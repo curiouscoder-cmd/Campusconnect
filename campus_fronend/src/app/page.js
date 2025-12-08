@@ -4,32 +4,17 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { MentorCard } from "@/components/MentorCard";
 import { PricingCard } from "@/components/PricingCard";
-import { BookingModal } from "@/components/BookingModal";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion-eldora";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Star, CheckCircle2 } from "lucide-react";
-import { HeroHighlight, Highlight } from "@/components/ui/hero-highlight";
+import { ArrowRight } from "lucide-react";
+import { HeroHighlight } from "@/components/ui/hero-highlight";
 import { TextReveal } from "@/components/ui/text-reveal";
 import { TypewriterEffectSmooth } from "@/components/ui/typewriter-effect";
 import { FloatingOrbs } from "@/components/ui/floating-elements";
-import { Spotlight } from "@/components/ui/spotlight";
-import { Marquee } from "@/components/ui/marquee";
-import { GradientText } from "@/components/ui/text-shimmer";
-import { CalendlyButton } from "@/components/CalendlyWidget";
-import { FadeIn, FadeInStagger, FadeInStaggerItem, ScaleIn } from "@/components/ui/scroll-animation";
+import { FadeIn, FadeInStagger, FadeInStaggerItem } from "@/components/ui/scroll-animation";
 import { MentorCardWithBooking } from "@/components/SessionBookingModal";
 import Link from "next/link";
-
-// College logos for marquee
-const colleges = [
-  { name: "Newton School of Technology", short: "NST" },
-  { name: "Vedam School of Technology", short: "Vedam" },
-  { name: "NIAT", short: "NIAT" },
-  { name: "Scaler School of Technology", short: "SST" },
-  { name: "ATLAS SkillTech", short: "ATLAS" },
-  { name: "Plaksha University", short: "Plaksha" },
-];
 
 // Available colleges - easy to expand later
 const COLLEGES = [
