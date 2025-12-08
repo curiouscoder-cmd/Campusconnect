@@ -4,9 +4,9 @@ import { Check } from "lucide-react";
 
 export function PricingCard({ plan }) {
     return (
-        <Card className={`relative flex flex-col border-border/60 transition-all duration-300 hover:shadow-md ${plan.popular ? 'border-foreground/20 shadow-sm' : ''}`}>
+        <Card className={`relative flex flex-col border-border/60 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 ${plan.popular ? 'border-primary/30 shadow-md shadow-primary/5 ring-1 ring-primary/20' : ''}`}>
             {plan.popular && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] px-3 py-1 rounded-full font-medium">
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 gradient-bg text-white text-[10px] px-3 py-1 rounded-full font-medium">
                     Most Popular
                 </span>
             )}

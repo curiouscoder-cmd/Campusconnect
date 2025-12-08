@@ -5,7 +5,7 @@
 @plugin "tailwindcss-animate";
 
 :root {
-  --background: #FFFFFF;
+  --background: #FAFBFC;
   --foreground: #0F172A;
 
   --card: #FFFFFF;
@@ -14,33 +14,38 @@
   --popover: #FFFFFF;
   --popover-foreground: #0F172A;
 
-  --primary: #000000;
+  --primary: #6366F1;
   --primary-foreground: #FFFFFF;
 
-  --secondary: #F7F7F8;
+  --secondary: #F1F5F9;
   --secondary-foreground: #0F172A;
 
-  --muted: #F7F7F8;
-  --muted-foreground: #475569;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
 
-  --accent: #E5E7EB;
-  --accent-foreground: #0F172A;
+  --accent: #8B5CF6;
+  --accent-foreground: #FFFFFF;
 
-  --destructive: #ef4444;
-  --destructive-foreground: #fafafa;
+  --destructive: #EF4444;
+  --destructive-foreground: #FAFAFA;
 
-  --border: rgba(15, 23, 42, 0.08);
-  --input: rgba(15, 23, 42, 0.08);
-  --ring: #0F172A;
+  --border: rgba(99, 102, 241, 0.15);
+  --input: rgba(99, 102, 241, 0.1);
+  --ring: #6366F1;
 
-  --radius: 0.75rem;
+  --radius: 0.875rem;
 
-  /* Chart colors (keeping if needed by shadcn components internally) */
-  --chart-1: #000000;
-  --chart-2: #333333;
-  --chart-3: #666666;
-  --chart-4: #999999;
-  --chart-5: #cccccc;
+  /* Gradient colors */
+  --gradient-start: #6366F1;
+  --gradient-mid: #8B5CF6;
+  --gradient-end: #EC4899;
+
+  /* Chart colors */
+  --chart-1: #6366F1;
+  --chart-2: #8B5CF6;
+  --chart-3: #A855F7;
+  --chart-4: #D946EF;
+  --chart-5: #EC4899;
 }
 
 @theme inline {
@@ -65,6 +70,7 @@
   --color-ring: var(--ring);
   --radius-radius: var(--radius);
   --font-sans: var(--font-inter);
+  --font-display: var(--font-display);
   --animate-shine: shine var(--duration) infinite linear;
   @keyframes shine {
   0% {
@@ -112,5 +118,167 @@ body {
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Gradient utilities */
+.gradient-text {
+  background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-mid) 50%, var(--gradient-end) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-bg {
+  background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-mid) 50%, var(--gradient-end) 100%);
+}
+
+.gradient-border {
+  position: relative;
+  background: var(--card);
+  border-radius: var(--radius);
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Glow effects */
+.glow {
+  box-shadow: 0 0 40px -10px rgba(99, 102, 241, 0.3);
+}
+
+.glow-hover:hover {
+  box-shadow: 0 0 50px -10px rgba(99, 102, 241, 0.4);
+}
+
+/* Animated gradient background */
+.animated-gradient {
+  background: linear-gradient(-45deg, #6366F1, #8B5CF6, #A855F7, #EC4899);
+  background-size: 400% 400%;
+  animation: gradient-shift 8s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Glass morphism */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Subtle noise texture overlay */
+.noise-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.02;
+  pointer-events: none;
+}
+
+/* Marquee animations */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(-100% - var(--gap))); }
+}
+
+@keyframes marquee-reverse {
+  from { transform: translateX(calc(-100% - var(--gap))); }
+  to { transform: translateX(0); }
+}
+
+@keyframes marquee-vertical {
+  from { transform: translateY(0); }
+  to { transform: translateY(calc(-100% - var(--gap))); }
+}
+
+.animate-marquee {
+  animation: marquee var(--duration) linear infinite;
+}
+
+.animate-marquee-reverse {
+  animation: marquee-reverse var(--duration) linear infinite;
+}
+
+.animate-marquee-vertical {
+  animation: marquee-vertical var(--duration) linear infinite;
+}
+
+/* Shimmer animation */
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+.animate-shimmer {
+  animation: shimmer 3s linear infinite;
+}
+
+/* Pulse glow */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.6); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Typewriter Animation */
+.typewriter-animation {
+  width: fit-content;
+  margin: 0 auto;
+  border-right: 3px solid rgba(99, 102, 241, 0.8);
+  white-space: nowrap;
+  overflow: hidden;
+  animation: 
+    typewriter 2s steps(50, end) 0.3s 1 normal both,
+    blinkingCursor 600ms steps(50, end) infinite;
+}
+
+.typewriter-animation-smooth {
+  width: fit-content;
+  margin: 0 auto;
+  border-right: 3px solid;
+  border-image: linear-gradient(to bottom, #6366F1, #8B5CF6, #EC4899) 1;
+  white-space: nowrap;
+  overflow: hidden;
+  animation: 
+    typewriter 2s steps(50, end) 0.3s 1 normal both,
+    blinkingCursor 600ms steps(50, end) infinite;
+}
+
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes blinkingCursor {
+  0%, 49% {
+    border-right-color: rgba(99, 102, 241, 0.8);
+  }
+  50%, 100% {
+    border-right-color: transparent;
   }
 }

@@ -9,7 +9,7 @@ export function MentorCard({ mentor }) {
         <div className="relative group w-full h-full bg-card rounded-xl border border-border/50 overflow-hidden">
             <ShineBorder
                 className="absolute inset-0 w-full h-full !p-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                color={["#A07CFE", "#FE8FB5", "#FFBE7B"]}
+                color={["#6366F1", "#8B5CF6", "#EC4899"]}
                 borderWidth={1.5}
             />
 
@@ -20,7 +20,7 @@ export function MentorCard({ mentor }) {
                         <AvatarFallback className="text-lg bg-muted">{mentor.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div className="absolute -bottom-2 right-0 sm:right-2 bg-background border px-1.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
-                        <Star className="w-3 h-3 fill-black text-black" />
+                        <Star className="w-3 h-3 fill-primary text-primary" />
                         <span className="text-[10px] font-semibold">{mentor.rating || "5.0"}</span>
                     </div>
                 </div>

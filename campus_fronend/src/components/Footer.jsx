@@ -8,16 +8,16 @@ export function Footer() {
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12">
                     <div className="col-span-2 lg:col-span-2">
                         <Link href="/" className="font-bold text-xl tracking-tight mb-4 block">
-                            Establish
+                            Campus Connect
                         </Link>
                         <p className="text-muted-foreground text-sm max-w-xs leading-relaxed">
-                            Connect with top mentors from NST, Vedam, and NIAT. Get guidance that gets you accepted.
+                            Talk to real students. Get real insights. Choose the right college with confidence.
                         </p>
                     </div>
 
                     <div className="flex flex-col gap-3">
                         <h4 className="font-semibold text-sm">Platform</h4>
-                        <Link href="#mentors" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Mentors</Link>
+                        <Link href="#mentors" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Students</Link>
                         <Link href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</Link>
                         <Link href="#reviews" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Reviews</Link>
                     </div>
@@ -38,7 +38,7 @@ export function Footer() {
 
                 <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-border/40 gap-4">
                     <p className="text-xs text-muted-foreground">
-                        © {new Date().getFullYear()} Establish Inc. All rights reserved.
+                        © {new Date().getFullYear()} Campus Connect. All rights reserved.
                     </p>
                     <div className="flex items-center gap-4">
                         <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">

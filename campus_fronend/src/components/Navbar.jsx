@@ -4,58 +4,43 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetClose } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
-import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 export function Navbar() {
-    const [scrolled, setScrolled] = useState(false);
-
-    useEffect(() => {
-        const handleScroll = () => {
-            setScrolled(window.scrollY > 20);
-        };
-        window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
-
     return (
-        <header className={cn(
-            "fixed top-0 z-50 w-full border-b transition-all duration-300",
-            scrolled ? "bg-white/80 backdrop-blur-md border-border/40 py-2" : "bg-transparent border-transparent py-4"
-        )}>
-            <div className="container mx-auto flex h-14 items-center justify-between px-4 md:px-6">
-                <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight">
-                    Campus Connect
+        <header className="fixed top-0 z-50 w-full border-b bg-white border-gray-200">
+            <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
+                {/* Logo */}
+                <Link href="/" className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold">
+                        CC
+                    </div>
+                    <span className="font-semibold text-primary text-lg">Campus Connect</span>
                 </Link>
 
-                {/* Desktop Nav */}
-                <nav className="hidden md:flex items-center gap-6">
-                    <Link href="/contact" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                {/* Desktop Nav - Centered */}
+                <nav className="hidden md:flex items-center gap-8">
+                    <Link href="/" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+                        Home
+                    </Link>
+                    <Link href="/#mentors" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+                        Students
+                    </Link>
+                    <Link href="/contact" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
                         Contact
-                    </Link>
-                    <Link href="/#mentors" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-                        Mentors
-                    </Link>
-                    <Link href="/#pricing" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-                        Pricing
-                    </Link>
-                    <Link href="/#reviews" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-                        Reviews
-                    </Link>
-                    <Link href="/#faq" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-                        FAQ
                     </Link>
                 </nav>
 
-                <div className="flex items-center gap-4">
+                {/* Right side buttons */}
+                <div className="flex items-center gap-3">
                     <Link href="/login">
-                        <Button variant="ghost" size="sm" className="hidden sm:inline-flex font-medium">
+                        <Button variant="ghost" size="sm" className="hidden sm:inline-flex font-medium text-foreground hover:text-primary">
                             Log in
                         </Button>
                     </Link>
                     <Link href="/signup">
-                        <Button size="sm" className="rounded-full px-5 shadow-sm font-medium">
-                            Get Started
+                        <Button size="sm" className="rounded-full px-5 font-medium bg-slate-900 text-white hover:bg-slate-800 transition-colors">
+                            Join Now
                         </Button>
                     </Link>
 
@@ -74,7 +59,7 @@ export function Navbar() {
                                     <Link href="/contact" className="text-lg font-medium">Contact</Link>
                                 </SheetClose>
                                 <SheetClose asChild>
-                                    <Link href="/#mentors" className="text-lg font-medium">Mentors</Link>
+                                    <Link href="/#mentors" className="text-lg font-medium">Students</Link>
                                 </SheetClose>
                                 <SheetClose asChild>
                                     <Link href="/#pricing" className="text-lg font-medium">Pricing</Link>

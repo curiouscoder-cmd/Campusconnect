@@ -84,7 +84,7 @@ export function BookingModal({ mentor }) {
                         </div>
 
                         <p className="text-[10px] text-muted-foreground text-center mt-4">
-                            Powered by Establish Bookings
+                            Powered by Campus Connect
                         </p>
                     </div>
                 </div>

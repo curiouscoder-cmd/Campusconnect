@@ -38,7 +38,7 @@ export default function SignupPage() {
                                 role === "student" ? "border-black bg-black/5" : "border-border bg-muted/20 hover:bg-muted/50"
                             )}
                         >
-                            <span className="font-semibold text-sm">Student</span>
+                            <span className="font-semibold text-sm">Applicant</span>
                             {role === "student" && <Check className="w-3 h-3 mt-1" />}
                         </button>
                         <button
@@ -49,7 +49,7 @@ export default function SignupPage() {
                                 role === "mentor" ? "border-black bg-black/5" : "border-border bg-muted/20 hover:bg-muted/50"
                             )}
                         >
-                            <span className="font-semibold text-sm">Mentor</span>
+                            <span className="font-semibold text-sm">Current Student</span>
                             {role === "mentor" && <Check className="w-3 h-3 mt-1" />}
                         </button>
                     </div>
@@ -107,9 +107,9 @@ export default function SignupPage() {
                     </div>
                     <blockquote className="space-y-2">
                         <p className="text-lg">
-                            &ldquo;This platform completely changed how I connect with mentors. The guidance I received was invaluable for my career.&rdquo;
+                            &ldquo;Talking to a real student gave me the honest truth about Vedam that no brochure could. Now I&apos;m confident about my choice.&rdquo;
                         </p>
-                        <footer className="text-sm border-t border-white/20 pt-4 mt-4">Shreya Gupta, Student @ IIT Delhi</footer>
+                        <footer className="text-sm border-t border-white/20 pt-4 mt-4">Arjun Patel, Admitted to Vedam 2024</footer>
                     </blockquote>
                 </div>
             </motion.div>

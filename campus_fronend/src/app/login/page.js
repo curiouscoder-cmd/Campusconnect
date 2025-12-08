@@ -26,9 +26,9 @@ export default function LoginPage() {
                     </div>
                     <blockquote className="space-y-2">
                         <p className="text-lg">
-                            &ldquo;Finding the right mentor was impossible until I found Campus Connect. It's concise, professional, and effective.&rdquo;
+                            &ldquo;I was so confused about joining NST. One call with a current student cleared all my doubts about hostel life and placements. Best decision ever.&rdquo;
                         </p>
-                        <footer className="text-sm border-t border-white/20 pt-4 mt-4">Rahul Verma, Alumni @ BITS Pilani</footer>
+                        <footer className="text-sm border-t border-white/20 pt-4 mt-4">Priya Sharma, Admitted to NST 2024</footer>
                     </blockquote>
                 </div>
             </motion.div>
