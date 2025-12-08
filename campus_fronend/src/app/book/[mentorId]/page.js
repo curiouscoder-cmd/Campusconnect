@@ -9,7 +9,7 @@ import { Calendar } from "lucide-react";
 
 // Mock Data (would typically come from API/Context)
 const MENTORS = {
-    "1": { name: "Aditya Kumar", role: "Software Engineer @ Google", image: "https://github.com/shadcn.png" },
+    "1": { name: "Nitya Jain", role: "Software Engineer @ Google", image: "https://github.com/shadcn.png" },
     "2": { name: "Riya Singh", role: "Product Designer @ Microsoft", image: "https://github.com/shadcn.png" },
     "3": { name: "Karan Mehta", role: "Founder @ Stealth", image: "https://github.com/shadcn.png" }
 };

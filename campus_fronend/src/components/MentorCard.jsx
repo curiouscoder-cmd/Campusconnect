@@ -1,49 +1,45 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { Star } from "lucide-react";
-import { ShineBorder } from "@/components/ui/shine-border";
+import { Star, GraduationCap } from "lucide-react";
 
-export function MentorCard({ mentor }) {
+export function MentorCard({ mentor, onClick }) {
     return (
-        <div className="relative group w-full h-full bg-card rounded-xl border border-border/50 overflow-hidden">
-            <ShineBorder
-                className="absolute inset-0 w-full h-full !p-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                color={["#6366F1", "#8B5CF6", "#EC4899"]}
-                borderWidth={1.5}
-            />
+        <div 
+            className="group w-full bg-white rounded-2xl border border-gray-100 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 overflow-hidden"
+        >
+            <div className="p-6">
+                {/* Header with avatar and info */}
+                <div className="flex items-center gap-4">
+                    <div className="relative flex-shrink-0">
+                        <Avatar className="h-14 w-14 border-2 border-white shadow-md">
+                            <AvatarImage src={mentor.image} alt={mentor.name} className="object-cover" />
+                            <AvatarFallback className="text-base font-semibold bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
+                                {mentor.name.slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                        </Avatar>
+                    </div>
 
-            <div className="relative z-10 flex flex-col sm:flex-row items-start gap-4 p-5 h-full">
-                <div className="relative">
-                    <Avatar className="h-16 w-16 sm:h-20 sm:w-20 border border-border/50">
-                        <AvatarImage src={mentor.image} alt={mentor.name} className="object-cover" />
-                        <AvatarFallback className="text-lg bg-muted">{mentor.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div className="absolute -bottom-2 right-0 sm:right-2 bg-background border px-1.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
-                        <Star className="w-3 h-3 fill-primary text-primary" />
-                        <span className="text-[10px] font-semibold">{mentor.rating || "5.0"}</span>
+                    <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-base text-foreground truncate">{mentor.name}</h3>
+                        <p className="text-sm text-muted-foreground">{mentor.role}</p>
+                    </div>
+
+                    <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-full">
+                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        <span className="text-xs font-semibold text-amber-700">{mentor.rating || "5.0"}</span>
                     </div>
                 </div>
 
-                <div className="flex-1 space-y-2 w-full">
-                    <div className="flex justify-between items-start w-full">
-                        <div>
-                            <h3 className="font-semibold text-lg text-foreground leading-tight tracking-tight">{mentor.name}</h3>
-                            <p className="text-sm text-muted-foreground">{mentor.role}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5 font-medium text-foreground/80">{mentor.college}</p>
-                        </div>
-                        <div className="text-right">
-                            <span className="block font-semibold text-sm">{mentor.price}</span>
-                            <span className="text-[10px] text-muted-foreground">/ session</span>
-                        </div>
-                    </div>
+                {/* College info */}
+                <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+                    <GraduationCap className="w-4 h-4 text-primary/60" />
+                    <span className="truncate">{mentor.college}</span>
+                </div>
 
-                    <div className="flex flex-wrap gap-2 pt-1">
-                        {mentor.expertise.map((tag) => (
-                            <Badge key={tag} variant="outline" className="font-normal text-xs px-2 py-0.5 text-muted-foreground border-border bg-transparent">
-                                {tag}
-                            </Badge>
-                        ))}
+                {/* Price */}
+                <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+                    <div>
+                        <span className="text-xs text-muted-foreground">Starting from</span>
+                        <p className="font-semibold text-lg text-foreground">₹99 <span className="text-sm font-normal text-muted-foreground">/ session</span></p>
                     </div>
                 </div>
             </div>

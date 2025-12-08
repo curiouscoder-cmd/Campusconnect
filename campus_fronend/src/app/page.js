@@ -18,6 +18,8 @@ import { Marquee } from "@/components/ui/marquee";
 import { GradientText } from "@/components/ui/text-shimmer";
 import { CalendlyButton } from "@/components/CalendlyWidget";
 import { FadeIn, FadeInStagger, FadeInStaggerItem, ScaleIn } from "@/components/ui/scroll-animation";
+import { MentorCardWithBooking } from "@/components/SessionBookingModal";
+import Link from "next/link";
 
 // College logos for marquee
 const colleges = [
@@ -29,33 +31,60 @@ const colleges = [
   { name: "Plaksha University", short: "Plaksha" },
 ];
 
-// Mock Data (Moved from separate files for simplicity in this artifact, but kept clean)
-const mentors = [
+// Available colleges - easy to expand later
+const COLLEGES = [
+  { id: "nst", name: "Newton School of Technology", short: "NST" },
+  // Future colleges - uncomment when ready
+  // { id: "vedam", name: "Vedam School of Technology", short: "Vedam" },
+  // { id: "niat", name: "NIAT", short: "NIAT" },
+  // { id: "sst", name: "Scaler School of Technology", short: "SST" },
+];
+
+// Current active college for MVP (change this to show different colleges)
+const ACTIVE_COLLEGE = "nst";
+
+// Mock Data - All mentors with college IDs for filtering
+const allMentors = [
+  // NST Students
   {
-    name: "Aditya Kumar",
+    name: "Nitya Jain",
     role: "2nd Year Student",
     college: "Newton School of Technology",
+    collegeId: "nst",
     price: "₹149",
-    expertise: ["Campus Life", "Admission Process", "Coding Culture"],
+   
     image: "https://github.com/shadcn.png"
   },
   {
-    name: "Riya Singh",
-    role: "1st Year Student",
-    college: "NIAT",
-    price: "₹99",
-    expertise: ["Hostel Life", "Faculty Quality", "Course Difficulty"],
-    image: "https://github.com/shadcn.png"
-  },
-  {
-    name: "Karan Mehta",
+    name: "Harsh Hirawat",
     role: "2nd Year Student",
-    college: "Vedam School of Technology",
-    price: "₹149",
-    expertise: ["Placements", "Social Life", "Worth Joining?"],
+    college: "Newton School of Technology",
+    collegeId: "nst",
+    price: "₹99",
     image: "https://github.com/shadcn.png"
-  }
+  },
+  {
+    name: "Rahul Verma",
+    role: "2nd Year Student",
+    college: "Newton School of Technology",
+    collegeId: "nst",
+    price: "₹149",
+    image: "https://github.com/shadcn.png"
+  },
+  // Future: Other college students
+  // {
+  //   name: "Riya Singh",
+  //   role: "1st Year Student",
+  //   college: "NIAT",
+  //   collegeId: "niat",
+  //   price: "₹99",
+  //   expertise: ["Hostel Life", "Faculty Quality", "Course Difficulty"],
+  //   image: "https://github.com/shadcn.png"
+  // },
 ];
+
+// Filter mentors by active college (for MVP, only NST)
+const mentors = allMentors.filter(m => m.collegeId === ACTIVE_COLLEGE);
 
 const pricingPlans = [
   {
@@ -144,7 +173,11 @@ export default function Home() {
 
               <TextReveal delay={0.4}>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <CalendlyButton url="https://calendly.com/nitya6402/30min" label="Talk to a Student mentor" />
+                  <Link href="/#mentors">
+                    <Button size="lg" className="rounded-full px-8 h-12 text-base gradient-bg text-white shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all hover:-translate-y-0.5 border-0">
+                      Talk to a Student mentor <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
                   <Button variant="outline" size="lg" className="rounded-full h-12 text-base border-primary/20 text-primary hover:bg-primary/5 hover:text-primary">
                     See How It Works
                   </Button>
@@ -161,7 +194,7 @@ export default function Home() {
             <FadeIn direction="up">
               <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
                 <div>
-                  <h2 className="text-3xl font-bold tracking-tight mb-4" style={{ fontFamily: 'var(--font-display)' }}>Meet Current Students</h2>
+                  <h2 className="text-3xl font-bold tracking-tight mb-4" style={{ fontFamily: 'var(--font-display)' }}>Meet top mentors</h2>
                   <p className="text-muted-foreground max-w-xl">
                     Connect with students who are living the college experience right now. Get honest answers about what it&apos;s really like.
                   </p>
@@ -173,12 +206,9 @@ export default function Home() {
             <FadeInStagger className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {mentors.map((mentor, i) => (
                 <FadeInStaggerItem key={i}>
-                  <div className="flex flex-col h-full">
+                  <MentorCardWithBooking mentor={mentor}>
                     <MentorCard mentor={mentor} />
-                    <div className="mt-4 flex justify-end">
-                      <BookingModal mentor={mentor} />
-                    </div>
-                  </div>
+                  </MentorCardWithBooking>
                 </FadeInStaggerItem>
               ))}
             </FadeInStagger>
