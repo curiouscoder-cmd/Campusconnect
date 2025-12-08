@@ -5,10 +5,12 @@ import { Footer } from "@/components/Footer";
 import { MentorCard } from "@/components/MentorCard";
 import { PricingCard } from "@/components/PricingCard";
 import { BookingModal } from "@/components/BookingModal";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion-eldora";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Star, CheckCircle2 } from "lucide-react";
+import { HeroHighlight, Highlight } from "@/components/ui/hero-highlight";
+import { TextReveal } from "@/components/ui/text-reveal";
 
 // Mock Data (Moved from separate files for simplicity in this artifact, but kept clean)
 const mentors = [
@@ -77,45 +79,39 @@ const faqs = [
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col font-sans">
-      <Navbar />
-
-      <main className="flex-1">
+      <main className="flex-1 mt-20"> {/* Added mt-20 to clear fixed navbar initially if needed, or rely on layout */}
         {/* Hero Section */}
-        <section className="relative pt-20 pb-32 md:pt-32 md:pb-48 overflow-hidden">
-          <div className="container px-4 md:px-6 mx-auto relative z-10 text-center">
-            <Badge variant="outline" className="mb-6 py-1.5 px-4 text-sm font-medium rounded-full border-black/10 bg-white/50 backdrop-blur-sm text-foreground/80">
-              For students of NST, Vedam, NIAT
-            </Badge>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground max-w-4xl mx-auto mb-6 leading-[1.1]">
-              Master your career with guidance from alumni.
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-              Book 1:1 sessions with seniors who have cracked the companies you dream of. No fluff, just actionable advice.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" className="rounded-full px-8 h-12 text-base shadow-lg shadow-black/5 hover:shadow-xl transition-all hover:-translate-y-0.5">
-                Find a Mentor <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="lg" className="rounded-full h-12 text-base text-muted-foreground hover:text-foreground">
-                View Success Stories
-              </Button>
-            </div>
+        <section className="relative">
+          <HeroHighlight containerClassName="h-[60vh]">
+            <div className="text-center px-4 max-w-4xl mx-auto">
+              <TextReveal delay={0.1}>
+                <Badge variant="outline" className="mb-6 py-1.5 px-4 text-sm font-medium rounded-full border-black/10 bg-white/50 backdrop-blur-sm text-foreground/80">
+                  For students of NST, Vedam, NIAT
+                </Badge>
+              </TextReveal>
+              <TextReveal delay={0.2}>
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground mb-6 leading-[1.1]">
+                  Master your career with <Highlight className="text-black dark:text-white">guidance from alumni.</Highlight>
+                </h1>
+              </TextReveal>
+              <TextReveal delay={0.3}>
+                <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
+                  Book 1:1 sessions with seniors who have cracked the companies you dream of. No fluff, just actionable advice.
+                </p>
+              </TextReveal>
 
-            {/* Social Proof / Avatars */}
-            <div className="mt-12 flex items-center justify-center gap-4 text-sm text-muted-foreground">
-              <div className="flex -space-x-3">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="w-8 h-8 rounded-full border-2 border-background bg-muted overflow-hidden">
-                    <img src={`https://github.com/shadcn.png?s=${i}`} alt="User" />
-                  </div>
-                ))}
-              </div>
-              <p>Trusted by <span className="font-semibold text-foreground">500+ students</span></p>
+              <TextReveal delay={0.4}>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                  <Button size="lg" className="rounded-full px-8 h-12 text-base shadow-lg shadow-black/5 hover:shadow-xl transition-all hover:-translate-y-0.5">
+                    Find a Mentor <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="lg" className="rounded-full h-12 text-base text-muted-foreground hover:text-foreground">
+                    View Success Stories
+                  </Button>
+                </div>
+              </TextReveal>
             </div>
-          </div>
-
-          {/* Background Elements */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-blue-50/50 to-transparent opacity-60 blur-3xl rounded-full -z-10 pointer-events-none" />
+          </HeroHighlight>
         </section>
 
         {/* Mentors Section */}
