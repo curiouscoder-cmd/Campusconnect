@@ -34,7 +34,7 @@ export function Navbar() {
                 {/* Right side buttons */}
                 <div className="flex items-center gap-3">
                     <Link href="/login">
-                        <Button variant="ghost" size="sm" className="hidden sm:inline-flex font-medium text-foreground hover:text-primary">
+                        <Button variant="ghost" size="sm" className="hidden sm:inline-flex font-medium text-foreground hover:text-slate-900 hover:bg-slate-100">
                             Log in
                         </Button>
                     </Link>

@@ -1,12 +1,16 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Star, GraduationCap } from "lucide-react";
+import { Star, GraduationCap, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
-export function MentorCard({ mentor, onClick }) {
+export function MentorCard({ mentor, onBookSession }) {
+    // Generate ID from name for URL
+    const mentorId = mentor.id || mentor.name.toLowerCase().replace(/\s+/g, '-');
+    
     return (
         <div 
-            className="group w-full bg-white rounded-2xl border border-gray-100 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 overflow-hidden"
+            className="group w-full bg-white rounded-2xl border border-gray-100 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 overflow-hidden flex flex-col h-full"
         >
-            <div className="p-6">
+            <div className="p-6 flex-1 flex flex-col">
                 {/* Header with avatar and info */}
                 <div className="flex items-center gap-4">
                     <div className="relative flex-shrink-0">
@@ -39,8 +43,26 @@ export function MentorCard({ mentor, onClick }) {
                 <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
                     <div>
                         <span className="text-xs text-muted-foreground">Starting from</span>
-                        <p className="font-semibold text-lg text-foreground">₹99 <span className="text-sm font-normal text-muted-foreground">/ session</span></p>
+                        <p className="font-semibold text-lg text-foreground">{mentor.price} <span className="text-sm font-normal text-muted-foreground">/ session</span></p>
                     </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="mt-4 space-y-2">
+                    <Link
+                        href={`/mentor/${mentorId}`}
+                        className="w-full py-2.5 px-4 rounded-lg border border-primary/30 text-primary text-sm font-medium hover:bg-primary/5 transition-colors flex items-center justify-center gap-2 group/btn"
+                    >
+                        View Details
+                        <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                    </Link>
+                    
+                    <button
+                        onClick={onBookSession}
+                        className="w-full py-2.5 px-4 rounded-lg bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
+                    >
+                        Book Session
+                    </button>
                 </div>
             </div>
         </div>

@@ -32,29 +32,37 @@ const ACTIVE_COLLEGE = "nst";
 const allMentors = [
   // NST Students
   {
+    id: "nitya-jain",
     name: "Nitya Jain",
     role: "2nd Year Student",
     college: "Newton School of Technology",
     collegeId: "nst",
     price: "₹149",
-   
-    image: "https://github.com/shadcn.png"
+    image: "https://github.com/shadcn.png",
+    bio: "Passionate about helping students make informed college decisions. I'm a 2nd year student at NST with a strong interest in tech and community building. I love sharing my campus experience and helping applicants understand what NST really offers.",
+    expertise: ["Campus Life", "Academics", "Placements", "Hostel Experience"]
   },
   {
+    id: "harsh-hirawat",
     name: "Harsh Hirawat",
     role: "2nd Year Student",
     college: "Newton School of Technology",
     collegeId: "nst",
     price: "₹99",
-    image: "https://github.com/shadcn.png"
+    image: "https://github.com/shadcn.png",
+    bio: "A coding enthusiast and NST student who's passionate about sharing real insights about student life. I can help you understand the technical curriculum, coding culture, and what to expect in your first year.",
+    expertise: ["Coding Culture", "Technical Curriculum", "First Year Experience", "Faculty"]
   },
   {
+    id: "rahul-verma",
     name: "Rahul Verma",
     role: "2nd Year Student",
     college: "Newton School of Technology",
     collegeId: "nst",
     price: "₹149",
-    image: "https://github.com/shadcn.png"
+    image: "https://github.com/shadcn.png",
+    bio: "Currently in my 2nd year at NST, focused on building a strong foundation in computer science. I'm here to give you honest feedback about placements, internships, and the overall learning environment at NST.",
+    expertise: ["Placements", "Internships", "Learning Environment", "Career Guidance"]
   },
   // Future: Other college students
   // {

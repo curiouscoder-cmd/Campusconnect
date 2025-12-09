@@ -1,5 +1,6 @@
 "use client";
 
+import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,9 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 
 export default function ContactPage() {
     return (
-        <div className="min-h-screen flex flex-col font-sans pt-24">
-
-            <main className="flex-1 container mx-auto px-4 py-16 max-w-2xl">
+        <div className="min-h-screen flex flex-col font-sans">
+            <Navbar />
+            <main className="flex-1 container mx-auto px-4 py-16 max-w-2xl mt-16">
                 <div className="text-center mb-12">
                     <h1 className="text-4xl font-bold tracking-tight mb-4">Contact Us</h1>
                     <p className="text-muted-foreground">
