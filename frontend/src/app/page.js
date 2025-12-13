@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,8 +47,8 @@ const allMentors = [
     role: "2nd Year Student",
     college: "Newton School of Technology",
     collegeId: "nst",
-    price: "₹149",
-    image: "https://github.com/shadcn.png",
+    price: "₹99",
+    image: "https://gxutjvplqghjphemydcn.supabase.co/storage/v1/object/sign/mentors%20pic/Screenshot%202025-10-07%20at%203.58.37%20PM.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV84MmZmNmVhZS1kMDk2LTQ0ZmQtOWFhMi1jNWNlNWFmNWE2NzAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJtZW50b3JzIHBpYy9TY3JlZW5zaG90IDIwMjUtMTAtMDcgYXQgMy41OC4zNyBQTS5wbmciLCJpYXQiOjE3NjU2Mzc5NzgsImV4cCI6MTc5NzE3Mzk3OH0.c_PfavptClBsGFgQu3ipTbA6Snq9lyMXERG4JuJXEOM",
     bio: "Passionate about helping students make informed college decisions. I'm a 2nd year student at NST with a strong interest in tech and community building. I love sharing my campus experience and helping applicants understand what NST really offers.",
     expertise: ["Campus Life", "Academics", "Placements", "Hostel Experience"]
   },
@@ -58,17 +59,17 @@ const allMentors = [
     college: "Newton School of Technology",
     collegeId: "nst",
     price: "₹99",
-    image: "https://github.com/shadcn.png",
+    image: "https://gxutjvplqghjphemydcn.supabase.co/storage/v1/object/sign/mentors%20pic/Screenshot%202025-12-14%20at%2012.20.53%20AM.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV84MmZmNmVhZS1kMDk2LTQ0ZmQtOWFhMi1jNWNlNWFmNWE2NzAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJtZW50b3JzIHBpYy9TY3JlZW5zaG90IDIwMjUtMTItMTQgYXQgMTIuMjAuNTMgQU0ucG5nIiwiaWF0IjoxNzY1NjUxODk2LCJleHAiOjE3OTcxODc4OTZ9.MxJUFtYViaw9ioZtuj4I3aRABiVjECIL5aldczW6_4Q",
     bio: "A coding enthusiast and NST student who's passionate about sharing real insights about student life. I can help you understand the technical curriculum, coding culture, and what to expect in your first year.",
     expertise: ["Coding Culture", "Technical Curriculum", "First Year Experience", "Faculty"]
   },
   {
-    id: "rahul-verma",
-    name: "Rahul Verma",
+    id: "divya-pahuja",
+    name: "Divya Pahuja",
     role: "2nd Year Student",
     college: "Newton School of Technology",
     collegeId: "nst",
-    price: "₹149",
+    price: "₹99",
     image: "https://github.com/shadcn.png",
     bio: "Currently in my 2nd year at NST, focused on building a strong foundation in computer science. I'm here to give you honest feedback about placements, internships, and the overall learning environment at NST.",
     expertise: ["Placements", "Internships", "Learning Environment", "Career Guidance"]
@@ -237,6 +238,8 @@ const faqs = [
 ];
 
 export default function Home() {
+  const { isAuthenticated } = useAuth();
+  
   return (
     <div className="min-h-screen flex flex-col font-sans">
       <Navbar />
@@ -275,14 +278,16 @@ export default function Home() {
 
               <TextReveal delay={0.4}>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <Link href="/#mentors">
+                  <Link href={isAuthenticated ? "/#mentors" : "/login"}>
                     <Button size="lg" className="rounded-full px-8 h-12 text-base gradient-bg text-white shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all hover:-translate-y-0.5 border-0">
-                      Talk to a Student mentor <ArrowRight className="ml-2 h-4 w-4" />
+                      Book Session <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
-                  <Button variant="outline" size="lg" className="rounded-full h-12 text-base border-primary/20 text-primary hover:bg-primary/5 hover:text-primary">
-                    See How It Works
-                  </Button>
+                  <Link href={isAuthenticated ? "/contact" : "/login"}>
+                    <Button variant="outline" size="lg" className="rounded-full h-12 text-base border-primary/20 text-primary hover:bg-primary/5 hover:text-primary">
+                      Contact Us
+                    </Button>
+                  </Link>
                 </div>
               </TextReveal>
             </div>
@@ -301,7 +306,9 @@ export default function Home() {
                     Connect with students who are living the college experience right now. Get honest answers about what it&apos;s really like.
                   </p>
                 </div>
-                <Button variant="outline" className="rounded-full border-primary/20 text-primary hover:bg-primary/5">View All Students</Button>
+                <Link href={isAuthenticated ? "/#mentors" : "/login"}>
+                  <Button variant="outline" className="rounded-full border-primary/20 text-primary hover:bg-primary/5">View All Students</Button>
+                </Link>
               </div>
             </FadeIn>
 
