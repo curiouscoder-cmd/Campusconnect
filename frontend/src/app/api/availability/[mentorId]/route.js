@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { createServerClient } from "@/lib/supabase";
 
-// Mock availability data - In production, this would come from a database
+// Generate mock slots for development
 function generateMockSlots(mentorId, days = 14) {
   const slots = [];
   const today = new Date();
@@ -16,7 +17,6 @@ function generateMockSlots(mentorId, days = 14) {
     date.setDate(today.getDate() + i);
     const dateStr = date.toISOString().split("T")[0];
     
-    // Skip some random slots to simulate real availability
     const availableSlots = timeSlots.filter(() => Math.random() > 0.3);
     
     availableSlots.forEach((startTime) => {
@@ -42,7 +42,7 @@ function generateMockSlots(mentorId, days = 14) {
 
 export async function GET(request, { params }) {
   try {
-    const { mentorId } = params;
+    const { mentorId } = await params;
     
     if (!mentorId) {
       return NextResponse.json(
@@ -50,19 +50,56 @@ export async function GET(request, { params }) {
         { status: 400 }
       );
     }
+
+    const supabase = createServerClient();
     
-    // In production, fetch from database
+    // Try to fetch from database first
+    if (supabase) {
+      const today = new Date().toISOString().split("T")[0];
+      
+      const { data: slots, error } = await supabase
+        .from("availability")
+        .select("*")
+        .eq("mentor_id", mentorId)
+        .gte("date", today)
+        .order("date", { ascending: true })
+        .order("start_time", { ascending: true });
+
+      if (!error && slots && slots.length > 0) {
+        // Transform database format to frontend format
+        const formattedSlots = slots.map((slot) => ({
+          id: slot.id,
+          mentorId: slot.mentor_id,
+          date: slot.date,
+          startTime: slot.start_time,
+          endTime: slot.end_time,
+          isBooked: slot.is_booked,
+          isReserved: slot.is_reserved,
+          reservedUntil: slot.reserved_until,
+        }));
+
+        return NextResponse.json({
+          success: true,
+          mentorId,
+          slots: formattedSlots,
+          source: "database",
+        });
+      }
+    }
+    
+    // Fallback to mock data
     const slots = generateMockSlots(mentorId);
     
     return NextResponse.json({
       success: true,
       mentorId,
       slots,
+      source: "mock",
     });
   } catch (error) {
     console.error("Error fetching availability:", error);
     return NextResponse.json(
-      { error: "Failed to fetch availability" },
+      { error: "Failed to fetch availability", details: error.message },
       { status: 500 }
     );
   }

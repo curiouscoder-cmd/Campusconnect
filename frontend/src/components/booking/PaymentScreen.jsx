@@ -1,45 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Clock, Calendar, CreditCard, Shield, Loader2 } from "lucide-react";
-import { formatTime, formatTimeRemaining } from "@/lib/booking-utils";
+import { formatTime } from "@/lib/booking-utils";
 import { cn } from "@/lib/utils";
 
 // Razorpay Key - Replace with your actual key
-const RAZORPAY_KEY = process.env.NEXT_PUBLIC_RAZORPAY_KEY || "rzp_test_yourkeyhere";
+const RAZORPAY_KEY = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_yourkeyhere";
 
 export function PaymentScreen({
   mentor,
   selectedSlot,
   selectedSession,
   userDetails,
-  reservationEndTime,
   onPaymentSuccess,
   onPaymentFailure,
 }) {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(600); // 10 minutes in seconds
-
-  // Countdown timer for slot reservation
-  useEffect(() => {
-    if (!reservationEndTime) return;
-
-    const updateTimer = () => {
-      const endTime = new Date(reservationEndTime).getTime();
-      const now = Date.now();
-      const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
-      setTimeRemaining(remaining);
-
-      if (remaining === 0) {
-        onPaymentFailure("Slot reservation expired. Please select a new slot.");
-      }
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-    return () => clearInterval(interval);
-  }, [reservationEndTime, onPaymentFailure]);
 
   const handlePayment = async () => {
     setIsProcessing(true);
@@ -109,52 +87,11 @@ export function PaymentScreen({
 
   return (
     <div className="space-y-6">
-      {/* Timer Warning */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className={cn(
-          "flex items-center justify-between p-4 rounded-xl",
-          timeRemaining < 120
-            ? "bg-red-50 border border-red-200"
-            : "bg-amber-50 border border-amber-200"
-        )}
-      >
-        <div className="flex items-center gap-3">
-          <Clock
-            className={cn(
-              "w-5 h-5",
-              timeRemaining < 120 ? "text-red-500" : "text-amber-500"
-            )}
-          />
-          <div>
-            <p
-              className={cn(
-                "text-sm font-medium",
-                timeRemaining < 120 ? "text-red-700" : "text-amber-700"
-              )}
-            >
-              Slot reserved for you
-            </p>
-            <p
-              className={cn(
-                "text-xs",
-                timeRemaining < 120 ? "text-red-600" : "text-amber-600"
-              )}
-            >
-              Complete payment to confirm
-            </p>
-          </div>
-        </div>
-        <div
-          className={cn(
-            "text-2xl font-bold tabular-nums",
-            timeRemaining < 120 ? "text-red-600" : "text-amber-600"
-          )}
-        >
-          {formatTimeRemaining(timeRemaining)}
-        </div>
-      </motion.div>
+      {/* Header */}
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900">Complete Payment</h3>
+        <p className="text-sm text-gray-500 mt-1">Review your booking and pay to confirm</p>
+      </div>
 
       {/* Booking Summary */}
       <div className="bg-gray-50 rounded-xl p-5 space-y-4">
@@ -189,7 +126,7 @@ export function PaymentScreen({
           <div className="border-t border-gray-200 pt-3 mt-3">
             <div className="flex items-center justify-between">
               <span className="font-medium text-gray-900">Total Amount</span>
-              <span className="text-xl font-bold text-indigo-600">
+              <span className="text-xl font-bold text-slate-900">
                 ₹{selectedSession.price}
               </span>
             </div>
@@ -206,14 +143,14 @@ export function PaymentScreen({
       {/* Pay Button */}
       <motion.button
         onClick={handlePayment}
-        disabled={isProcessing || timeRemaining === 0}
+        disabled={isProcessing}
         whileHover={!isProcessing ? { y: -2 } : {}}
         whileTap={!isProcessing ? { scale: 0.98 } : {}}
         className={cn(
           "w-full py-4 rounded-xl font-semibold text-white transition-all duration-200 flex items-center justify-center gap-2",
-          isProcessing || timeRemaining === 0
+          isProcessing
             ? "bg-gray-400 cursor-not-allowed"
-            : "bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/25"
+            : "bg-slate-900 hover:bg-slate-800 shadow-lg shadow-slate-900/25"
         )}
       >
         {isProcessing ? (

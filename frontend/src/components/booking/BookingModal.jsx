@@ -38,7 +38,6 @@ export function BookingModal({ mentor, isOpen, onClose }) {
     phone: "",
     questions: "",
   });
-  const [reservationEndTime, setReservationEndTime] = useState(null);
   const [paymentData, setPaymentData] = useState(null);
   const [error, setError] = useState(null);
 
@@ -71,7 +70,6 @@ export function BookingModal({ mentor, isOpen, onClose }) {
         setSelectedSlot(null);
         setSelectedSession(null);
         setUserDetails({ name: "", email: "", phone: "", questions: "" });
-        setReservationEndTime(null);
         setPaymentData(null);
         setError(null);
       }, 300);
@@ -104,9 +102,6 @@ export function BookingModal({ mentor, isOpen, onClose }) {
   };
 
   const handleContinueFromDetails = () => {
-    // Reserve the slot for 10 minutes
-    const endTime = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-    setReservationEndTime(endTime);
     setCurrentStep(STEPS.PAYMENT);
   };
 
@@ -117,7 +112,6 @@ export function BookingModal({ mentor, isOpen, onClose }) {
 
   const handlePaymentFailure = (errorMessage) => {
     setError(errorMessage);
-    setReservationEndTime(null);
     setCurrentStep(STEPS.SLOT_SELECTION);
   };
 
@@ -131,7 +125,6 @@ export function BookingModal({ mentor, isOpen, onClose }) {
         setCurrentStep(STEPS.SESSION_TYPE);
         break;
       case STEPS.PAYMENT:
-        setReservationEndTime(null);
         setCurrentStep(STEPS.USER_DETAILS);
         break;
       default:
@@ -333,7 +326,6 @@ export function BookingModal({ mentor, isOpen, onClose }) {
                       selectedSlot={selectedSlot}
                       selectedSession={selectedSession}
                       userDetails={userDetails}
-                      reservationEndTime={reservationEndTime}
                       onPaymentSuccess={handlePaymentSuccess}
                       onPaymentFailure={handlePaymentFailure}
                     />

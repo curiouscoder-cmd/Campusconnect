@@ -1,20 +1,29 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { MentorCard } from "@/components/MentorCard";
-import { PricingCard } from "@/components/PricingCard";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion-eldora";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { ChevronDown, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { HeroHighlight } from "@/components/ui/hero-highlight";
 import { TextReveal } from "@/components/ui/text-reveal";
 import { TypewriterEffectSmooth } from "@/components/ui/typewriter-effect";
 import { FloatingOrbs } from "@/components/ui/floating-elements";
 import { FadeIn, FadeInStagger, FadeInStaggerItem } from "@/components/ui/scroll-animation";
 import { MentorCardWithBooking } from "@/components/SessionBookingModal";
-import Link from "next/link";
+import { MentorCard } from "@/components/MentorCard";
+import { PricingCard } from "@/components/PricingCard";
+import { Accordion as AccordionEldora, AccordionContent as AccordionContentEldora, AccordionItem as AccordionItemEldora, AccordionTrigger as AccordionTriggerEldora } from "@/components/ui/accordion-eldora";
+import { Badge } from "@/components/ui/badge";
+import { ArrowRight } from "lucide-react";
 
 // Available colleges - easy to expand later
 const COLLEGES = [
@@ -99,6 +108,106 @@ const pricingPlans = [
     popular: false
   }
 ];
+
+// Testimonials data
+const testimonials = [
+  {
+    quote: "Finally got the real picture.",
+    text: "I was confused between NST and a traditional college. One session with Aditya gave me honest insights about hostel life, faculty, and placements that no brochure could. I made my decision with confidence.",
+    name: "Sarthak Gupta",
+    role: "Applicant who booked a session",
+    initials: "SG"
+  },
+  {
+    quote: "Cleared all my doubts instantly.",
+    text: "The mentor was so helpful in explaining the actual campus culture and placement statistics. This 30-minute session saved me months of confusion. Highly recommend Campus Connect!",
+    name: "Priya Sharma",
+    role: "Admitted to NST 2024",
+    initials: "PS"
+  },
+  {
+    quote: "Honest feedback that matters.",
+    text: "Unlike college websites and brochures, I got real insights about what student life is actually like. The mentor answered all my questions without sugarcoating anything. Worth every penny!",
+    name: "Arjun Patel",
+    role: "Applicant considering multiple colleges",
+    initials: "AP"
+  },
+  {
+    quote: "Best decision before joining college.",
+    text: "I was skeptical about paying for a session, but talking to a current student gave me confidence in my choice. They explained everything from academics to social life to career prospects.",
+    name: "Neha Verma",
+    role: "Admitted to NST 2024",
+    initials: "NV"
+  }
+];
+
+// Testimonials Carousel Component
+function TestimonialsCarousel() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % testimonials.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const current = testimonials[currentIndex];
+
+  return (
+    <section id="reviews" className="py-24 bg-slate-900 text-white">
+      <div className="container px-4 md:px-6 mx-auto max-w-2xl">
+        <FadeIn direction="up">
+          <div className="text-center mb-12">
+            <p className="text-sm font-medium text-white/60 uppercase tracking-wider">What Students Say</p>
+          </div>
+        </FadeIn>
+
+        <FadeIn direction="up" delay={0.2}>
+          <div className="overflow-hidden">
+            <motion.div
+              key={currentIndex}
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -100 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+              className="text-center"
+            >
+            <h3 className="text-2xl md:text-3xl font-bold mb-6 text-white">
+              &ldquo;{current.quote}&rdquo;
+            </h3>
+            <p className="text-white/70 text-lg leading-relaxed mb-8">
+              {current.text}
+            </p>
+            <div className="flex items-center justify-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm">
+                {current.initials}
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-white text-sm">{current.name}</p>
+                <p className="text-xs text-white/60">{current.role}</p>
+              </div>
+            </div>
+
+            {/* Dots Indicator */}
+            <div className="flex gap-2 justify-center mt-8">
+              {testimonials.map((_, index) => (
+                <div
+                  key={index}
+                  className={`h-1 rounded-full transition-all ${
+                    index === currentIndex ? "bg-white w-8" : "bg-white/30 w-2"
+                  }`}
+                />
+              ))}
+            </div>
+          </motion.div>
+          </div>
+        </FadeIn>
+      </div>
+    </section>
+  );
+}
 
 const faqs = [
   {
@@ -229,54 +338,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Reviews / Trust Section */}
-        <section id="reviews" className="py-24 bg-slate-900 text-white">
-          <div className="container px-4 md:px-6 mx-auto">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <FadeIn direction="left">
-                <div>
-                  <h2 className="text-3xl md:text-4xl font-bold mb-6" style={{ fontFamily: 'var(--font-display)' }}>&ldquo;Finally got the real picture.&rdquo;</h2>
-                  <p className="text-white/80 text-lg leading-relaxed mb-8">
-                    I was confused between NST and a traditional college. One session with Aditya gave me honest insights about hostel life, faculty, and placements that no brochure could. I made my decision with confidence.
-                  </p>
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm" />
-                    <div>
-                      <p className="font-semibold">Sarthak Gupta</p>
-                      <p className="text-sm text-white/60">Admitted to NST, 2024</p>
-                    </div>
-                  </div>
-                </div>
-              </FadeIn>
-              <FadeInStagger className="grid grid-cols-2 gap-4" staggerDelay={0.15}>
-                <FadeInStaggerItem>
-                  <div className="bg-white/10 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
-                    <h3 className="text-3xl font-bold mb-2">500+</h3>
-                    <p className="text-white/60 text-sm">Sessions Completed</p>
-                  </div>
-                </FadeInStaggerItem>
-                <FadeInStaggerItem>
-                  <div className="bg-white/10 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
-                    <h3 className="text-3xl font-bold mb-2">4.9/5</h3>
-                    <p className="text-white/60 text-sm">Average Rating</p>
-                  </div>
-                </FadeInStaggerItem>
-                <FadeInStaggerItem>
-                  <div className="bg-white/10 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
-                    <h3 className="text-3xl font-bold mb-2">50+</h3>
-                    <p className="text-white/60 text-sm">Current Students</p>
-                  </div>
-                </FadeInStaggerItem>
-                <FadeInStaggerItem>
-                  <div className="bg-white/10 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
-                    <h3 className="text-3xl font-bold mb-2">10+</h3>
-                    <p className="text-white/60 text-sm">New-Gen Colleges</p>
-                  </div>
-                </FadeInStaggerItem>
-              </FadeInStagger>
-            </div>
-          </div>
-        </section>
+        {/* Student Testimonials Carousel */}
+        <TestimonialsCarousel />
 
         {/* FAQ Section */}
         <section id="faq" className="py-24">

@@ -2,6 +2,7 @@ import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import SmoothScroll from "@/components/smooth-scroll";
+import { AuthProvider } from "@/context/AuthContext";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" });
@@ -15,8 +16,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${inter.variable} ${spaceGrotesk.variable} antialiased font-sans`}>
-        <SmoothScroll />
-        {children}
+        <AuthProvider>
+          <SmoothScroll />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
