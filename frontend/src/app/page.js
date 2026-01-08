@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -87,7 +88,7 @@ const allMentors = [
 ];
 
 // Filter mentors by active college (for MVP, only NST)
-const mentors = allMentors.filter(m => m.collegeId === ACTIVE_COLLEGE);
+// const mentors = allMentors.filter(m => m.collegeId === ACTIVE_COLLEGE);
 
 const pricingPlans = [
   {
@@ -146,7 +147,7 @@ const testimonials = [
 function TestimonialsCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % testimonials.length);
@@ -175,34 +176,33 @@ function TestimonialsCarousel() {
               transition={{ duration: 0.5, ease: "easeInOut" }}
               className="text-center"
             >
-            <h3 className="text-2xl md:text-3xl font-bold mb-6 text-white">
-              &ldquo;{current.quote}&rdquo;
-            </h3>
-            <p className="text-white/70 text-lg leading-relaxed mb-8">
-              {current.text}
-            </p>
-            <div className="flex items-center justify-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm">
-                {current.initials}
+              <h3 className="text-2xl md:text-3xl font-bold mb-6 text-white">
+                &ldquo;{current.quote}&rdquo;
+              </h3>
+              <p className="text-white/70 text-lg leading-relaxed mb-8">
+                {current.text}
+              </p>
+              <div className="flex items-center justify-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm">
+                  {current.initials}
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-white text-sm">{current.name}</p>
+                  <p className="text-xs text-white/60">{current.role}</p>
+                </div>
               </div>
-              <div className="text-left">
-                <p className="font-semibold text-white text-sm">{current.name}</p>
-                <p className="text-xs text-white/60">{current.role}</p>
-              </div>
-            </div>
 
-            {/* Dots Indicator */}
-            <div className="flex gap-2 justify-center mt-8">
-              {testimonials.map((_, index) => (
-                <div
-                  key={index}
-                  className={`h-1 rounded-full transition-all ${
-                    index === currentIndex ? "bg-white w-8" : "bg-white/30 w-2"
-                  }`}
-                />
-              ))}
-            </div>
-          </motion.div>
+              {/* Dots Indicator */}
+              <div className="flex gap-2 justify-center mt-8">
+                {testimonials.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`h-1 rounded-full transition-all ${index === currentIndex ? "bg-white w-8" : "bg-white/30 w-2"
+                      }`}
+                  />
+                ))}
+              </div>
+            </motion.div>
           </div>
         </FadeIn>
       </div>
@@ -239,7 +239,39 @@ const faqs = [
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
-  
+  const [mentors, setMentors] = useState([]);
+  const [loadingMentors, setLoadingMentors] = useState(true);
+
+  useEffect(() => {
+    async function fetchMentors() {
+      try {
+        // Fetch all active mentors from database
+        const { data, error } = await supabase
+          .from("mentors")
+          .select("*")
+          .eq("is_active", true)
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.warn("Supabase mentors fetch failed, using mock data:", error);
+          setMentors(allMentors.filter(m => m.collegeId === ACTIVE_COLLEGE));
+        } else if (data && data.length > 0) {
+          setMentors(data);
+        } else {
+          // If no mentors in DB, show mock data as fallback
+          setMentors(allMentors.filter(m => m.collegeId === ACTIVE_COLLEGE));
+        }
+      } catch (e) {
+        console.error("Unexpected error fetching mentors", e);
+        setMentors(allMentors.filter(m => m.collegeId === ACTIVE_COLLEGE));
+      } finally {
+        setLoadingMentors(false);
+      }
+    }
+
+    fetchMentors();
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col font-sans">
       <Navbar />
@@ -292,7 +324,7 @@ export default function Home() {
               </TextReveal>
             </div>
           </HeroHighlight>
-          
+
         </section>
 
         {/* Mentors Section */}
@@ -314,12 +346,17 @@ export default function Home() {
 
             <FadeInStagger className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {mentors.map((mentor, i) => (
-                <FadeInStaggerItem key={i}>
+                <FadeInStaggerItem key={mentor.id || i}>
                   <MentorCardWithBooking mentor={mentor}>
                     <MentorCard mentor={mentor} />
                   </MentorCardWithBooking>
                 </FadeInStaggerItem>
               ))}
+              {mentors.length === 0 && !loadingMentors && (
+                <div className="col-span-full text-center py-12 text-muted-foreground">
+                  No mentors available at the moment. Please check back later.
+                </div>
+              )}
             </FadeInStagger>
           </div>
         </section>

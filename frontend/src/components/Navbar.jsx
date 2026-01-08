@@ -11,9 +11,12 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, User, LogOut, Settings } from "lucide-react";
+import { Menu, User, LogOut, Settings, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
+
+
+const ADMIN_EMAIL = "nityaprofessional6402@gmail.com";
 
 export function Navbar() {
     const router = useRouter();
@@ -26,10 +29,10 @@ export function Navbar() {
     };
 
     // Get user's name from metadata or email
-    const userName = user?.user_metadata?.full_name || 
-                     user?.user_metadata?.first_name || 
-                     user?.email?.split("@")[0] || 
-                     "User";
+    const userName = user?.user_metadata?.full_name ||
+        user?.user_metadata?.first_name ||
+        user?.email?.split("@")[0] ||
+        "User";
 
     const userInitial = userName.charAt(0).toUpperCase();
 
@@ -80,6 +83,17 @@ export function Navbar() {
                                             <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                                         </div>
                                         <DropdownMenuSeparator />
+                                        {user?.email === ADMIN_EMAIL && (
+                                            <>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href="/admin" className="w-full cursor-pointer">
+                                                        <LayoutDashboard className="w-4 h-4 mr-2" />
+                                                        Admin Dashboard
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                            </>
+                                        )}
                                         <DropdownMenuItem onClick={handleSignOut} className="text-red-600 cursor-pointer">
                                             <LogOut className="w-4 h-4 mr-2" />
                                             Log out
@@ -126,7 +140,7 @@ export function Navbar() {
                                 </SheetClose>
                                 {isAuthenticated ? (
                                     <SheetClose asChild>
-                                        <button 
+                                        <button
                                             onClick={handleSignOut}
                                             className="text-lg font-medium text-red-600 text-left"
                                         >
