@@ -12,7 +12,9 @@ import {
     LogOut,
     PlusCircle,
     Menu,
-    X
+    X,
+    Home,
+    ExternalLink
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -112,6 +114,15 @@ export default function AdminLayout({ children }) {
                             <p className="text-xs text-gray-500 truncate">{user.email}</p>
                         </div>
                     </div>
+                    <Link
+                        href="/"
+                        target="_blank"
+                        className="w-full flex items-center justify-start gap-3 px-4 py-2 mb-2 rounded-md text-sm font-medium text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
+                    >
+                        <Home className="w-4 h-4" />
+                        View Site
+                        <ExternalLink className="w-3 h-3 ml-auto" />
+                    </Link>
                     <Button
                         variant="ghost"
                         className="w-full justify-start gap-3 text-gray-500 hover:text-gray-900 hover:bg-gray-100"

@@ -40,11 +40,22 @@ export default function SignupPage() {
             });
 
             if (signUpError) {
-                setError(signUpError.message);
+                // Handle specific error cases
+                if (signUpError.message.toLowerCase().includes("user already registered")) {
+                    setError("This email is already registered. Please login instead.");
+                } else {
+                    setError(signUpError.message);
+                }
                 return;
             }
 
-            // Redirect to login or show success message
+            // Check if user already exists (Supabase returns user with identities = [] for existing users)
+            if (data?.user && data.user.identities && data.user.identities.length === 0) {
+                setError("This email is already registered. Please login instead.");
+                return;
+            }
+
+            // Redirect to login with success message for truly new registrations
             router.push("/login?message=Check your email to confirm your account");
         } catch (err) {
             setError("Something went wrong. Please try again.");
@@ -79,20 +90,20 @@ export default function SignupPage() {
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="first-name">First name</Label>
-                                <Input 
-                                    id="first-name" 
-                                    placeholder="Aditya" 
-                                    required 
+                                <Input
+                                    id="first-name"
+                                    placeholder="Aditya"
+                                    required
                                     value={formData.firstName}
                                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                                 />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="last-name">Last name</Label>
-                                <Input 
-                                    id="last-name" 
-                                    placeholder="Kumar" 
-                                    required 
+                                <Input
+                                    id="last-name"
+                                    placeholder="Kumar"
+                                    required
                                     value={formData.lastName}
                                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                                 />
@@ -111,10 +122,10 @@ export default function SignupPage() {
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="password">Password</Label>
-                            <Input 
-                                id="password" 
-                                type="password" 
-                                required 
+                            <Input
+                                id="password"
+                                type="password"
+                                required
                                 minLength={6}
                                 value={formData.password}
                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -147,7 +158,7 @@ export default function SignupPage() {
                 className="hidden bg-zinc-900 lg:block relative overflow-hidden"
                 transition={{ duration: 0.5, ease: "easeInOut" }}
             >
-                <img 
+                <img
                     src="https://images.unsplash.com/photo-1752650735501-633d9d5d2b3b?q=80&w=2531&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                     alt="Students"
                     className="absolute inset-0 w-full h-full object-cover"

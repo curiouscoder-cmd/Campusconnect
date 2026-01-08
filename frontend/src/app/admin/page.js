@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { Users, Calendar, DollarSign, TrendingUp, ArrowUpRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState({
@@ -72,7 +73,7 @@ export default function AdminDashboard() {
                 <h1 className="text-3xl font-bold text-gray-900">
                     Dashboard Overview
                 </h1>
-                <p className="text-gray-500 mt-2">Welcome back, here's what's happening today.</p>
+                <p className="text-gray-500 mt-2">Welcome back, here&apos;s what&apos;s happening today.</p>
             </div>
 
             <motion.div
@@ -148,10 +149,10 @@ export default function AdminDashboard() {
                         <CardTitle className="text-gray-900">Quick Actions</CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-3">
-                        <a href="/admin/mentors" className="flex items-center justify-between p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-100 cursor-pointer">
+                        <Link href="/admin/mentors" className="flex items-center justify-between p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-100 cursor-pointer">
                             <span className="font-medium text-gray-900">Add New Mentor</span>
                             <ArrowUpRight className="w-4 h-4 text-gray-400" />
-                        </a>
+                        </Link>
                         <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-100 cursor-pointer">
                             <span className="font-medium text-gray-900">View Analytics Report</span>
                             <ArrowUpRight className="w-4 h-4 text-gray-400" />

@@ -38,7 +38,17 @@ function LoginForm() {
             });
 
             if (signInError) {
-                setError(signInError.message);
+                // Handle specific error cases with user-friendly messages
+                const errorMessage = signInError.message.toLowerCase();
+                if (errorMessage.includes("invalid login credentials") || errorMessage.includes("invalid credentials")) {
+                    setError("Invalid email or password. Please check your credentials.");
+                } else if (errorMessage.includes("email not confirmed")) {
+                    setError("Please verify your email before logging in. Check your inbox for the verification link.");
+                } else if (errorMessage.includes("user not found")) {
+                    setError("No account found with this email. Please sign up first.");
+                } else {
+                    setError(signInError.message);
+                }
                 return;
             }
 
@@ -95,10 +105,10 @@ function LoginForm() {
                             Forgot your password?
                         </Link>
                     </div>
-                    <Input 
-                        id="password" 
-                        type="password" 
-                        required 
+                    <Input
+                        id="password"
+                        type="password"
+                        required
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     />
@@ -133,7 +143,7 @@ export default function LoginPage() {
                 className="hidden bg-zinc-900 lg:block relative overflow-hidden"
                 transition={{ duration: 0.5, ease: "easeInOut" }}
             >
-                <img 
+                <img
                     src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop"
                     alt="Students collaborating"
                     className="absolute inset-0 w-full h-full object-cover"

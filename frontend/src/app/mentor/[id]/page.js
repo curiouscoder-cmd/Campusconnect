@@ -5,12 +5,13 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Star, GraduationCap, Briefcase, ArrowLeft, Clock, Users, Video, X, CheckCircle } from "lucide-react";
+import { Star, GraduationCap, Briefcase, ArrowLeft, Clock, Users, Video, X, CheckCircle, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { BookingModal } from "@/components/booking";
+import { supabase } from "@/lib/supabase";
 
-// All mentors data
-const allMentors = [
+// Fallback mock mentors data
+const fallbackMentors = [
   {
     id: "nitya-jain",
     name: "Nitya Jain",
@@ -53,8 +54,79 @@ export default function MentorDetailPage() {
   const params = useParams();
   const router = useRouter();
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [mentor, setMentor] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const mentor = allMentors.find(m => m.id === params.id);
+  useEffect(() => {
+    async function fetchMentor() {
+      try {
+        const mentorId = params.id;
+
+        // First, try to fetch by UUID (for database mentors)
+        let { data, error } = await supabase
+          .from("mentors")
+          .select("*")
+          .eq("id", mentorId)
+          .single();
+
+        if (error || !data) {
+          // If not found by UUID, try to find by slug (name-based ID)
+          const { data: allMentors, error: allError } = await supabase
+            .from("mentors")
+            .select("*")
+            .eq("is_active", true);
+
+          if (!allError && allMentors) {
+            // Try to match by generated slug from name
+            data = allMentors.find(m => {
+              const slug = m.name.toLowerCase().replace(/\s+/g, '-');
+              return slug === mentorId || m.id === mentorId;
+            });
+          }
+        }
+
+        if (data) {
+          // Normalize the price field to ensure it has ₹ prefix
+          const normalizedMentor = {
+            ...data,
+            price: data.price?.toString().startsWith('₹') ? data.price : `₹${data.price || 99}`,
+            expertise: data.expertise || ["Campus Life", "Academics", "Placements"],
+            rating: data.rating || "5.0"
+          };
+          setMentor(normalizedMentor);
+        } else {
+          // Fall back to mock data
+          const fallbackMentor = fallbackMentors.find(m => m.id === mentorId);
+          setMentor(fallbackMentor || null);
+        }
+      } catch (e) {
+        console.error("Error fetching mentor:", e);
+        // Fall back to mock data on error
+        const fallbackMentor = fallbackMentors.find(m => m.id === params.id);
+        setMentor(fallbackMentor || null);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchMentor();
+  }, [params.id]);
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-1 mt-16 flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading mentor details...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!mentor) {
     return (
@@ -103,13 +175,13 @@ export default function MentorDetailPage() {
                 <div className="flex-1">
                   <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">{mentor.name}</h1>
                   <p className="text-xl text-primary font-medium mb-4">{mentor.role}</p>
-                  
+
                   <div className="flex items-center gap-4 flex-wrap mb-6">
                     <div className="flex items-center gap-2 bg-amber-50 px-4 py-2 rounded-full">
                       <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
                       <span className="font-semibold text-amber-700">{mentor.rating}</span>
                     </div>
-                    
+
                     <div className="flex items-center gap-2 text-muted-foreground bg-white/50 px-4 py-2 rounded-full">
                       <GraduationCap className="w-5 h-5 text-primary/60" />
                       <span>{mentor.college}</span>
@@ -121,7 +193,7 @@ export default function MentorDetailPage() {
                     </div>
                   </div>
 
-                  <Button 
+                  <Button
                     onClick={() => setIsBookingOpen(true)}
                     size="lg"
                     className="rounded-full px-8 bg-slate-900 text-white hover:bg-slate-800"
@@ -192,7 +264,7 @@ export default function MentorDetailPage() {
                   <p className="text-white/70 text-sm mb-4">
                     Book a session with {mentor.name.split(' ')[0]} and get all your questions answered.
                   </p>
-                  <Button 
+                  <Button
                     onClick={() => setIsBookingOpen(true)}
                     className="w-full bg-white text-slate-900 hover:bg-gray-100"
                   >
