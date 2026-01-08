@@ -239,49 +239,52 @@ const faqs = [
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
-  // Initialize with mock data to prevent empty state
-  const [mentors, setMentors] = useState(allMentors.filter(m => m.collegeId === ACTIVE_COLLEGE));
+  // Initialize with mock data - this will be replaced if DB fetch succeeds
+  const mockMentorData = allMentors.filter(m => m.collegeId === ACTIVE_COLLEGE);
+  const [mentors, setMentors] = useState(mockMentorData);
   const [loadingMentors, setLoadingMentors] = useState(true);
 
   useEffect(() => {
+    let isMounted = true; // Prevent state updates on unmounted component
+
     async function fetchMentors() {
       try {
-        // First try with is_active filter
-        let { data, error } = await supabase
+        // Fetch mentors from database (without is_active filter for now)
+        const { data, error } = await supabase
           .from("mentors")
           .select("*")
-          .eq("is_active", true)
           .order("created_at", { ascending: false });
 
-        // If is_active filter returns 0 results, try without it (column might not exist)
-        if (!error && (!data || data.length === 0)) {
-          const fallbackResult = await supabase
-            .from("mentors")
-            .select("*")
-            .order("created_at", { ascending: false });
-
-          if (!fallbackResult.error && fallbackResult.data && fallbackResult.data.length > 0) {
-            data = fallbackResult.data;
+        // Only update state if component is still mounted AND we got real data
+        if (isMounted) {
+          if (!error && data && data.length > 0) {
+            console.log("Fetched mentors from DB:", data.length);
+            setMentors(data);
+          } else {
+            // Keep mock data - don't change anything
+            console.log("Using mock data, DB returned:", { error, dataLength: data?.length });
           }
+          setLoadingMentors(false);
         }
-
-        if (error) {
-          console.warn("Supabase mentors fetch failed, using mock data:", error);
-          // Keep the initialized mock data
-        } else if (data && data.length > 0) {
-          setMentors(data);
-        }
-        // If still no data, the initialized mock data remains
       } catch (e) {
-        console.error("Unexpected error fetching mentors", e);
-        // Keep the initialized mock data
-      } finally {
-        setLoadingMentors(false);
+        console.error("Error fetching mentors:", e);
+        if (isMounted) {
+          setLoadingMentors(false);
+          // Keep mock data on error
+        }
       }
     }
 
     fetchMentors();
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  // DEBUG: Log mentors at render time
+  console.log("Rendering with mentors:", mentors.length, mentors);
 
   return (
     <div className="min-h-screen flex flex-col font-sans">
@@ -355,20 +358,21 @@ export default function Home() {
               </div>
             </FadeIn>
 
-            <FadeInStagger className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Temporarily removed FadeInStagger for debugging */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {mentors.map((mentor, i) => (
-                <FadeInStaggerItem key={mentor.id || i}>
+                <div key={mentor.id || i}>
                   <MentorCardWithBooking mentor={mentor}>
                     <MentorCard mentor={mentor} />
                   </MentorCardWithBooking>
-                </FadeInStaggerItem>
+                </div>
               ))}
               {mentors.length === 0 && !loadingMentors && (
                 <div className="col-span-full text-center py-12 text-muted-foreground">
                   No mentors available at the moment. Please check back later.
                 </div>
               )}
-            </FadeInStagger>
+            </div>
           </div>
         </section>
 

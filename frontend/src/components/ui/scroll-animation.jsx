@@ -3,13 +3,13 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-export function FadeIn({ 
-  children, 
-  className, 
-  delay = 0, 
+export function FadeIn({
+  children,
+  className,
+  delay = 0,
   direction = "up",
   duration = 0.5,
-  ...props 
+  ...props
 }) {
   const directions = {
     up: { y: 40, x: 0 },
@@ -21,18 +21,18 @@ export function FadeIn({
 
   return (
     <motion.div
-      initial={{ 
-        opacity: 0, 
-        ...directions[direction] 
+      initial={{
+        opacity: 0,
+        ...directions[direction]
       }}
-      whileInView={{ 
-        opacity: 1, 
-        x: 0, 
-        y: 0 
+      whileInView={{
+        opacity: 1,
+        x: 0,
+        y: 0
       }}
       viewport={{ once: true, margin: "-100px" }}
-      transition={{ 
-        duration: duration, 
+      transition={{
+        duration: duration,
         delay: delay,
         ease: [0.25, 0.1, 0.25, 1]
       }}
@@ -44,11 +44,11 @@ export function FadeIn({
   );
 }
 
-export function FadeInStagger({ 
-  children, 
+export function FadeInStagger({
+  children,
   className,
   staggerDelay = 0.1,
-  ...props 
+  ...props
 }) {
   return (
     <motion.div
@@ -64,11 +64,11 @@ export function FadeInStagger({
   );
 }
 
-export function FadeInStaggerItem({ 
-  children, 
+export function FadeInStaggerItem({
+  children,
   className,
   direction = "up",
-  ...props 
+  ...props
 }) {
   const directions = {
     up: { y: 30, x: 0 },
@@ -82,9 +82,9 @@ export function FadeInStaggerItem({
     <motion.div
       variants={{
         hidden: { opacity: 0, ...directions[direction] },
-        visible: { 
-          opacity: 1, 
-          x: 0, 
+        visible: {
+          opacity: 1,
+          x: 0,
           y: 0,
           transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }
         }
@@ -97,19 +97,19 @@ export function FadeInStaggerItem({
   );
 }
 
-export function ScaleIn({ 
-  children, 
-  className, 
+export function ScaleIn({
+  children,
+  className,
   delay = 0,
-  ...props 
+  ...props
 }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true, margin: "-100px" }}
-      transition={{ 
-        duration: 0.5, 
+      transition={{
+        duration: 0.5,
         delay: delay,
         ease: [0.25, 0.1, 0.25, 1]
       }}
