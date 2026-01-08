@@ -245,11 +245,11 @@ export default function Home() {
   useEffect(() => {
     async function fetchMentors() {
       try {
-        // Fetch all active mentors from database
+        // Fetch all mentors from database
+        // NOTE: Add .eq("is_active", true) filter after adding the column to DB
         const { data, error } = await supabase
           .from("mentors")
           .select("*")
-          .eq("is_active", true)
           .order("created_at", { ascending: false });
 
         if (error) {
