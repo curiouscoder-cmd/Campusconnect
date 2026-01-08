@@ -73,8 +73,7 @@ export default function MentorDetailPage() {
           // If not found by UUID, try to find by slug (name-based ID)
           const { data: allMentors, error: allError } = await supabase
             .from("mentors")
-            .select("*")
-            .eq("is_active", true);
+            .select("*");
 
           if (!allError && allMentors) {
             // Try to match by generated slug from name

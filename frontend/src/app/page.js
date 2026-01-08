@@ -239,42 +239,28 @@ const faqs = [
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
-  // Initialize with mock data to prevent empty state
-  const [mentors, setMentors] = useState(allMentors.filter(m => m.collegeId === ACTIVE_COLLEGE));
+  const [mentors, setMentors] = useState([]);
   const [loadingMentors, setLoadingMentors] = useState(true);
 
   useEffect(() => {
     async function fetchMentors() {
       try {
-        // First try with is_active filter
-        let { data, error } = await supabase
+        const { data, error } = await supabase
           .from("mentors")
           .select("*")
-          .eq("is_active", true)
           .order("created_at", { ascending: false });
-
-        // If is_active filter returns 0 results, try without it (column might not exist)
-        if (!error && (!data || data.length === 0)) {
-          const fallbackResult = await supabase
-            .from("mentors")
-            .select("*")
-            .order("created_at", { ascending: false });
-
-          if (!fallbackResult.error && fallbackResult.data && fallbackResult.data.length > 0) {
-            data = fallbackResult.data;
-          }
-        }
 
         if (error) {
           console.warn("Supabase mentors fetch failed, using mock data:", error);
-          // Keep the initialized mock data
+          setMentors(allMentors.filter(m => m.collegeId === ACTIVE_COLLEGE));
         } else if (data && data.length > 0) {
           setMentors(data);
+        } else {
+          setMentors(allMentors.filter(m => m.collegeId === ACTIVE_COLLEGE));
         }
-        // If still no data, the initialized mock data remains
       } catch (e) {
         console.error("Unexpected error fetching mentors", e);
-        // Keep the initialized mock data
+        setMentors(allMentors.filter(m => m.collegeId === ACTIVE_COLLEGE));
       } finally {
         setLoadingMentors(false);
       }
