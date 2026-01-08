@@ -239,31 +239,42 @@ const faqs = [
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
-  const [mentors, setMentors] = useState([]);
+  // Initialize with mock data to prevent empty state
+  const [mentors, setMentors] = useState(allMentors.filter(m => m.collegeId === ACTIVE_COLLEGE));
   const [loadingMentors, setLoadingMentors] = useState(true);
 
   useEffect(() => {
     async function fetchMentors() {
       try {
-        // Fetch all mentors from database
-        // NOTE: Add .eq("is_active", true) filter after adding the column to DB
-        const { data, error } = await supabase
+        // First try with is_active filter
+        let { data, error } = await supabase
           .from("mentors")
           .select("*")
+          .eq("is_active", true)
           .order("created_at", { ascending: false });
+
+        // If is_active filter returns 0 results, try without it (column might not exist)
+        if (!error && (!data || data.length === 0)) {
+          const fallbackResult = await supabase
+            .from("mentors")
+            .select("*")
+            .order("created_at", { ascending: false });
+
+          if (!fallbackResult.error && fallbackResult.data && fallbackResult.data.length > 0) {
+            data = fallbackResult.data;
+          }
+        }
 
         if (error) {
           console.warn("Supabase mentors fetch failed, using mock data:", error);
-          setMentors(allMentors.filter(m => m.collegeId === ACTIVE_COLLEGE));
+          // Keep the initialized mock data
         } else if (data && data.length > 0) {
           setMentors(data);
-        } else {
-          // If no mentors in DB, show mock data as fallback
-          setMentors(allMentors.filter(m => m.collegeId === ACTIVE_COLLEGE));
         }
+        // If still no data, the initialized mock data remains
       } catch (e) {
         console.error("Unexpected error fetching mentors", e);
-        setMentors(allMentors.filter(m => m.collegeId === ACTIVE_COLLEGE));
+        // Keep the initialized mock data
       } finally {
         setLoadingMentors(false);
       }
