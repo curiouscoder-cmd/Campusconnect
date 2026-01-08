@@ -239,30 +239,22 @@ const faqs = [
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
-  // Initialize with mock data - this will be replaced if DB fetch succeeds
-  const mockMentorData = allMentors.filter(m => m.collegeId === ACTIVE_COLLEGE);
-  const [mentors, setMentors] = useState(mockMentorData);
+  const [mentors, setMentors] = useState([]);
   const [loadingMentors, setLoadingMentors] = useState(true);
 
   useEffect(() => {
-    let isMounted = true; // Prevent state updates on unmounted component
+    let isMounted = true;
 
     async function fetchMentors() {
       try {
-        // Fetch mentors from database (without is_active filter for now)
         const { data, error } = await supabase
           .from("mentors")
           .select("*")
           .order("created_at", { ascending: false });
 
-        // Only update state if component is still mounted AND we got real data
         if (isMounted) {
-          if (!error && data && data.length > 0) {
-            console.log("Fetched mentors from DB:", data.length);
+          if (!error && data) {
             setMentors(data);
-          } else {
-            // Keep mock data - don't change anything
-            console.log("Using mock data, DB returned:", { error, dataLength: data?.length });
           }
           setLoadingMentors(false);
         }
@@ -270,21 +262,16 @@ export default function Home() {
         console.error("Error fetching mentors:", e);
         if (isMounted) {
           setLoadingMentors(false);
-          // Keep mock data on error
         }
       }
     }
 
     fetchMentors();
 
-    // Cleanup function
     return () => {
       isMounted = false;
     };
   }, []);
-
-  // DEBUG: Log mentors at render time
-  console.log("Rendering with mentors:", mentors.length, mentors);
 
   return (
     <div className="min-h-screen flex flex-col font-sans">
@@ -358,7 +345,7 @@ export default function Home() {
               </div>
             </FadeIn>
 
-            {/* Temporarily removed FadeInStagger for debugging */}
+
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {mentors.map((mentor, i) => (
                 <div key={mentor.id || i}>
