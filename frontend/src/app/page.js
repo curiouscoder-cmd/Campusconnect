@@ -245,10 +245,11 @@ export default function Home() {
   useEffect(() => {
     async function fetchMentors() {
       try {
-        // Fetch all mentors from database
+        // Fetch all active mentors from database
         const { data, error } = await supabase
           .from("mentors")
           .select("*")
+          .eq("is_active", true)
           .order("created_at", { ascending: false });
 
         if (error) {
