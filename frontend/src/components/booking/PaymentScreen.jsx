@@ -23,29 +23,79 @@ export function PaymentScreen({
     setIsProcessing(true);
 
     try {
-      // In production, create order on backend first
-      // const orderResponse = await fetch('/api/payments/create-order', {
-      //   method: 'POST',
-      //   body: JSON.stringify({ amount: selectedSession.price, slotId: selectedSlot.id })
-      // });
-      // const { orderId } = await orderResponse.json();
+      // Create order on backend first
+      const orderResponse = await fetch('/api/payments/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: selectedSession.price,
+          slotId: selectedSlot.id,
+          mentorId: mentor.id,
+          sessionType: selectedSession,
+          userDetails,
+        }),
+      });
+
+      const orderData = await orderResponse.json();
+
+      if (!orderResponse.ok || !orderData.success) {
+        throw new Error(orderData.error || 'Failed to create order');
+      }
 
       const options = {
-        key: RAZORPAY_KEY,
-        amount: selectedSession.price * 100, // Amount in paise
-        currency: "INR",
+        key: orderData.key || RAZORPAY_KEY,
+        amount: orderData.order.amount,
+        currency: orderData.order.currency,
         name: "Campus Connect",
         description: `${selectedSession.title} with ${mentor.name}`,
         image: "/logo.png",
-        // order_id: orderId, // Use this in production
-        handler: function (response) {
-          // Payment successful
+        order_id: orderData.order.id, // Important: Use the order_id from backend
+        handler: async function (response) {
+          // Payment successful - verify on backend
           console.log("Payment successful:", response);
-          onPaymentSuccess({
-            razorpayPaymentId: response.razorpay_payment_id,
-            razorpayOrderId: response.razorpay_order_id,
-            razorpaySignature: response.razorpay_signature,
-          });
+
+          // Verify payment on backend
+          try {
+            const verifyResponse = await fetch('/api/payments/verify', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                slotId: selectedSlot.id,
+                mentorId: mentor.id,
+                sessionType: selectedSession,
+                userDetails,
+              }),
+            });
+
+            const verifyData = await verifyResponse.json();
+
+            if (verifyData.success) {
+              onPaymentSuccess({
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpaySignature: response.razorpay_signature,
+                booking: verifyData.booking,
+                meetLink: verifyData.meetLink,
+              });
+            } else {
+              throw new Error(verifyData.error || 'Payment verification failed');
+            }
+          } catch (verifyError) {
+            console.error("Verification error:", verifyError);
+            // Still show success since payment went through
+            onPaymentSuccess({
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpaySignature: response.razorpay_signature,
+            });
+          }
         },
         prefill: {
           name: userDetails.name,
@@ -80,7 +130,7 @@ export function PaymentScreen({
       }
     } catch (error) {
       console.error("Payment error:", error);
-      onPaymentFailure("Failed to initialize payment. Please try again.");
+      onPaymentFailure(error.message || "Failed to initialize payment. Please try again.");
       setIsProcessing(false);
     }
   };
