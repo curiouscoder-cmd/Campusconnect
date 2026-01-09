@@ -1,12 +1,13 @@
 // Booking utility functions
 
 // Session types configuration
+// NOTE: Prices set to ₹1 for testing. Change back to 99, 199, 49 after testing.
 export const SESSION_TYPES = [
   {
     id: "quick",
     title: "Quick Chat",
     duration: 15,
-    price: 99,
+    price: 1,  // TODO: Change back to 99 after testing
     description: "Perfect for quick doubts about admissions or campus life",
     type: "1:1",
   },
@@ -14,7 +15,7 @@ export const SESSION_TYPES = [
     id: "deep",
     title: "Deep Dive",
     duration: 30,
-    price: 199,
+    price: 1,  // TODO: Change back to 199 after testing
     description: "Detailed discussion about placements, faculty, and more",
     type: "1:1",
   },
@@ -22,7 +23,7 @@ export const SESSION_TYPES = [
     id: "group",
     title: "Group Session",
     duration: 45,
-    price: 49,
+    price: 1,  // TODO: Change back to 49 after testing
     description: "Join with other applicants, ask questions together",
     type: "group",
     maxParticipants: 5,
@@ -33,13 +34,13 @@ export const SESSION_TYPES = [
 export function getNextDays(count) {
   const dates = [];
   const today = new Date();
-  
+
   for (let i = 0; i < count; i++) {
     const date = new Date(today);
     date.setDate(today.getDate() + i);
     dates.push(date);
   }
-  
+
   return dates;
 }
 
@@ -68,7 +69,7 @@ export function formatTime(time) {
 // Check if a slot is available (not booked and not reserved by someone else)
 export function isSlotAvailable(slot, currentUserId) {
   if (slot.isBooked) return false;
-  
+
   if (slot.isReserved) {
     // Check if reservation has expired
     if (slot.reservedUntil) {
@@ -83,7 +84,7 @@ export function isSlotAvailable(slot, currentUserId) {
     }
     return false;
   }
-  
+
   return true;
 }
 
@@ -105,24 +106,24 @@ export function formatTimeRemaining(seconds) {
 export function generateMockSlots(mentorId, days = 7) {
   const slots = [];
   const dates = getNextDays(days);
-  
+
   // Available time slots (9 AM to 6 PM, every 30 minutes)
   const timeSlots = [
     "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
     "12:00", "12:30", "14:00", "14:30", "15:00", "15:30",
     "16:00", "16:30", "17:00", "17:30"
   ];
-  
+
   dates.forEach((date) => {
     // Skip some random slots to simulate real availability
     const availableSlots = timeSlots.filter(() => Math.random() > 0.3);
-    
+
     availableSlots.forEach((startTime) => {
       const [hours, minutes] = startTime.split(":").map(Number);
       const endHours = minutes === 30 ? hours + 1 : hours;
       const endMinutes = minutes === 30 ? 0 : 30;
       const endTime = `${endHours.toString().padStart(2, "0")}:${endMinutes.toString().padStart(2, "0")}`;
-      
+
       slots.push({
         id: `${mentorId}-${formatDateISO(date)}-${startTime}`,
         mentorId,
@@ -134,7 +135,7 @@ export function generateMockSlots(mentorId, days = 7) {
       });
     });
   });
-  
+
   return slots;
 }
 
