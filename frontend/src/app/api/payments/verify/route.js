@@ -337,23 +337,35 @@ export async function POST(request) {
       .eq("razorpay_order_id", razorpay_order_id);
 
     // Create booking record
-    const { data: booking, error } = await supabase
+    // Note: slot_id might be null if using mock slots (not from availability table)
+    const bookingData = {
+      mentor_id: mentorId,
+      user_name: userDetails?.name,
+      user_email: userDetails?.email,
+      user_phone: userDetails?.phone || null,
+      questions: userDetails?.questions || null,
+      session_type: sessionType?.id || sessionType || 'quick',
+      session_duration: sessionType?.duration || 15,
+      session_price: sessionType?.price || 1,
+      status: "confirmed",
+      meet_link: meetLink,
+      confirmed_at: new Date().toISOString(),
+    };
+
+    // Only add slot_id if it's a valid UUID (from availability table)
+    if (slotId && slotId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      bookingData.slot_id = slotId;
+    }
+
+    const { data: booking, error: bookingError } = await supabase
       .from("bookings")
-      .insert({
-        mentor_id: mentorId,
-        slot_id: slotId,
-        user_name: userDetails?.name,
-        user_email: userDetails?.email,
-        user_phone: userDetails?.phone,
-        questions: userDetails?.questions,
-        session_type: sessionType?.id || sessionType,
-        session_duration: sessionType?.duration,
-        status: "confirmed",
-        meet_link: meetLink,
-        confirmed_at: new Date().toISOString(),
-      })
+      .insert(bookingData)
       .select()
       .single();
+
+    if (bookingError) {
+      console.error("Error creating booking:", bookingError);
+    }
 
     if (booking) {
       bookingId = booking.id;
@@ -402,7 +414,7 @@ export async function POST(request) {
       console.error("Mentor email send failed:", emailErr);
     }
 
-    const bookingData = {
+    const responseData = {
       id: bookingId,
       slotId,
       mentorId,
@@ -417,7 +429,7 @@ export async function POST(request) {
 
     return NextResponse.json({
       success: true,
-      booking: bookingData,
+      booking: responseData,
       meetLink,
     });
   } catch (error) {
