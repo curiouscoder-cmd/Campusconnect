@@ -41,25 +41,25 @@ export function SlotPicker({
   const calendarDays = useMemo(() => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
-    
+
     // First day of the month
     const firstDay = new Date(year, month, 1);
     // Last day of the month
     const lastDay = new Date(year, month + 1, 0);
-    
+
     // Start from Sunday of the first week
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - startDate.getDay());
-    
+
     const days = [];
     const current = new Date(startDate);
-    
+
     // Generate 6 weeks of days
     for (let i = 0; i < 42; i++) {
       days.push(new Date(current));
       current.setDate(current.getDate() + 1);
     }
-    
+
     return days;
   }, [currentMonth]);
 
@@ -101,12 +101,17 @@ export function SlotPicker({
     year: "numeric",
   });
 
+  // Format selected date with timezone fix
   const selectedDateFormatted = selectedDate
-    ? new Date(selectedDate).toLocaleDateString("en-US", {
+    ? (() => {
+      const [year, month, day] = selectedDate.split('-').map(Number);
+      const date = new Date(year, month - 1, day);
+      return date.toLocaleDateString("en-US", {
         weekday: "long",
         month: "long",
         day: "numeric",
-      })
+      });
+    })()
     : "";
 
   return (
@@ -169,10 +174,10 @@ export function SlotPicker({
                     isSelected
                       ? "bg-slate-900 text-white font-semibold"
                       : isSelectable && isCurrentMonth
-                      ? "text-slate-900 font-medium hover:bg-slate-100"
-                      : isCurrentMonth
-                      ? "text-gray-300"
-                      : "text-gray-200",
+                        ? "text-slate-900 font-medium hover:bg-slate-100"
+                        : isCurrentMonth
+                          ? "text-gray-300"
+                          : "text-gray-200",
                     isSelectable && !isSelected && "cursor-pointer",
                     !isSelectable && "cursor-default"
                   )}
