@@ -252,15 +252,20 @@ export async function POST(request) {
       }
     }
 
-    // Send confirmation email (don't wait for it)
-    sendBookingConfirmationEmail(
-      userDetails,
-      sessionType,
-      meetLink,
-      slotDate,
-      slotTime,
-      fetchedMentorName
-    );
+    // Send confirmation email
+    try {
+      await sendBookingConfirmationEmail(
+        userDetails,
+        sessionType,
+        meetLink,
+        slotDate,
+        slotTime,
+        fetchedMentorName
+      );
+      console.log("Email function completed");
+    } catch (emailErr) {
+      console.error("Email send failed:", emailErr);
+    }
 
     const bookingData = {
       id: bookingId,
