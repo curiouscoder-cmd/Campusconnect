@@ -133,6 +133,121 @@ async function sendBookingConfirmationEmail(userDetails, sessionType, meetLink, 
   }
 }
 
+// Send notification email to mentor
+async function sendMentorNotificationEmail(mentorEmail, mentorName, studentName, sessionType, slotDate, slotTime, meetLink) {
+  if (!process.env.RESEND_API_KEY || !mentorEmail) {
+    console.log("Skipping mentor email: Resend not configured or no mentor email");
+    return;
+  }
+
+  try {
+    const { error } = await resend.emails.send({
+      from: "Campus Connect <contact@campus-connect.co.in>",
+      to: [mentorEmail],
+      subject: "🔔 New Session Booked! - Campus Connect",
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #6366F1; margin: 0; font-size: 28px;">Campus Connect</h1>
+            </div>
+            
+            <div style="background: white; border-radius: 16px; padding: 40px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+              <div style="text-align: center; margin-bottom: 24px;">
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #10B981 0%, #059669 100%); border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+                  <span style="font-size: 40px; color: white;">📅</span>
+                </div>
+              </div>
+              
+              <h2 style="color: #0f172a; text-align: center; margin: 0 0 8px 0; font-size: 24px;">
+                New Session Booked!
+              </h2>
+              <p style="color: #64748b; text-align: center; margin: 0 0 32px 0; font-size: 16px;">
+                Hi ${mentorName || 'Mentor'}, someone has booked a session with you!
+              </p>
+              
+              <div style="background: #f8fafc; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                <h3 style="color: #0f172a; margin: 0 0 16px 0; font-size: 16px; font-weight: 600;">
+                  👤 Student Details
+                </h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Student Name</td>
+                    <td style="padding: 8px 0; color: #0f172a; font-size: 14px; font-weight: 500; text-align: right;">
+                      ${studentName || 'Not provided'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Session Type</td>
+                    <td style="padding: 8px 0; color: #0f172a; font-size: 14px; font-weight: 500; text-align: right;">
+                      ${sessionType?.title || sessionType || 'Quick Chat'}
+                    </td>
+                  </tr>
+                  ${slotDate ? `
+                  <tr>
+                    <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Date & Time</td>
+                    <td style="padding: 8px 0; color: #0f172a; font-size: 14px; font-weight: 500; text-align: right;">
+                      ${slotDate} ${slotTime ? 'at ' + slotTime : ''}
+                    </td>
+                  </tr>
+                  ` : ''}
+                </table>
+              </div>
+              
+              ${meetLink ? `
+              <div style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
+                <p style="color: rgba(255,255,255,0.9); margin: 0 0 12px 0; font-size: 14px;">
+                  Your session meeting link:
+                </p>
+                <a href="${meetLink}" style="display: inline-block; background: white; color: #059669; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">
+                  Join Google Meet
+                </a>
+              </div>
+              ` : ''}
+              
+              <div style="border-top: 1px solid #e2e8f0; padding-top: 24px;">
+                <h4 style="color: #0f172a; margin: 0 0 12px 0; font-size: 14px;">📌 Reminders:</h4>
+                <ul style="color: #64748b; font-size: 14px; margin: 0; padding-left: 20px; line-height: 1.8;">
+                  <li>Join the meeting on time</li>
+                  <li>Be prepared to answer questions about college life</li>
+                  <li>Ensure good internet connectivity</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 32px;">
+              <p style="color: #64748b; font-size: 14px; margin: 0 0 8px 0;">
+                View all your bookings in your
+              </p>
+              <a href="https://campus-connect.co.in/mentor-dashboard" style="color: #6366F1; text-decoration: none; font-weight: 500;">
+                Mentor Dashboard
+              </a>
+              <p style="color: #94a3b8; font-size: 12px; margin: 24px 0 0 0;">
+                © ${new Date().getFullYear()} Campus Connect. All rights reserved.
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    });
+
+    if (error) {
+      console.error("Failed to send mentor notification email:", error);
+    } else {
+      console.log("Mentor notification email sent to:", mentorEmail);
+    }
+  } catch (emailError) {
+    console.error("Error sending mentor notification email:", emailError);
+  }
+}
+
 export async function POST(request) {
   try {
     const body = await request.json();
@@ -185,19 +300,21 @@ export async function POST(request) {
     let bookingId = `booking_${Date.now()}`;
     let fetchedMentorName = mentorName;
     let meetLink = null;
+    let mentorEmail = null;
 
     if (supabase) {
-      // Fetch mentor name and meet_link
+      // Fetch mentor name, email and meet_link
       if (mentorId) {
         const { data: mentor } = await supabase
           .from("mentors")
-          .select("name, meet_link")
+          .select("name, email, meet_link")
           .eq("id", mentorId)
           .single();
 
         if (mentor) {
           fetchedMentorName = fetchedMentorName || mentor.name;
           meetLink = mentor.meet_link;
+          mentorEmail = mentor.email;
         }
       }
     }
@@ -254,7 +371,7 @@ export async function POST(request) {
         .eq("id", slotId);
     }
 
-    // Send confirmation email
+    // Send confirmation email to student
     try {
       await sendBookingConfirmationEmail(
         userDetails,
@@ -264,9 +381,25 @@ export async function POST(request) {
         slotTime,
         fetchedMentorName
       );
-      console.log("Email function completed");
+      console.log("Student email sent");
     } catch (emailErr) {
-      console.error("Email send failed:", emailErr);
+      console.error("Student email send failed:", emailErr);
+    }
+
+    // Send notification email to mentor
+    try {
+      await sendMentorNotificationEmail(
+        mentorEmail,
+        fetchedMentorName,
+        userDetails?.name,
+        sessionType,
+        slotDate,
+        slotTime,
+        meetLink
+      );
+      console.log("Mentor email sent");
+    } catch (emailErr) {
+      console.error("Mentor email send failed:", emailErr);
     }
 
     const bookingData = {

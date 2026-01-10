@@ -11,7 +11,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, User, LogOut, Settings, LayoutDashboard } from "lucide-react";
+import { Menu, User, LogOut, Settings, LayoutDashboard, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 
@@ -87,6 +87,12 @@ export function Navbar() {
                                             <Link href="/profile" className="w-full cursor-pointer">
                                                 <User className="w-4 h-4 mr-2" />
                                                 My Profile
+                                            </Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild>
+                                            <Link href="/mentor-dashboard" className="w-full cursor-pointer">
+                                                <Calendar className="w-4 h-4 mr-2" />
+                                                Mentor Dashboard
                                             </Link>
                                         </DropdownMenuItem>
                                         {user?.email === ADMIN_EMAIL && (
