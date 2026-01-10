@@ -26,6 +26,7 @@ export default function EditMentorPage() {
         college: "",
         college_id: "",
         price: "",
+        meet_link: "",
         image: "",
         bio: "",
         expertise: ""
@@ -53,6 +54,7 @@ export default function EditMentorPage() {
                         college: data.college || "",
                         college_id: data.college_id || "",
                         price: data.price || "",
+                        meet_link: data.meet_link || "",
                         image: data.image || "",
                         bio: data.bio || "",
                         expertise: Array.isArray(data.expertise) ? data.expertise.join(", ") : (data.expertise || "")
@@ -120,6 +122,7 @@ export default function EditMentorPage() {
                     college: formData.college,
                     college_id: formData.college_id,
                     price: formData.price,
+                    meet_link: formData.meet_link,
                     image: formData.image,
                     bio: formData.bio,
                     expertise: expertiseArray,
@@ -238,6 +241,20 @@ export default function EditMentorPage() {
                                     onChange={handleChange}
                                     className="bg-white border-gray-300 text-gray-900"
                                 />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="meet_link" className="text-gray-700">Google Meet Link</Label>
+                                <Input
+                                    id="meet_link"
+                                    name="meet_link"
+                                    type="url"
+                                    placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                                    value={formData.meet_link}
+                                    onChange={handleChange}
+                                    className="bg-white border-gray-300 text-gray-900"
+                                />
+                                <p className="text-xs text-gray-500">Personal Google Meet link for sessions</p>
                             </div>
 
                             <div className="space-y-2">

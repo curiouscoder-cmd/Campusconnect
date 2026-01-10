@@ -22,6 +22,7 @@ export default function AddMentorPage() {
         college: "Newton School of Technology",
         college_id: "nst",
         price: "₹99",
+        meet_link: "",
         image: "",
         bio: "",
         expertise: ""
@@ -184,6 +185,20 @@ export default function AddMentorPage() {
                                     onChange={handleChange}
                                     className="bg-white border-gray-300 text-gray-900"
                                 />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="meet_link" className="text-gray-700">Google Meet Link</Label>
+                                <Input
+                                    id="meet_link"
+                                    name="meet_link"
+                                    type="url"
+                                    placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                                    value={formData.meet_link}
+                                    onChange={handleChange}
+                                    className="bg-white border-gray-300 text-gray-900"
+                                />
+                                <p className="text-xs text-gray-500">Personal Google Meet link for sessions</p>
                             </div>
 
                             <div className="space-y-2">

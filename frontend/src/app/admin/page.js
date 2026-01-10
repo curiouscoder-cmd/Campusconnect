@@ -24,17 +24,23 @@ export default function AdminDashboard() {
                     .from("mentors")
                     .select("*", { count: "exact", head: true });
 
-                // Fetch Bookings Count & Revenue
-                const { data: bookings, count: bookingsCount, error: bookingsError } = await supabase
+                // Fetch Bookings Count
+                const { count: bookingsCount, error: bookingsError } = await supabase
                     .from("bookings")
-                    .select("price");
+                    .select("*", { count: "exact", head: true });
+
+                // Fetch Revenue from payments
+                const { data: payments, error: paymentsError } = await supabase
+                    .from("payments")
+                    .select("amount")
+                    .eq("status", "paid");
 
                 // Fetch Users Count (Profiles)
                 const { count: usersCount, error: usersError } = await supabase
                     .from("profiles")
                     .select("*", { count: "exact", head: true });
 
-                const totalRevenue = bookings?.reduce((acc, curr) => acc + (curr.price || 0), 0) || 0;
+                const totalRevenue = payments?.reduce((acc, curr) => acc + (curr.amount || 0), 0) || 0;
 
                 setStats({
                     mentors: mentorsCount || 0,

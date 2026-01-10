@@ -80,12 +80,6 @@ async function sendBookingConfirmationEmail(userDetails, sessionType, meetLink, 
                     </td>
                   </tr>
                   ` : ''}
-                  <tr>
-                    <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Amount Paid</td>
-                    <td style="padding: 8px 0; color: #10b981; font-size: 14px; font-weight: 600; text-align: right;">
-                      ₹${sessionType?.price || 99}
-                    </td>
-                  </tr>
                 </table>
               </div>
               
