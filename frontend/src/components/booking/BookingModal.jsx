@@ -66,17 +66,26 @@ export function BookingModal({ mentor, isOpen, onClose }) {
 
         if (data && data.length > 0) {
           // Transform DB slots to the format expected by SlotPicker
-          const transformedSlots = data.map(slot => ({
-            id: slot.id,
-            mentorId: slot.mentor_id,
-            date: slot.date,
-            startTime: slot.start_time,
-            endTime: slot.end_time,
-            isBooked: slot.is_booked,
-            isReserved: slot.is_reserved,
-            reservedBy: slot.reserved_by,
-            reservedUntil: slot.reserved_until,
-          }));
+          const transformedSlots = data.map(slot => {
+            // Normalize date to YYYY-MM-DD format (handle timezone issues)
+            let normalizedDate = slot.date;
+            if (slot.date && slot.date.includes('T')) {
+              // If date includes time component, extract just the date part
+              normalizedDate = slot.date.split('T')[0];
+            }
+
+            return {
+              id: slot.id,
+              mentorId: slot.mentor_id,
+              date: normalizedDate,
+              startTime: slot.start_time,
+              endTime: slot.end_time,
+              isBooked: slot.is_booked,
+              isReserved: slot.is_reserved,
+              reservedBy: slot.reserved_by,
+              reservedUntil: slot.reserved_until,
+            };
+          });
           setSlots(transformedSlots);
         } else {
           // Fallback to mock slots if no real data
