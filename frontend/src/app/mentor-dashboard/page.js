@@ -142,7 +142,6 @@ export default function MentorDashboardPage() {
                 start_time: time,
                 end_time: calculateEndTime(time),
                 is_booked: false,
-                is_reserved: false,
             }));
 
             const { error } = await supabase.from("availability").insert(slotsToInsert);
@@ -448,8 +447,8 @@ export default function MentorDashboardPage() {
                                         <div
                                             key={slot.id}
                                             className={`flex items-center justify-between p-3 rounded-lg border ${slot.is_booked
-                                                    ? "bg-green-50 border-green-200"
-                                                    : "bg-gray-50 border-gray-200"
+                                                ? "bg-green-50 border-green-200"
+                                                : "bg-gray-50 border-gray-200"
                                                 }`}
                                         >
                                             <div className="flex items-center gap-3">
