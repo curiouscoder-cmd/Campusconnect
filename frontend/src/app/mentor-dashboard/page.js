@@ -20,7 +20,18 @@ import {
     CalendarDays,
     Video,
     AlertCircle,
+    Save,
+    Check,
 } from "lucide-react";
+
+// Predefined time slots (30 min each, 9 AM to 10 PM)
+const TIME_SLOTS = [
+    "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+    "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
+    "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
+    "18:00", "18:30", "19:00", "19:30", "20:00", "20:30",
+    "21:00", "21:30", "22:00"
+];
 
 export default function MentorDashboardPage() {
     const { user, loading: authLoading } = useAuth();
@@ -30,11 +41,10 @@ export default function MentorDashboardPage() {
     const [upcomingBookings, setUpcomingBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [newSlot, setNewSlot] = useState({
-        date: "",
-        start_time: "",
-        end_time: "",
-    });
+    const [savingMeetLink, setSavingMeetLink] = useState(false);
+    const [selectedDate, setSelectedDate] = useState("");
+    const [selectedTimeSlots, setSelectedTimeSlots] = useState([]);
+    const [meetLink, setMeetLink] = useState("");
 
     useEffect(() => {
         if (!authLoading && !user) {
@@ -49,7 +59,6 @@ export default function MentorDashboardPage() {
 
     async function fetchMentorProfile() {
         try {
-            // Check if user is a mentor by their email
             const { data: mentorData, error } = await supabase
                 .from("mentors")
                 .select("*")
@@ -57,15 +66,14 @@ export default function MentorDashboardPage() {
                 .single();
 
             if (error || !mentorData) {
-                // Not a mentor
                 setMentor(null);
                 setLoading(false);
                 return;
             }
 
             setMentor(mentorData);
+            setMeetLink(mentorData.meet_link || "");
 
-            // Fetch their availability slots
             await fetchSlots(mentorData.id);
             await fetchUpcomingBookings(mentorData.id);
         } catch (error) {
@@ -104,32 +112,49 @@ export default function MentorDashboardPage() {
         }
     }
 
-    async function handleAddSlot(e) {
-        e.preventDefault();
-        if (!mentor || !newSlot.date || !newSlot.start_time) return;
+    function toggleTimeSlot(time) {
+        if (selectedTimeSlots.includes(time)) {
+            setSelectedTimeSlots(selectedTimeSlots.filter((t) => t !== time));
+        } else {
+            setSelectedTimeSlots([...selectedTimeSlots, time]);
+        }
+    }
+
+    function calculateEndTime(startTime) {
+        const [hours, minutes] = startTime.split(":").map(Number);
+        const totalMinutes = hours * 60 + minutes + 30;
+        const endHours = Math.floor(totalMinutes / 60) % 24;
+        const endMinutes = totalMinutes % 60;
+        return `${endHours.toString().padStart(2, "0")}:${endMinutes.toString().padStart(2, "0")}`;
+    }
+
+    async function handleAddSlots() {
+        if (!mentor || !selectedDate || selectedTimeSlots.length === 0) {
+            alert("Please select a date and at least one time slot");
+            return;
+        }
 
         setSaving(true);
         try {
-            // Calculate end time (default 1 hour after start)
-            const endTime = newSlot.end_time || calculateEndTime(newSlot.start_time);
-
-            const { error } = await supabase.from("availability").insert({
+            const slotsToInsert = selectedTimeSlots.map((time) => ({
                 mentor_id: mentor.id,
-                date: newSlot.date,
-                start_time: newSlot.start_time,
-                end_time: endTime,
+                date: selectedDate,
+                start_time: time,
+                end_time: calculateEndTime(time),
                 is_booked: false,
                 is_reserved: false,
-            });
+            }));
+
+            const { error } = await supabase.from("availability").insert(slotsToInsert);
 
             if (error) throw error;
 
-            // Refresh slots
             await fetchSlots(mentor.id);
-            setNewSlot({ date: "", start_time: "", end_time: "" });
+            setSelectedTimeSlots([]);
+            alert(`${selectedTimeSlots.length} slots added successfully!`);
         } catch (error) {
-            console.error("Error adding slot:", error);
-            alert("Failed to add slot: " + error.message);
+            console.error("Error adding slots:", error);
+            alert("Failed to add slots: " + error.message);
         } finally {
             setSaving(false);
         }
@@ -146,7 +171,6 @@ export default function MentorDashboardPage() {
 
             if (error) throw error;
 
-            // Refresh slots
             await fetchSlots(mentor.id);
         } catch (error) {
             console.error("Error deleting slot:", error);
@@ -154,10 +178,26 @@ export default function MentorDashboardPage() {
         }
     }
 
-    function calculateEndTime(startTime) {
-        const [hours, minutes] = startTime.split(":").map(Number);
-        const endHours = (hours + 1) % 24;
-        return `${endHours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+    async function handleSaveMeetLink() {
+        if (!mentor) return;
+
+        setSavingMeetLink(true);
+        try {
+            const { error } = await supabase
+                .from("mentors")
+                .update({ meet_link: meetLink })
+                .eq("id", mentor.id);
+
+            if (error) throw error;
+
+            setMentor({ ...mentor, meet_link: meetLink });
+            alert("Meet link saved successfully!");
+        } catch (error) {
+            console.error("Error saving meet link:", error);
+            alert("Failed to save meet link: " + error.message);
+        } finally {
+            setSavingMeetLink(false);
+        }
     }
 
     function formatDate(dateStr) {
@@ -174,6 +214,13 @@ export default function MentorDashboardPage() {
         const period = hour >= 12 ? "PM" : "AM";
         const displayHour = hour % 12 || 12;
         return `${displayHour}:${minutes} ${period}`;
+    }
+
+    // Check if a slot is already added for the selected date
+    function isSlotTaken(time) {
+        return slots.some(
+            (slot) => slot.date === selectedDate && slot.start_time === time
+        );
     }
 
     if (authLoading || loading) {
@@ -269,64 +316,114 @@ export default function MentorDashboardPage() {
                     </Card>
                 </div>
 
+                {/* Meet Link Card */}
+                <Card className="mb-6">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Video className="w-5 h-5" />
+                            Your Google Meet Link
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex gap-3">
+                            <Input
+                                type="url"
+                                placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                                value={meetLink}
+                                onChange={(e) => setMeetLink(e.target.value)}
+                                className="flex-1"
+                            />
+                            <Button onClick={handleSaveMeetLink} disabled={savingMeetLink}>
+                                {savingMeetLink ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <Save className="w-4 h-4 mr-2" />
+                                )}
+                                Save
+                            </Button>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                            This link will be shared with students who book sessions with you.
+                        </p>
+                    </CardContent>
+                </Card>
+
                 <div className="grid md:grid-cols-2 gap-6">
-                    {/* Add Slot Form */}
+                    {/* Add Slots Form */}
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Plus className="w-5 h-5" />
-                                Add Availability Slot
+                                Add Availability Slots
                             </CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <form onSubmit={handleAddSlot} className="space-y-4">
+                        <CardContent className="space-y-4">
+                            {/* Date Picker */}
+                            <div className="space-y-2">
+                                <Label htmlFor="date">Select Date</Label>
+                                <Input
+                                    id="date"
+                                    type="date"
+                                    value={selectedDate}
+                                    min={new Date().toISOString().split("T")[0]}
+                                    onChange={(e) => {
+                                        setSelectedDate(e.target.value);
+                                        setSelectedTimeSlots([]);
+                                    }}
+                                />
+                            </div>
+
+                            {/* Time Slots Grid */}
+                            {selectedDate && (
                                 <div className="space-y-2">
-                                    <Label htmlFor="date">Date</Label>
-                                    <Input
-                                        id="date"
-                                        type="date"
-                                        value={newSlot.date}
-                                        min={new Date().toISOString().split("T")[0]}
-                                        onChange={(e) =>
-                                            setNewSlot({ ...newSlot, date: e.target.value })
-                                        }
-                                        required
-                                    />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="start_time">Start Time</Label>
-                                        <Input
-                                            id="start_time"
-                                            type="time"
-                                            value={newSlot.start_time}
-                                            onChange={(e) =>
-                                                setNewSlot({ ...newSlot, start_time: e.target.value })
-                                            }
-                                            required
-                                        />
+                                    <Label>Select Time Slots (30 min each)</Label>
+                                    <div className="grid grid-cols-4 gap-2 max-h-[250px] overflow-y-auto">
+                                        {TIME_SLOTS.map((time) => {
+                                            const isTaken = isSlotTaken(time);
+                                            const isSelected = selectedTimeSlots.includes(time);
+
+                                            return (
+                                                <button
+                                                    key={time}
+                                                    type="button"
+                                                    disabled={isTaken}
+                                                    onClick={() => !isTaken && toggleTimeSlot(time)}
+                                                    className={`
+                                                        p-2 text-sm rounded-lg border transition-all
+                                                        ${isTaken
+                                                            ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200"
+                                                            : isSelected
+                                                                ? "bg-primary text-white border-primary"
+                                                                : "bg-white text-gray-700 border-gray-200 hover:border-primary hover:bg-primary/5"
+                                                        }
+                                                    `}
+                                                >
+                                                    {formatTime(time)}
+                                                    {isTaken && (
+                                                        <span className="block text-[10px]">Added</span>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="end_time">End Time (Optional)</Label>
-                                        <Input
-                                            id="end_time"
-                                            type="time"
-                                            value={newSlot.end_time}
-                                            onChange={(e) =>
-                                                setNewSlot({ ...newSlot, end_time: e.target.value })
-                                            }
-                                        />
-                                    </div>
+                                    <p className="text-xs text-gray-500">
+                                        Selected: {selectedTimeSlots.length} slot(s)
+                                    </p>
                                 </div>
-                                <Button type="submit" className="w-full" disabled={saving}>
-                                    {saving ? (
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                    ) : (
-                                        <Plus className="w-4 h-4 mr-2" />
-                                    )}
-                                    Add Slot
-                                </Button>
-                            </form>
+                            )}
+
+                            <Button
+                                onClick={handleAddSlots}
+                                className="w-full"
+                                disabled={saving || !selectedDate || selectedTimeSlots.length === 0}
+                            >
+                                {saving ? (
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                ) : (
+                                    <Plus className="w-4 h-4 mr-2" />
+                                )}
+                                Add {selectedTimeSlots.length} Slot(s)
+                            </Button>
                         </CardContent>
                     </Card>
 
@@ -346,7 +443,7 @@ export default function MentorDashboardPage() {
                                     <p className="text-sm">Add your first availability slot!</p>
                                 </div>
                             ) : (
-                                <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                                <div className="space-y-2 max-h-[350px] overflow-y-auto">
                                     {slots.map((slot) => (
                                         <div
                                             key={slot.id}
