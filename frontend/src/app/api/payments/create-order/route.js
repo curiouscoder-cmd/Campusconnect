@@ -10,6 +10,8 @@ export async function POST(request) {
     const body = await request.json();
     const { amount, slotId, mentorId, sessionType, userDetails } = body;
 
+    console.log("Creating order with:", { amount, slotId, mentorId, sessionType: sessionType?.id });
+
     if (!amount || !slotId || !mentorId) {
       return NextResponse.json(
         { error: "Amount, Slot ID, and Mentor ID are required" },
@@ -28,7 +30,7 @@ export async function POST(request) {
           id: mockOrderId,
           amount: amount * 100,
           currency: "INR",
-          receipt: `booking_${slotId}_${Date.now()}`,
+          receipt: `booking_${Date.now()}`,
         },
         key: "rzp_test_placeholder",
         isMock: true,
@@ -41,29 +43,40 @@ export async function POST(request) {
       key_secret: RAZORPAY_KEY_SECRET,
     });
 
-    // Create order
+    // Sanitize slotId for receipt (remove special characters, limit length)
+    const sanitizedSlotId = String(slotId).replace(/[^a-zA-Z0-9]/g, '').substring(0, 20);
+    const receipt = `bk_${sanitizedSlotId}_${Date.now()}`.substring(0, 40);
+
+    // Create order - notes must be strings only
     const order = await razorpay.orders.create({
-      amount: amount * 100, // Amount in paise
+      amount: Math.round(amount * 100), // Amount in paise, ensure it's an integer
       currency: "INR",
-      receipt: `booking_${slotId}_${Date.now()}`,
+      receipt: receipt,
       notes: {
-        slotId,
-        mentorId,
-        sessionType: sessionType?.id || sessionType,
-        userName: userDetails?.name,
-        userEmail: userDetails?.email,
+        slotId: String(slotId || ""),
+        mentorId: String(mentorId || ""),
+        sessionType: String(sessionType?.id || sessionType || ""),
+        userName: String(userDetails?.name || ""),
+        userEmail: String(userDetails?.email || ""),
       },
     });
 
-    // Save order to database
-    const supabase = createServerClient();
-    if (supabase) {
-      await supabase.from("payments").insert({
-        razorpay_order_id: order.id,
-        amount: amount,
-        currency: "INR",
-        status: "created",
-      });
+    console.log("Order created successfully:", order.id);
+
+    // Save order to database (don't let this fail the request)
+    try {
+      const supabase = createServerClient();
+      if (supabase) {
+        await supabase.from("payments").insert({
+          razorpay_order_id: order.id,
+          amount: amount,
+          currency: "INR",
+          status: "created",
+        });
+      }
+    } catch (dbError) {
+      console.error("Failed to save order to database:", dbError);
+      // Don't fail the request if DB save fails
     }
 
     return NextResponse.json({
@@ -78,9 +91,11 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error("Error creating payment order:", error);
+    console.error("Error details:", error.message, error.stack);
     return NextResponse.json(
       { error: "Failed to create payment order", details: error.message },
       { status: 500 }
     );
   }
 }
+
