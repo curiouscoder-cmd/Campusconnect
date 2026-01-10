@@ -83,6 +83,12 @@ export function Navbar() {
                                             <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                                         </div>
                                         <DropdownMenuSeparator />
+                                        <DropdownMenuItem asChild>
+                                            <Link href="/profile" className="w-full cursor-pointer">
+                                                <User className="w-4 h-4 mr-2" />
+                                                My Profile
+                                            </Link>
+                                        </DropdownMenuItem>
                                         {user?.email === ADMIN_EMAIL && (
                                             <>
                                                 <DropdownMenuItem asChild>
@@ -91,9 +97,9 @@ export function Navbar() {
                                                         Admin Dashboard
                                                     </Link>
                                                 </DropdownMenuItem>
-                                                <DropdownMenuSeparator />
                                             </>
                                         )}
+                                        <DropdownMenuSeparator />
                                         <DropdownMenuItem onClick={handleSignOut} className="text-red-600 cursor-pointer">
                                             <LogOut className="w-4 h-4 mr-2" />
                                             Log out
@@ -139,14 +145,19 @@ export function Navbar() {
                                     <Link href="/#pricing" className="text-lg font-medium">Pricing</Link>
                                 </SheetClose>
                                 {isAuthenticated ? (
-                                    <SheetClose asChild>
-                                        <button
-                                            onClick={handleSignOut}
-                                            className="text-lg font-medium text-red-600 text-left"
-                                        >
-                                            Log out
-                                        </button>
-                                    </SheetClose>
+                                    <>
+                                        <SheetClose asChild>
+                                            <Link href="/profile" className="text-lg font-medium">My Profile</Link>
+                                        </SheetClose>
+                                        <SheetClose asChild>
+                                            <button
+                                                onClick={handleSignOut}
+                                                className="text-lg font-medium text-red-600 text-left"
+                                            >
+                                                Log out
+                                            </button>
+                                        </SheetClose>
+                                    </>
                                 ) : (
                                     <>
                                         <SheetClose asChild>

@@ -8,7 +8,8 @@ import { SessionTypeSelector } from "./SessionTypeSelector";
 import { UserDetailsForm } from "./UserDetailsForm";
 import { PaymentScreen } from "./PaymentScreen";
 import { ConfirmationScreen } from "./ConfirmationScreen";
-import { generateMockSlots } from "@/lib/booking-utils";
+import { generateMockSlots, formatDateISO } from "@/lib/booking-utils";
+import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import Script from "next/script";
 
@@ -40,15 +41,60 @@ export function BookingModal({ mentor, isOpen, onClose }) {
   });
   const [paymentData, setPaymentData] = useState(null);
   const [error, setError] = useState(null);
+  const [slots, setSlots] = useState([]);
+  const [slotsLoading, setSlotsLoading] = useState(true);
 
-  // Generate mock slots for the mentor
+  // Fetch real slots from database
   const mentorId = mentor?.id;
-  const slots = useMemo(() => {
-    if (mentorId) {
-      return generateMockSlots(mentorId, 14);
+
+  useEffect(() => {
+    async function fetchSlots() {
+      if (!mentorId || !isOpen) return;
+
+      setSlotsLoading(true);
+      try {
+        // Fetch available slots from availability table
+        const today = formatDateISO(new Date());
+        const { data, error } = await supabase
+          .from("availability")
+          .select("*")
+          .eq("mentor_id", mentorId)
+          .eq("is_booked", false)
+          .gte("date", today)
+          .order("date", { ascending: true })
+          .order("start_time", { ascending: true });
+
+        if (data && data.length > 0) {
+          // Transform DB slots to the format expected by SlotPicker
+          const transformedSlots = data.map(slot => ({
+            id: slot.id,
+            mentorId: slot.mentor_id,
+            date: slot.date,
+            startTime: slot.start_time,
+            endTime: slot.end_time,
+            isBooked: slot.is_booked,
+            isReserved: slot.is_reserved,
+            reservedBy: slot.reserved_by,
+            reservedUntil: slot.reserved_until,
+          }));
+          setSlots(transformedSlots);
+        } else {
+          // Fallback to mock slots if no real data
+          const mockSlots = generateMockSlots(mentorId, 14);
+          setSlots(mockSlots);
+        }
+      } catch (err) {
+        console.error("Error fetching slots:", err);
+        // Fallback to mock slots on error
+        const mockSlots = generateMockSlots(mentorId, 14);
+        setSlots(mockSlots);
+      } finally {
+        setSlotsLoading(false);
+      }
     }
-    return [];
-  }, [mentorId]);
+
+    fetchSlots();
+  }, [mentorId, isOpen]);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -144,7 +190,7 @@ export function BookingModal({ mentor, isOpen, onClose }) {
   return (
     <>
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
-      
+
       {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -197,7 +243,7 @@ export function BookingModal({ mentor, isOpen, onClose }) {
 
             {/* Mentor Name */}
             <p className="text-sm text-gray-500 mb-1">{mentor?.name}</p>
-            
+
             {/* Session Title */}
             <h2 className="text-xl font-bold text-gray-900 mb-4">
               {selectedSession ? `${selectedSession.duration} Minute Meeting` : "Book a Session"}
@@ -363,13 +409,13 @@ export function BookingModal({ mentor, isOpen, onClose }) {
                   }}
                   whileHover={
                     !((currentStep === STEPS.SLOT_SELECTION && !selectedSlot) ||
-                    (currentStep === STEPS.SESSION_TYPE && !selectedSession))
+                      (currentStep === STEPS.SESSION_TYPE && !selectedSession))
                       ? { scale: 1.01 }
                       : {}
                   }
                   whileTap={
                     !((currentStep === STEPS.SLOT_SELECTION && !selectedSlot) ||
-                    (currentStep === STEPS.SESSION_TYPE && !selectedSession))
+                      (currentStep === STEPS.SESSION_TYPE && !selectedSession))
                       ? { scale: 0.99 }
                       : {}
                   }
@@ -380,7 +426,7 @@ export function BookingModal({ mentor, isOpen, onClose }) {
                   className={cn(
                     "w-full py-3.5 rounded-full font-semibold text-sm transition-all duration-200",
                     (currentStep === STEPS.SLOT_SELECTION && !selectedSlot) ||
-                    (currentStep === STEPS.SESSION_TYPE && !selectedSession)
+                      (currentStep === STEPS.SESSION_TYPE && !selectedSession)
                       ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                       : "bg-slate-900 text-white hover:bg-slate-800"
                   )}
