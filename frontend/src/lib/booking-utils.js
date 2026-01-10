@@ -53,7 +53,7 @@ export function formatDate(date) {
   });
 }
 
-// Format date to ISO string (YYYY-MM-DD) using local timezone
+// Format date to ISO string (YYYY-MM-DD) using LOCAL timezone
 export function formatDateISO(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
