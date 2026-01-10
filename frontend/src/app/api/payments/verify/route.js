@@ -185,71 +185,79 @@ export async function POST(request) {
       );
     }
 
-    // Generate a meet link
-    const meetLink = `https://meet.google.com/${generateMeetCode()}`;
-
     const supabase = createServerClient();
 
     // Create booking in database
     let bookingId = `booking_${Date.now()}`;
     let fetchedMentorName = mentorName;
+    let meetLink = null;
 
     if (supabase) {
-      // Fetch mentor name if not provided
-      if (!fetchedMentorName && mentorId) {
+      // Fetch mentor name and meet_link
+      if (mentorId) {
         const { data: mentor } = await supabase
           .from("mentors")
-          .select("name")
+          .select("name, meet_link")
           .eq("id", mentorId)
           .single();
-        fetchedMentorName = mentor?.name;
-      }
 
-      // Update payment status
+        if (mentor) {
+          fetchedMentorName = fetchedMentorName || mentor.name;
+          meetLink = mentor.meet_link;
+        }
+      }
+    }
+
+    // Fallback to generated link if mentor doesn't have one
+    if (!meetLink) {
+      meetLink = `https://meet.google.com/${generateMeetCode()}`;
+      console.log("Using generated meet link (mentor has no personal link)");
+    }
+
+    // Update payment status
+    await supabase
+      .from("payments")
+      .update({
+        razorpay_payment_id,
+        razorpay_signature,
+        status: "paid",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("razorpay_order_id", razorpay_order_id);
+
+    // Create booking record
+    const { data: booking, error } = await supabase
+      .from("bookings")
+      .insert({
+        mentor_id: mentorId,
+        slot_id: slotId,
+        user_name: userDetails?.name,
+        user_email: userDetails?.email,
+        user_phone: userDetails?.phone,
+        questions: userDetails?.questions,
+        session_type: sessionType?.id || sessionType,
+        session_duration: sessionType?.duration,
+        status: "confirmed",
+        meet_link: meetLink,
+        confirmed_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (booking) {
+      bookingId = booking.id;
+
+      // Update payment with booking ID
       await supabase
         .from("payments")
-        .update({
-          razorpay_payment_id,
-          razorpay_signature,
-          status: "paid",
-          updated_at: new Date().toISOString(),
-        })
+        .update({ booking_id: bookingId })
         .eq("razorpay_order_id", razorpay_order_id);
 
-      // Create booking record
-      const { data: booking, error } = await supabase
-        .from("bookings")
-        .insert({
-          mentor_id: mentorId,
-          slot_id: slotId,
-          user_name: userDetails?.name,
-          user_email: userDetails?.email,
-          user_phone: userDetails?.phone,
-          questions: userDetails?.questions,
-          session_type: sessionType?.id || sessionType,
-          session_duration: sessionType?.duration,
-          status: "confirmed",
-          meet_link: meetLink,
-          confirmed_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      if (booking) {
-        bookingId = booking.id;
-
-        // Update payment with booking ID
-        await supabase
-          .from("payments")
-          .update({ booking_id: bookingId })
-          .eq("razorpay_order_id", razorpay_order_id);
-
-        // Mark slot as booked
-        await supabase
-          .from("availability")
-          .update({ is_booked: true, is_reserved: false })
-          .eq("id", slotId);
-      }
+      // Mark slot as booked
+      await supabase
+        .from("availability")
+        .update({ is_booked: true, is_reserved: false })
+        .eq("id", slotId);
     }
 
     // Send confirmation email
