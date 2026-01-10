@@ -228,7 +228,6 @@ export async function POST(request) {
           questions: userDetails?.questions,
           session_type: sessionType?.id || sessionType,
           session_duration: sessionType?.duration,
-          session_price: sessionType?.price,
           status: "confirmed",
           meet_link: meetLink,
           confirmed_at: new Date().toISOString(),
