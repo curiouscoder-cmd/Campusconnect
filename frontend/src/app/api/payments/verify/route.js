@@ -1,8 +1,143 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { createServerClient } from "@/lib/supabase";
+import { Resend } from "resend";
 
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Send booking confirmation email
+async function sendBookingConfirmationEmail(userDetails, sessionType, meetLink, slotDate, slotTime, mentorName) {
+  if (!process.env.RESEND_API_KEY || !userDetails?.email) {
+    console.log("Skipping email: Resend not configured or no user email");
+    return;
+  }
+
+  try {
+    const { error } = await resend.emails.send({
+      from: "Campus Connect <contact@campus-connect.co.in>",
+      to: [userDetails.email],
+      subject: "🎉 Your Session is Booked! - Campus Connect",
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+            <!-- Header -->
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #6366F1; margin: 0; font-size: 28px;">Campus Connect</h1>
+            </div>
+            
+            <!-- Main Card -->
+            <div style="background: white; border-radius: 16px; padding: 40px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+              <!-- Success Icon -->
+              <div style="text-align: center; margin-bottom: 24px;">
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%); border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+                  <span style="font-size: 40px;">✓</span>
+                </div>
+              </div>
+              
+              <h2 style="color: #0f172a; text-align: center; margin: 0 0 8px 0; font-size: 24px;">
+                Session Booked Successfully!
+              </h2>
+              <p style="color: #64748b; text-align: center; margin: 0 0 32px 0; font-size: 16px;">
+                Hi ${userDetails.name || 'there'}, your mentoring session is confirmed.
+              </p>
+              
+              <!-- Session Details -->
+              <div style="background: #f8fafc; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                <h3 style="color: #0f172a; margin: 0 0 16px 0; font-size: 16px; font-weight: 600;">
+                  📅 Session Details
+                </h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Session Type</td>
+                    <td style="padding: 8px 0; color: #0f172a; font-size: 14px; font-weight: 500; text-align: right;">
+                      ${sessionType?.title || 'Quick Chat'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Duration</td>
+                    <td style="padding: 8px 0; color: #0f172a; font-size: 14px; font-weight: 500; text-align: right;">
+                      ${sessionType?.duration || 15} minutes
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Mentor</td>
+                    <td style="padding: 8px 0; color: #0f172a; font-size: 14px; font-weight: 500; text-align: right;">
+                      ${mentorName || 'Your Mentor'}
+                    </td>
+                  </tr>
+                  ${slotDate ? `
+                  <tr>
+                    <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Date & Time</td>
+                    <td style="padding: 8px 0; color: #0f172a; font-size: 14px; font-weight: 500; text-align: right;">
+                      ${slotDate} ${slotTime ? 'at ' + slotTime : ''}
+                    </td>
+                  </tr>
+                  ` : ''}
+                  <tr>
+                    <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Amount Paid</td>
+                    <td style="padding: 8px 0; color: #10b981; font-size: 14px; font-weight: 600; text-align: right;">
+                      ₹${sessionType?.price || 99}
+                    </td>
+                  </tr>
+                </table>
+              </div>
+              
+              <!-- Meet Link -->
+              <div style="background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%); border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
+                <p style="color: rgba(255,255,255,0.9); margin: 0 0 12px 0; font-size: 14px;">
+                  Join your session using this link:
+                </p>
+                <a href="${meetLink}" style="display: inline-block; background: white; color: #6366F1; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">
+                  Join Google Meet
+                </a>
+              </div>
+              
+              <!-- Tips -->
+              <div style="border-top: 1px solid #e2e8f0; padding-top: 24px;">
+                <h4 style="color: #0f172a; margin: 0 0 12px 0; font-size: 14px;">💡 Tips for your session:</h4>
+                <ul style="color: #64748b; font-size: 14px; margin: 0; padding-left: 20px; line-height: 1.8;">
+                  <li>Join 2-3 minutes before the scheduled time</li>
+                  <li>Prepare your questions in advance</li>
+                  <li>Ensure you have a stable internet connection</li>
+                  <li>Use headphones for better audio quality</li>
+                </ul>
+              </div>
+            </div>
+            
+            <!-- Footer -->
+            <div style="text-align: center; margin-top: 32px;">
+              <p style="color: #64748b; font-size: 14px; margin: 0 0 8px 0;">
+                Questions? Reply to this email or contact us at
+              </p>
+              <a href="mailto:contact@campus-connect.co.in" style="color: #6366F1; text-decoration: none; font-weight: 500;">
+                contact@campus-connect.co.in
+              </a>
+              <p style="color: #94a3b8; font-size: 12px; margin: 24px 0 0 0;">
+                © ${new Date().getFullYear()} Campus Connect. All rights reserved.
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    });
+
+    if (error) {
+      console.error("Failed to send booking confirmation email:", error);
+    } else {
+      console.log("Booking confirmation email sent to:", userDetails.email);
+    }
+  } catch (emailError) {
+    console.error("Error sending booking confirmation email:", emailError);
+  }
+}
 
 export async function POST(request) {
   try {
@@ -15,6 +150,9 @@ export async function POST(request) {
       mentorId,
       sessionType,
       userDetails,
+      slotDate,
+      slotTime,
+      mentorName,
     } = body;
 
     if (!razorpay_payment_id) {
@@ -54,8 +192,19 @@ export async function POST(request) {
 
     // Create booking in database
     let bookingId = `booking_${Date.now()}`;
-    
+    let fetchedMentorName = mentorName;
+
     if (supabase) {
+      // Fetch mentor name if not provided
+      if (!fetchedMentorName && mentorId) {
+        const { data: mentor } = await supabase
+          .from("mentors")
+          .select("name")
+          .eq("id", mentorId)
+          .single();
+        fetchedMentorName = mentor?.name;
+      }
+
       // Update payment status
       await supabase
         .from("payments")
@@ -78,7 +227,7 @@ export async function POST(request) {
           user_phone: userDetails?.phone,
           questions: userDetails?.questions,
           session_type: sessionType?.id || sessionType,
-          session_duration: sessionType?.durationMinutes,
+          session_duration: sessionType?.duration,
           session_price: sessionType?.price,
           status: "confirmed",
           meet_link: meetLink,
@@ -103,6 +252,16 @@ export async function POST(request) {
           .eq("id", slotId);
       }
     }
+
+    // Send confirmation email (don't wait for it)
+    sendBookingConfirmationEmail(
+      userDetails,
+      sessionType,
+      meetLink,
+      slotDate,
+      slotTime,
+      fetchedMentorName
+    );
 
     const bookingData = {
       id: bookingId,

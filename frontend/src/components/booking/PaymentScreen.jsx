@@ -71,6 +71,9 @@ export function PaymentScreen({
                 mentorId: mentor.id,
                 sessionType: selectedSession,
                 userDetails,
+                slotDate: selectedSlot.date,
+                slotTime: selectedSlot.startTime,
+                mentorName: mentor.name,
               }),
             });
 
