@@ -42,9 +42,9 @@ export function Navbar() {
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-2">
                     <img
-                        src="/logo.png"
+                        src="/favicon_light.ico"
                         alt="Campus Connect"
-                        className="w-10 h-10 rounded-lg"
+                        className="w-10 h-10"
                     />
                     <span className="font-semibold text-primary text-lg">Campus Connect</span>
                 </Link>
