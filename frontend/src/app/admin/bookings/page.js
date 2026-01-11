@@ -101,12 +101,12 @@ export default function BookingsPage() {
                                                     </div>
                                                 </td>
                                                 <td className="p-4 text-gray-400 text-xs font-mono">
-                                                    {booking.user_id?.substring(0, 8)}...
+                                                    {booking.user_email || booking.user_id?.substring(0, 8) + "..."}
                                                 </td>
                                                 <td className="p-4 text-gray-600 text-sm">
                                                     <div className="flex flex-col">
-                                                        <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {booking.date}</span>
-                                                        <span className="flex items-center gap-1.5 text-gray-500"><Clock className="w-3 h-3" /> {booking.start_time}</span>
+                                                        <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {booking.date || "Not set"}</span>
+                                                        <span className="flex items-center gap-1.5 text-gray-500"><Clock className="w-3 h-3" /> {booking.start_time || "Not set"}</span>
                                                     </div>
                                                 </td>
                                                 <td className="p-4 text-gray-600 text-sm">{booking.session_type}</td>
@@ -115,7 +115,7 @@ export default function BookingsPage() {
                                                         {booking.status}
                                                     </Badge>
                                                 </td>
-                                                <td className="p-4 text-right text-gray-900 font-medium">₹{booking.price}</td>
+                                                <td className="p-4 text-right text-gray-900 font-medium">₹{booking.session_price || 0}</td>
                                             </tr>
                                         ))}
                                     </tbody>

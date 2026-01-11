@@ -347,6 +347,8 @@ export async function POST(request) {
       session_type: sessionType?.id || sessionType || 'quick',
       session_duration: sessionType?.duration || 15,
       session_price: sessionType?.price || 1,
+      date: slotDate || new Date().toISOString().split('T')[0],
+      start_time: slotTime || null,
       status: "confirmed",
       meet_link: meetLink,
       confirmed_at: new Date().toISOString(),
