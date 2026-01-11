@@ -7,6 +7,7 @@
 -- 1. PROFILES TABLE - Users can update their own profile
 -- =====================================================
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
 CREATE POLICY "Users can update own profile" ON profiles
 FOR UPDATE
     USING (auth.uid () = id);
@@ -22,6 +23,11 @@ ALTER TABLE mentors ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Mentors can update own record" ON mentors
 FOR UPDATE
     USING (email = auth.email ());
+
+-- Required for homepage to show mentor cards (meet_link is excluded in frontend query)
+CREATE POLICY "Mentors are publicly readable" ON mentors FOR
+SELECT USING (true);
+
 -- =====================================================
 -- 3. BOOKINGS TABLE - Admin can see all bookings
 -- =====================================================
@@ -31,4 +37,3 @@ CREATE POLICY "Admin can read all bookings" ON bookings FOR
 SELECT USING (
         auth.email () = 'nityaprofessional6402@gmail.com'
     );
-

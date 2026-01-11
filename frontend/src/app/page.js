@@ -249,11 +249,16 @@ export default function Home() {
       try {
         const { data, error } = await supabase
           .from("mentors")
-          .select("id, name, title, college, image, rating, price, about, is_active, created_at")
+          .select("id, name, role, college, image, rating, price, bio, is_active, created_at")
           .order("created_at", { ascending: false });
 
+        console.log("Mentors fetch result:", { data, error });
+
         if (isMounted) {
-          if (!error && data) {
+          if (error) {
+            console.error("Error fetching mentors:", error);
+          }
+          if (data) {
             setMentors(data);
           }
           setLoadingMentors(false);

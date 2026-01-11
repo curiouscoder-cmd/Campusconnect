@@ -69,8 +69,19 @@ export function formatTime(time) {
   return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
 }
 
-// Check if a slot is available (not booked and not reserved by someone else)
+// Check if a slot is available (not booked, not reserved, and not in the past)
 export function isSlotAvailable(slot, currentUserId) {
+  // Check if slot is in the past
+  if (slot.date && slot.startTime) {
+    const [hours, minutes] = slot.startTime.split(':').map(Number);
+    const slotDateTime = new Date(slot.date);
+    slotDateTime.setHours(hours, minutes, 0, 0);
+
+    if (slotDateTime < new Date()) {
+      return false; // Slot is in the past
+    }
+  }
+
   if (slot.isBooked) return false;
 
   if (slot.isReserved) {

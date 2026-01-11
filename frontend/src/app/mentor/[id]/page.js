@@ -65,7 +65,7 @@ export default function MentorDetailPage() {
         // First, try to fetch by UUID (for database mentors)
         let { data, error } = await supabase
           .from("mentors")
-          .select("id, name, title, college, image, rating, price, about, is_active, created_at")
+          .select("id, name, role, college, image, rating, price, bio, is_active, created_at")
           .eq("id", mentorId)
           .single();
 
@@ -73,7 +73,7 @@ export default function MentorDetailPage() {
           // If not found by UUID, try to find by slug (name-based ID)
           const { data: allMentors, error: allError } = await supabase
             .from("mentors")
-            .select("id, name, title, college, image, rating, price, about, is_active, created_at")
+            .select("id, name, role, college, image, rating, price, bio, is_active, created_at")
             .eq("is_active", true);
 
           if (!allError && allMentors) {
