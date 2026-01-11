@@ -7,7 +7,7 @@ export const SESSION_TYPES = [
     id: "quick",
     title: "Quick Chat",
     duration: 15,
-    price: 1,  // TODO: Change back to 99 after testing
+    price: 49,  // TODO: Change back to 99 after testing
     description: "Perfect for quick doubts about admissions or campus life",
     type: "1:1",
   },
@@ -15,19 +15,19 @@ export const SESSION_TYPES = [
     id: "deep",
     title: "Deep Dive",
     duration: 30,
-    price: 0,  // TODO: Change back to 199 after testing
+    price: 98,  // TODO: Change back to 199 after testing
     description: "Detailed discussion about placements, faculty, and more",
     type: "1:1",
   },
-  {
-    id: "group",
-    title: "Group Session",
-    duration: 45,
-    price: 1,  // TODO: Change back to 49 after testing
-    description: "Join with other applicants, ask questions together",
-    type: "group",
-    maxParticipants: 5,
-  },
+  // {
+  //   id: "group",
+  //   title: "Group Session",
+  //   duration: 45,
+  //   price: 1,  // TODO: Change back to 49 after testing
+  //   description: "Join with other applicants, ask questions together",
+  //   type: "group",
+  //   maxParticipants: 5,
+  // },
 ];
 
 // Generate dates for the next N days
