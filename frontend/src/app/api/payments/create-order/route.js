@@ -73,10 +73,24 @@ export async function POST(request) {
           currency: "INR",
           status: "created",
         });
+
+        // Reserve the slot for 10 minutes while user completes payment
+        const reserveUntil = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+        await supabase
+          .from("availability")
+          .update({
+            is_reserved: true,
+            reserved_by: userDetails?.userId || null,
+            reserved_until: reserveUntil,
+          })
+          .eq("id", slotId)
+          .eq("is_booked", false);
+
+        console.log("Slot reserved until:", reserveUntil);
       }
     } catch (dbError) {
-      console.error("Failed to save order to database:", dbError);
-      // Don't fail the request if DB save fails
+      console.error("Failed to save order/reserve slot:", dbError);
+      // Don't fail the request if DB operations fail
     }
 
     return NextResponse.json({

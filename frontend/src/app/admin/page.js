@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Users, Calendar, DollarSign, TrendingUp, ArrowUpRight } from "lucide-react";
+import { Users, Calendar, TrendingUp, ArrowUpRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
@@ -29,30 +29,14 @@ export default function AdminDashboard() {
                     .from("bookings")
                     .select("*", { count: "exact", head: true });
 
-                // Fetch Revenue from payments (all payments)
-                const { data: payments, error: paymentsError } = await supabase
-                    .from("payments")
-                    .select("amount, status");
-
                 // Fetch Users Count (Profiles)
                 const { count: usersCount, error: usersError } = await supabase
                     .from("profiles")
                     .select("*", { count: "exact", head: true });
 
-                // Calculate revenue - sum all payment amounts
-                let totalRevenue = 0;
-                if (payments && payments.length > 0) {
-                    totalRevenue = payments.reduce((acc, curr) => {
-                        const amount = curr.amount || 0;
-                        // Razorpay stores in paise, convert to rupees if > 100
-                        return acc + (amount >= 100 ? amount / 100 : amount);
-                    }, 0);
-                }
-
                 setStats({
                     mentors: mentorsCount || 0,
                     bookings: bookingsCount || 0,
-                    revenue: Math.round(totalRevenue),
                     users: usersCount || 0
                 });
             } catch (error) {
@@ -93,7 +77,7 @@ export default function AdminDashboard() {
                 variants={container}
                 initial="hidden"
                 animate="show"
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+                className="grid grid-cols-1 md:grid-cols-3 gap-6"
             >
                 <StatsCard
                     title="Total Mentors"
@@ -112,19 +96,11 @@ export default function AdminDashboard() {
                     variants={item}
                 />
                 <StatsCard
-                    title="Total Revenue"
-                    value={`₹${stats.revenue.toLocaleString()}`}
-                    icon={DollarSign}
-                    trend="+24%"
-                    color="green"
-                    variants={item}
-                />
-                <StatsCard
                     title="Registered Users"
                     value={stats.users}
                     icon={TrendingUp}
                     trend="+8%"
-                    color="orange"
+                    color="green"
                     variants={item}
                 />
             </motion.div>

@@ -81,12 +81,13 @@ export default function ProfilePage() {
         try {
             const { error } = await supabase
                 .from("profiles")
-                .update({
+                .upsert({
+                    id: user.id,
+                    email: user.email,
                     full_name: formData.full_name,
                     phone: formData.phone,
                     updated_at: new Date().toISOString(),
-                })
-                .eq("id", user.id);
+                });
 
             if (error) throw error;
 
@@ -94,7 +95,7 @@ export default function ProfilePage() {
             setEditing(false);
         } catch (error) {
             console.error("Error updating profile:", error);
-            alert("Failed to update profile");
+            alert("Failed to update profile: " + error.message);
         } finally {
             setSaving(false);
         }
@@ -321,8 +322,8 @@ export default function ProfilePage() {
                                             </div>
                                             <span
                                                 className={`text-xs px-2 py-1 rounded-full ${booking.status === "confirmed"
-                                                        ? "bg-green-100 text-green-700"
-                                                        : "bg-gray-100 text-gray-600"
+                                                    ? "bg-green-100 text-green-700"
+                                                    : "bg-gray-100 text-gray-600"
                                                     }`}
                                             >
                                                 {booking.status}
