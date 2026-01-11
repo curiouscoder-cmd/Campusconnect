@@ -44,7 +44,7 @@ export function Navbar() {
                     <img
                         src="/favicon_light.ico"
                         alt="Campus Connect"
-                        className="w-10 h-10"
+                        className="w-10 h-10 border-0 outline-none"
                     />
                     <span className="font-semibold text-primary text-lg">Campus Connect</span>
                 </Link>
