@@ -10,13 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Mail, Phone, Calendar, Edit2, Save, Loader2, LogOut } from "lucide-react";
+import { User, Mail, Phone, Edit2, Save, Loader2, LogOut } from "lucide-react";
 
 export default function ProfilePage() {
     const { user, signOut, loading: authLoading } = useAuth();
     const router = useRouter();
     const [profile, setProfile] = useState(null);
-    const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -33,7 +32,6 @@ export default function ProfilePage() {
 
         if (user) {
             fetchProfile();
-            fetchBookings();
         }
     }, [user, authLoading, router]);
 
@@ -59,40 +57,29 @@ export default function ProfilePage() {
         }
     }
 
-    async function fetchBookings() {
-        try {
-            const { data, error } = await supabase
-                .from("bookings")
-                .select("*, mentors(name, image)")
-                .eq("user_email", user.email)
-                .order("created_at", { ascending: false })
-                .limit(5);
-
-            if (data) {
-                setBookings(data);
-            }
-        } catch (error) {
-            console.error("Error fetching bookings:", error);
-        }
-    }
-
     async function handleSave() {
         setSaving(true);
         try {
-            const { error } = await supabase
+            console.log("Updating profile for user:", user.id);
+            console.log("Form data:", formData);
+
+            const { data, error } = await supabase
                 .from("profiles")
-                .upsert({
-                    id: user.id,
-                    email: user.email,
+                .update({
                     full_name: formData.full_name,
                     phone: formData.phone,
                     updated_at: new Date().toISOString(),
-                });
+                })
+                .eq("id", user.id)
+                .select();
+
+            console.log("Update result:", { data, error });
 
             if (error) throw error;
 
             setProfile({ ...profile, ...formData });
             setEditing(false);
+            alert("Profile updated successfully!");
         } catch (error) {
             console.error("Error updating profile:", error);
             alert("Failed to update profile: " + error.message);
@@ -271,66 +258,6 @@ export default function ProfilePage() {
                                         </div>
                                     </div>
                                 </>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    {/* Recent Bookings Card */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-lg">Recent Sessions</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {bookings.length === 0 ? (
-                                <div className="text-center py-8 text-gray-500">
-                                    <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                                    <p>No sessions booked yet</p>
-                                    <Button
-                                        variant="link"
-                                        onClick={() => router.push("/")}
-                                        className="mt-2"
-                                    >
-                                        Browse Mentors
-                                    </Button>
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {bookings.map((booking) => (
-                                        <div
-                                            key={booking.id}
-                                            className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
-                                        >
-                                            {booking.mentors?.image ? (
-                                                <img
-                                                    src={booking.mentors.image}
-                                                    alt={booking.mentors.name}
-                                                    className="w-10 h-10 rounded-full object-cover"
-                                                />
-                                            ) : (
-                                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
-                                                    {booking.mentors?.name?.charAt(0) || "M"}
-                                                </div>
-                                            )}
-                                            <div className="flex-1 min-w-0">
-                                                <p className="font-medium text-sm truncate">
-                                                    {booking.mentors?.name || "Mentor"}
-                                                </p>
-                                                <p className="text-xs text-gray-500">
-                                                    {booking.session_type} •{" "}
-                                                    {new Date(booking.created_at).toLocaleDateString()}
-                                                </p>
-                                            </div>
-                                            <span
-                                                className={`text-xs px-2 py-1 rounded-full ${booking.status === "confirmed"
-                                                    ? "bg-green-100 text-green-700"
-                                                    : "bg-gray-100 text-gray-600"
-                                                    }`}
-                                            >
-                                                {booking.status}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
                             )}
                         </CardContent>
                     </Card>
