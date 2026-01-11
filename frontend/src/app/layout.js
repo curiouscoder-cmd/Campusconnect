@@ -10,6 +10,18 @@ const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-displ
 export const metadata = {
   title: "Campus Connect | Talk to Real Students at New-Gen Colleges",
   description: "Get honest insights from current students at NST, Vedam, NIAT & more. Book 1:1 sessions to ask about campus life, placements, faculty, hostel, and whether the college is worth joining.",
+  icons: {
+    icon: [
+      {
+        url: "/favicon_light.ico",
+        media: "(prefers-color-scheme: light)",
+      },
+      {
+        url: "/favicon_dark.ico",
+        media: "(prefers-color-scheme: dark)",
+      },
+    ],
+  },
 };
 
 export default function RootLayout({ children }) {

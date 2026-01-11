@@ -41,9 +41,11 @@ export function Navbar() {
             <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold">
-                        CC
-                    </div>
+                    <img
+                        src="/favicon_dark.ico"
+                        alt="Campus Connect"
+                        className="w-8 h-8"
+                    />
                     <span className="font-semibold text-primary text-lg">Campus Connect</span>
                 </Link>
 
