@@ -7,7 +7,7 @@ export const SESSION_TYPES = [
     id: "quick",
     title: "Quick Chat",
     duration: 15,
-    price: 49,  // TODO: Change back to 99 after testing
+    price: 1,  // TODO: Change back to 99 after testing
     description: "Perfect for quick doubts about admissions or campus life",
     type: "1:1",
   },

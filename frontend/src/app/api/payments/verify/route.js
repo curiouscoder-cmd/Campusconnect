@@ -387,6 +387,7 @@ export async function POST(request) {
 
     // Send confirmation email to student
     try {
+      console.log("Sending student email with meet link:", meetLink);
       await sendBookingConfirmationEmail(
         userDetails,
         sessionType,
@@ -395,7 +396,7 @@ export async function POST(request) {
         slotTime,
         fetchedMentorName
       );
-      console.log("Student email sent");
+      console.log("Student email sent successfully with meet link:", meetLink);
     } catch (emailErr) {
       console.error("Student email send failed:", emailErr);
     }

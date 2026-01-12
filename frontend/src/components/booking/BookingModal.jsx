@@ -168,6 +168,32 @@ export function BookingModal({ mentor, isOpen, onClose, mode = "paid" }) {
   };
 
   const handleContinueFromDetails = () => {
+    // Validate user details before proceeding
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[6-9]\d{9}$/;
+
+    if (!userDetails.name?.trim()) {
+      setError("Please enter your name");
+      return;
+    }
+    if (!userDetails.email?.trim()) {
+      setError("Please enter your email");
+      return;
+    }
+    if (!emailRegex.test(userDetails.email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+    if (!userDetails.phone?.trim()) {
+      setError("Please enter your phone number");
+      return;
+    }
+    if (!phoneRegex.test(userDetails.phone.replace(/\s/g, ""))) {
+      setError("Please enter a valid 10-digit phone number");
+      return;
+    }
+
+    setError(null);
     setCurrentStep(STEPS.PAYMENT);
   };
 
