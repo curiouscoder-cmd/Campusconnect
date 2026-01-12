@@ -8,6 +8,7 @@ import { SessionTypeSelector } from "./SessionTypeSelector";
 import { UserDetailsForm } from "./UserDetailsForm";
 import { PaymentScreen } from "./PaymentScreen";
 import { ConfirmationScreen } from "./ConfirmationScreen";
+import { NsatVerificationScreen } from "./NsatVerificationScreen";
 import { generateMockSlots, formatDateISO } from "@/lib/booking-utils";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,7 @@ const STEPS = {
   SESSION_TYPE: "session-type",
   USER_DETAILS: "user-details",
   PAYMENT: "payment",
+  NSAT_VERIFICATION: "nsat-verification",
   CONFIRMATION: "confirmation",
 };
 
@@ -26,10 +28,11 @@ const STEP_TITLES = {
   [STEPS.SESSION_TYPE]: "Choose Session Type",
   [STEPS.USER_DETAILS]: "Your Details",
   [STEPS.PAYMENT]: "Complete Payment",
+  [STEPS.NSAT_VERIFICATION]: "NSAT Verification",
   [STEPS.CONFIRMATION]: "Booking Confirmed",
 };
 
-export function BookingModal({ mentor, isOpen, onClose }) {
+export function BookingModal({ mentor, isOpen, onClose, mode = "paid" }) {
   const [currentStep, setCurrentStep] = useState(STEPS.SLOT_SELECTION);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [selectedSession, setSelectedSession] = useState(null);
@@ -43,6 +46,9 @@ export function BookingModal({ mentor, isOpen, onClose }) {
   const [error, setError] = useState(null);
   const [slots, setSlots] = useState([]);
   const [slotsLoading, setSlotsLoading] = useState(true);
+  const [nsatSubmitting, setNsatSubmitting] = useState(false);
+
+  const isNsatMode = mode === "nsat";
 
   // Fetch real slots from database
   const mentorId = mentor?.id;
@@ -145,7 +151,12 @@ export function BookingModal({ mentor, isOpen, onClose }) {
       setError("Please select a time slot");
       return;
     }
-    setCurrentStep(STEPS.SESSION_TYPE);
+    // In NSAT mode, go directly to NSAT verification
+    if (isNsatMode) {
+      setCurrentStep(STEPS.NSAT_VERIFICATION);
+    } else {
+      setCurrentStep(STEPS.SESSION_TYPE);
+    }
   };
 
   const handleContinueFromSession = () => {
@@ -182,14 +193,21 @@ export function BookingModal({ mentor, isOpen, onClose }) {
       case STEPS.PAYMENT:
         setCurrentStep(STEPS.USER_DETAILS);
         break;
+      case STEPS.NSAT_VERIFICATION:
+        setCurrentStep(STEPS.SLOT_SELECTION);
+        break;
       default:
         break;
     }
   };
 
-  const canGoBack = [STEPS.SESSION_TYPE, STEPS.USER_DETAILS, STEPS.PAYMENT].includes(currentStep);
+  const canGoBack = [STEPS.SESSION_TYPE, STEPS.USER_DETAILS, STEPS.PAYMENT, STEPS.NSAT_VERIFICATION].includes(currentStep);
 
   const getStepNumber = () => {
+    if (isNsatMode) {
+      const stepOrder = [STEPS.SLOT_SELECTION, STEPS.NSAT_VERIFICATION];
+      return stepOrder.indexOf(currentStep) + 1;
+    }
     const stepOrder = [STEPS.SLOT_SELECTION, STEPS.SESSION_TYPE, STEPS.USER_DETAILS, STEPS.PAYMENT];
     return stepOrder.indexOf(currentStep) + 1;
   };
@@ -387,6 +405,23 @@ export function BookingModal({ mentor, isOpen, onClose }) {
                   </motion.div>
                 )}
 
+                {currentStep === STEPS.NSAT_VERIFICATION && (
+                  <motion.div
+                    key="nsat"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <NsatVerificationScreen
+                      mentor={mentor}
+                      slot={selectedSlot}
+                      onSuccess={() => setCurrentStep(STEPS.CONFIRMATION)}
+                      onBack={handleBack}
+                    />
+                  </motion.div>
+                )}
+
                 {currentStep === STEPS.CONFIRMATION && (
                   <motion.div
                     key="confirmation"
@@ -399,8 +434,9 @@ export function BookingModal({ mentor, isOpen, onClose }) {
                       selectedSlot={selectedSlot}
                       selectedSession={selectedSession}
                       userDetails={userDetails}
-                      meetLink={mentor?.meetLink || "https://meet.google.com/abc-defg-hij"}
+                      meetLink={isNsatMode ? null : (mentor?.meetLink || "https://meet.google.com/abc-defg-hij")}
                       onClose={onClose}
+                      isNsatMode={isNsatMode}
                     />
                   </motion.div>
                 )}
@@ -408,7 +444,7 @@ export function BookingModal({ mentor, isOpen, onClose }) {
             </div>
 
             {/* Footer with Continue Button */}
-            {currentStep !== STEPS.CONFIRMATION && currentStep !== STEPS.PAYMENT && (
+            {currentStep !== STEPS.CONFIRMATION && currentStep !== STEPS.PAYMENT && currentStep !== STEPS.NSAT_VERIFICATION && (
               <div className="p-6 md:p-8 pt-4 bg-white">
                 <motion.button
                   onClick={() => {

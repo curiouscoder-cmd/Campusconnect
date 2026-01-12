@@ -26,7 +26,6 @@ import { PricingCard } from "@/components/PricingCard";
 import { Accordion as AccordionEldora, AccordionContent as AccordionContentEldora, AccordionItem as AccordionItemEldora, AccordionTrigger as AccordionTriggerEldora } from "@/components/ui/accordion-eldora";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight } from "lucide-react";
-import { NsatOfferModal } from "@/components/NsatOfferModal";
 
 // Available colleges - easy to expand later
 const COLLEGES = [
@@ -242,8 +241,6 @@ export default function Home() {
   const { isAuthenticated } = useAuth();
   const [mentors, setMentors] = useState([]);
   const [loadingMentors, setLoadingMentors] = useState(true);
-  const [nsatModalOpen, setNsatModalOpen] = useState(false);
-  const [selectedMentorForNsat, setSelectedMentorForNsat] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -349,26 +346,17 @@ export default function Home() {
                   <p className="text-sm text-gray-600">Register for NSAT using our link & get ₹300 off + a free mentorship session</p>
                 </div>
               </div>
-              <Button
-                onClick={() => setNsatModalOpen(true)}
-                className="rounded-full px-6 bg-gradient-to-r from-primary to-purple-500 text-white hover:opacity-90 transition-opacity shrink-0"
-              >
-                Claim Free Session
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+              <Link href="#mentors">
+                <Button
+                  className="rounded-full px-6 bg-gradient-to-r from-primary to-purple-500 text-white hover:opacity-90 transition-opacity shrink-0"
+                >
+                  Claim Free Session
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
             </div>
           </div>
         </section>
-
-        {/* NSAT Offer Modal */}
-        <NsatOfferModal
-          isOpen={nsatModalOpen}
-          onClose={() => {
-            setNsatModalOpen(false);
-            setSelectedMentorForNsat(null);
-          }}
-          mentor={selectedMentorForNsat}
-        />
 
         {/* Mentors Section */}
         <section id="mentors" className="py-24 bg-gradient-to-b from-primary/5 to-transparent border-t border-primary/10">
@@ -392,10 +380,7 @@ export default function Home() {
               {mentors.map((mentor, i) => (
                 <div key={mentor.id || i}>
                   <MentorCardWithBooking mentor={mentor}>
-                    <MentorCard mentor={mentor} onFreeSession={() => {
-                      setSelectedMentorForNsat(mentor);
-                      setNsatModalOpen(true);
-                    }} />
+                    <MentorCard mentor={mentor} />
                   </MentorCardWithBooking>
                 </div>
               ))}
