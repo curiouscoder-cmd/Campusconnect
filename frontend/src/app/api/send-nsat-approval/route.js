@@ -15,7 +15,7 @@ export async function POST(request) {
         }
 
         const { data, error } = await resend.emails.send({
-            from: "Campus Connect <onboarding@resend.dev>",
+            from: "Campus Connect <noreply@campus-connect.co.in>",
             to: email,
             subject: "🎉 Your Free Session is Approved!",
             html: `
