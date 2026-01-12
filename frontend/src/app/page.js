@@ -14,7 +14,7 @@ import {
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { motion } from "framer-motion";
-import { ChevronDown, Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronDown, Check, ChevronLeft, ChevronRight, Gift, ExternalLink } from "lucide-react";
 import { HeroHighlight } from "@/components/ui/hero-highlight";
 import { TextReveal } from "@/components/ui/text-reveal";
 import { TypewriterEffectSmooth } from "@/components/ui/typewriter-effect";
@@ -26,6 +26,7 @@ import { PricingCard } from "@/components/PricingCard";
 import { Accordion as AccordionEldora, AccordionContent as AccordionContentEldora, AccordionItem as AccordionItemEldora, AccordionTrigger as AccordionTriggerEldora } from "@/components/ui/accordion-eldora";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight } from "lucide-react";
+import { NsatOfferModal } from "@/components/NsatOfferModal";
 
 // Available colleges - easy to expand later
 const COLLEGES = [
@@ -241,6 +242,7 @@ export default function Home() {
   const { isAuthenticated } = useAuth();
   const [mentors, setMentors] = useState([]);
   const [loadingMentors, setLoadingMentors] = useState(true);
+  const [nsatModalOpen, setNsatModalOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -333,6 +335,33 @@ export default function Home() {
 
         </section>
 
+        {/* NSAT Offer Banner */}
+        <section className="py-6 bg-gradient-to-r from-primary/10 via-purple-500/10 to-primary/10 border-y border-primary/20">
+          <div className="container px-4 md:px-6 mx-auto">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-primary to-purple-500 flex items-center justify-center shrink-0">
+                  <Gift className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">🎉 NSAT Offer: Get Your First Session FREE!</h3>
+                  <p className="text-sm text-gray-600">Register for NSAT using our link & get ₹300 off + a free mentorship session</p>
+                </div>
+              </div>
+              <Button
+                onClick={() => setNsatModalOpen(true)}
+                className="rounded-full px-6 bg-gradient-to-r from-primary to-purple-500 text-white hover:opacity-90 transition-opacity shrink-0"
+              >
+                Claim Free Session
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        {/* NSAT Offer Modal */}
+        <NsatOfferModal isOpen={nsatModalOpen} onClose={() => setNsatModalOpen(false)} />
+
         {/* Mentors Section */}
         <section id="mentors" className="py-24 bg-gradient-to-b from-primary/5 to-transparent border-t border-primary/10">
           <div className="container px-4 md:px-6 mx-auto">
@@ -355,7 +384,7 @@ export default function Home() {
               {mentors.map((mentor, i) => (
                 <div key={mentor.id || i}>
                   <MentorCardWithBooking mentor={mentor}>
-                    <MentorCard mentor={mentor} />
+                    <MentorCard mentor={mentor} onFreeSession={() => setNsatModalOpen(true)} />
                   </MentorCardWithBooking>
                 </div>
               ))}

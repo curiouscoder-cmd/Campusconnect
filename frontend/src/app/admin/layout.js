@@ -14,7 +14,8 @@ import {
     Menu,
     X,
     Home,
-    ExternalLink
+    ExternalLink,
+    Gift
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -54,6 +55,7 @@ export default function AdminLayout({ children }) {
         { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
         { href: "/admin/mentors", label: "Mentors", icon: Users },
         { href: "/admin/bookings", label: "Bookings", icon: Calendar },
+        { href: "/admin/nsat-referrals", label: "NSAT Referrals", icon: Gift },
         // { href: "/admin/settings", label: "Settings", icon: Settings },
     ];
 
