@@ -37,7 +37,42 @@ export default function NsatReferralsPage() {
     const handleApprove = async (referral) => {
         setProcessingId(referral.id);
         try {
-            // Update status to approved
+            // Mark the slot as booked in availability table
+            if (referral.preferred_mentor_id && referral.preferred_date && referral.preferred_time) {
+                const { error: slotError } = await supabase
+                    .from("availability")
+                    .update({ is_booked: true, is_reserved: false })
+                    .eq("mentor_id", referral.preferred_mentor_id)
+                    .eq("date", referral.preferred_date)
+                    .eq("start_time", referral.preferred_time);
+
+                if (slotError) {
+                    console.error("Error marking slot as booked:", slotError);
+                }
+
+                // Create a booking record for the free session
+                const { error: bookingError } = await supabase
+                    .from("bookings")
+                    .insert({
+                        mentor_id: referral.preferred_mentor_id,
+                        user_name: referral.name,
+                        user_email: referral.email,
+                        user_phone: referral.phone || null,
+                        session_type: "nsat_free",
+                        session_duration: 15,
+                        session_price: 0,
+                        date: referral.preferred_date,
+                        start_time: referral.preferred_time,
+                        status: "confirmed",
+                        confirmed_at: new Date().toISOString(),
+                    });
+
+                if (bookingError) {
+                    console.error("Error creating booking:", bookingError);
+                }
+            }
+
+            // Update referral status to approved
             const { error } = await supabase
                 .from("nsat_referrals")
                 .update({
@@ -60,7 +95,7 @@ export default function NsatReferralsPage() {
 
             // Refresh list
             fetchReferrals();
-            alert("Referral approved! Email sent to " + referral.email);
+            alert("Referral approved! Slot booked and email sent to " + referral.email);
         } catch (error) {
             console.error("Error approving referral:", error);
             alert("Failed to approve referral");
@@ -174,7 +209,7 @@ export default function NsatReferralsPage() {
                                         <tr>
                                             <th className="p-4">Name</th>
                                             <th className="p-4">Email</th>
-                                            <th className="p-4">NSAT ID</th>
+                                            <th className="p-4">Preferred Slot</th>
                                             <th className="p-4">Status</th>
                                             <th className="p-4">Submitted</th>
                                             <th className="p-4 text-right">Actions</th>
@@ -189,8 +224,12 @@ export default function NsatReferralsPage() {
                                                 <td className="p-4 text-gray-600 text-sm">
                                                     {referral.email}
                                                 </td>
-                                                <td className="p-4 text-gray-600 text-sm font-mono">
-                                                    {referral.nsat_registration_id || "-"}
+                                                <td className="p-4 text-gray-600 text-sm">
+                                                    {referral.preferred_date && referral.preferred_time ? (
+                                                        <span>{referral.preferred_date} @ {referral.preferred_time}</span>
+                                                    ) : (
+                                                        <span className="text-gray-400">Not set</span>
+                                                    )}
                                                 </td>
                                                 <td className="p-4">
                                                     {getStatusBadge(referral.status)}
