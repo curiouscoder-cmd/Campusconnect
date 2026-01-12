@@ -346,14 +346,15 @@ export default function Home() {
                   <p className="text-sm text-gray-600">Register for NSAT using our link & get ₹300 off + a free mentorship session</p>
                 </div>
               </div>
-              <Link href="#mentors">
-                <Button
-                  className="rounded-full px-6 bg-gradient-to-r from-primary to-purple-500 text-white hover:opacity-90 transition-opacity shrink-0"
-                >
-                  Claim Free Session
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
+              <Button
+                onClick={() => {
+                  document.getElementById('mentors')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="rounded-full px-6 bg-gradient-to-r from-primary to-purple-500 text-white hover:opacity-90 transition-opacity shrink-0"
+              >
+                Claim Free Session
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
             </div>
           </div>
         </section>
