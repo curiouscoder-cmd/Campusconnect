@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import {
 import { Menu, User, LogOut, Settings, LayoutDashboard, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 
 const ADMIN_EMAIL = "nityaprofessional6402@gmail.com";
@@ -21,6 +23,27 @@ const ADMIN_EMAIL = "nityaprofessional6402@gmail.com";
 export function Navbar() {
     const router = useRouter();
     const { user, isAuthenticated, signOut, loading } = useAuth();
+    const [isMentor, setIsMentor] = useState(false);
+
+    // Check if user is a mentor
+    useEffect(() => {
+        async function checkMentorStatus() {
+            if (!user?.email) {
+                setIsMentor(false);
+                return;
+            }
+
+            const { data, error } = await supabase
+                .from("mentors")
+                .select("id")
+                .eq("email", user.email)
+                .single();
+
+            setIsMentor(!!data && !error);
+        }
+
+        checkMentorStatus();
+    }, [user?.email]);
 
     const handleSignOut = async () => {
         await signOut();
@@ -91,12 +114,14 @@ export function Navbar() {
                                                 My Profile
                                             </Link>
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem asChild>
-                                            <Link href="/mentor-dashboard" className="w-full cursor-pointer">
-                                                <Calendar className="w-4 h-4 mr-2" />
-                                                Mentor Dashboard
-                                            </Link>
-                                        </DropdownMenuItem>
+                                        {isMentor && (
+                                            <DropdownMenuItem asChild>
+                                                <Link href="/mentor-dashboard" className="w-full cursor-pointer">
+                                                    <Calendar className="w-4 h-4 mr-2" />
+                                                    Mentor Dashboard
+                                                </Link>
+                                            </DropdownMenuItem>
+                                        )}
                                         {user?.email === ADMIN_EMAIL && (
                                             <>
                                                 <DropdownMenuItem asChild>
