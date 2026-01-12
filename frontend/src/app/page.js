@@ -243,6 +243,7 @@ export default function Home() {
   const [mentors, setMentors] = useState([]);
   const [loadingMentors, setLoadingMentors] = useState(true);
   const [nsatModalOpen, setNsatModalOpen] = useState(false);
+  const [selectedMentorForNsat, setSelectedMentorForNsat] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -360,7 +361,14 @@ export default function Home() {
         </section>
 
         {/* NSAT Offer Modal */}
-        <NsatOfferModal isOpen={nsatModalOpen} onClose={() => setNsatModalOpen(false)} />
+        <NsatOfferModal
+          isOpen={nsatModalOpen}
+          onClose={() => {
+            setNsatModalOpen(false);
+            setSelectedMentorForNsat(null);
+          }}
+          mentor={selectedMentorForNsat}
+        />
 
         {/* Mentors Section */}
         <section id="mentors" className="py-24 bg-gradient-to-b from-primary/5 to-transparent border-t border-primary/10">
@@ -384,7 +392,10 @@ export default function Home() {
               {mentors.map((mentor, i) => (
                 <div key={mentor.id || i}>
                   <MentorCardWithBooking mentor={mentor}>
-                    <MentorCard mentor={mentor} onFreeSession={() => setNsatModalOpen(true)} />
+                    <MentorCard mentor={mentor} onFreeSession={() => {
+                      setSelectedMentorForNsat(mentor);
+                      setNsatModalOpen(true);
+                    }} />
                   </MentorCardWithBooking>
                 </div>
               ))}

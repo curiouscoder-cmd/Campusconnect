@@ -2,56 +2,61 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ExternalLink, Upload, CheckCircle, Loader2, Gift, ArrowRight } from "lucide-react";
+import { X, ExternalLink, CheckCircle, Gift, ArrowRight, Calendar, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/context/AuthContext";
+import { SESSION_TYPES, formatTime } from "@/lib/booking-utils";
+import { SlotPicker } from "@/components/booking/SlotPicker";
 
 const NSAT_LINK = "https://www.newtonschool.co/newton-school-of-technology-nst/apply-referral/?utm_source=referral&utm_medium=curiouscoder_cmd&utm_campaign=btech-computer-science-referral-dashboard-v2--portal-referral";
+const GOOGLE_FORM_LINK = "https://docs.google.com/forms/d/e/1FAIpQLSddkem_Iz-VisAGT9Q2Ow0rhS17S9r8q6HE0fzxZklHQo-HMA/viewform?usp=publish-editor";
 
-export function NsatOfferModal({ isOpen, onClose }) {
-    const [step, setStep] = useState(1);
-    const [loading, setLoading] = useState(false);
+export function NsatOfferModal({ isOpen, onClose, mentor }) {
+    const { user } = useAuth();
+    const [step, setStep] = useState(1); // 1: Choose slot, 2: NSAT steps, 3: Success
+    const [selectedSession, setSelectedSession] = useState(SESSION_TYPES[0]);
+    const [selectedSlot, setSelectedSlot] = useState(null);
     const [submitted, setSubmitted] = useState(false);
-    const [formData, setFormData] = useState({
-        name: "",
-        email: "",
-        phone: "",
-        nsat_registration_id: "",
-    });
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
+    const handleSlotSelect = (slot) => {
+        setSelectedSlot(slot);
+    };
 
+    const handleContinue = () => {
+        if (selectedSlot) {
+            setStep(2);
+        }
+    };
+
+    const handleSubmit = async () => {
         try {
+            // Save to nsat_referrals table with slot info
             const { error } = await supabase
                 .from("nsat_referrals")
                 .insert({
-                    name: formData.name,
-                    email: formData.email,
-                    phone: formData.phone,
-                    nsat_registration_id: formData.nsat_registration_id,
+                    name: user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Unknown",
+                    email: user?.email || "",
+                    preferred_mentor_id: mentor?.id,
+                    preferred_date: selectedSlot?.date,
+                    preferred_time: selectedSlot?.startTime,
                     status: "pending",
                 });
 
             if (error) throw error;
 
             setSubmitted(true);
-            setStep(4);
+            setStep(3);
         } catch (error) {
             console.error("Error submitting NSAT referral:", error);
             alert("Failed to submit. Please try again.");
-        } finally {
-            setLoading(false);
         }
     };
 
     const handleClose = () => {
         setStep(1);
         setSubmitted(false);
-        setFormData({ name: "", email: "", phone: "", nsat_registration_id: "" });
+        setSelectedSlot(null);
         onClose();
     };
 
@@ -70,7 +75,7 @@ export function NsatOfferModal({ isOpen, onClose }) {
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.95, opacity: 0 }}
-                    className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+                    className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header */}
@@ -86,185 +91,198 @@ export function NsatOfferModal({ isOpen, onClose }) {
                                 <Gift className="w-6 h-6 text-white" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-bold text-gray-900">NSAT Offer</h2>
-                                <p className="text-sm text-gray-500">Get your first session FREE!</p>
+                                <h2 className="text-xl font-bold text-gray-900">NSAT Offer - Free Session</h2>
+                                <p className="text-sm text-gray-500">
+                                    {mentor ? `with ${mentor.name}` : "Get your first session FREE!"}
+                                </p>
                             </div>
                         </div>
                     </div>
 
                     {/* Content */}
                     <div className="p-6">
-                        {/* Step Indicator */}
-                        {!submitted && (
-                            <div className="flex items-center justify-center gap-2 mb-6">
-                                {[1, 2, 3].map((s) => (
-                                    <div
-                                        key={s}
-                                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${step === s
-                                                ? "bg-primary text-white"
-                                                : step > s
-                                                    ? "bg-green-500 text-white"
-                                                    : "bg-gray-100 text-gray-400"
-                                            }`}
-                                    >
-                                        {step > s ? <CheckCircle className="w-4 h-4" /> : s}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Step 1: Register on NSAT */}
+                        {/* Step 1: Choose Slot */}
                         {step === 1 && (
-                            <div className="space-y-4">
-                                <div className="text-center">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                        Step 1: Register for NSAT
+                            <div className="space-y-6">
+                                <div className="text-center mb-4">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                                        Step 1: Choose Your Preferred Slot
                                     </h3>
-                                    <p className="text-sm text-gray-500 mb-4">
-                                        Click the button below to register for NSAT exam. You'll also get ₹300 off on the registration fee!
+                                    <p className="text-sm text-gray-500">
+                                        Select a date and time for your free session
                                     </p>
                                 </div>
 
-                                <a
-                                    href={NSAT_LINK}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-gradient-to-r from-primary to-purple-500 text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
+                                {/* Session Type Selection */}
+                                <div className="flex gap-3 justify-center">
+                                    {SESSION_TYPES.map((session) => (
+                                        <button
+                                            key={session.id}
+                                            onClick={() => setSelectedSession(session)}
+                                            className={`px-4 py-2 rounded-lg border-2 transition-all ${selectedSession.id === session.id
+                                                    ? "border-primary bg-primary/5 text-primary"
+                                                    : "border-gray-200 hover:border-gray-300"
+                                                }`}
+                                        >
+                                            <span className="font-medium">{session.title}</span>
+                                            <span className="text-sm text-gray-500 ml-2">({session.duration} min)</span>
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Slot Picker */}
+                                <SlotPicker
+                                    mentorId={mentor?.id}
+                                    sessionDuration={selectedSession.duration}
+                                    selectedSlot={selectedSlot}
+                                    onSelectSlot={handleSlotSelect}
+                                    currentUserId={user?.id}
+                                />
+
+                                {/* Selected Slot Display */}
+                                {selectedSlot && (
+                                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                                        <div className="flex items-center gap-3">
+                                            <CheckCircle className="w-5 h-5 text-green-500" />
+                                            <div>
+                                                <p className="font-medium text-green-800">Slot Selected</p>
+                                                <p className="text-sm text-green-600">
+                                                    {selectedSlot.date} at {formatTime(selectedSlot.startTime)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <Button
+                                    onClick={handleContinue}
+                                    disabled={!selectedSlot}
+                                    className="w-full bg-gradient-to-r from-primary to-purple-500 text-white"
                                 >
-                                    Register on NSAT
-                                    <ExternalLink className="w-4 h-4" />
-                                </a>
-
-                                <div className="text-center pt-4">
-                                    <p className="text-xs text-gray-400 mb-3">Already registered using this link?</p>
-                                    <Button
-                                        onClick={() => setStep(2)}
-                                        variant="outline"
-                                        className="w-full"
-                                    >
-                                        Continue to Step 2
-                                        <ArrowRight className="w-4 h-4 ml-2" />
-                                    </Button>
-                                </div>
+                                    Continue
+                                    <ArrowRight className="w-4 h-4 ml-2" />
+                                </Button>
                             </div>
                         )}
 
-                        {/* Step 2: Fill Form */}
+                        {/* Step 2: NSAT Verification Steps */}
                         {step === 2 && (
-                            <div className="space-y-4">
+                            <div className="space-y-6">
                                 <div className="text-center mb-4">
                                     <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                                        Step 2: Fill Your Details
+                                        Step 2: Complete NSAT Registration
                                     </h3>
                                     <p className="text-sm text-gray-500">
-                                        Enter the details you used for NSAT registration
+                                        Follow these steps to claim your free session
                                     </p>
                                 </div>
 
-                                <form onSubmit={(e) => { e.preventDefault(); setStep(3); }} className="space-y-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="name">Full Name *</Label>
-                                        <Input
-                                            id="name"
-                                            required
-                                            value={formData.name}
-                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                            placeholder="Enter your full name"
-                                        />
+                                {/* Selected Slot Summary */}
+                                <div className="bg-gray-50 rounded-lg p-4 flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                        <Calendar className="w-5 h-5 text-primary" />
                                     </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="email">Email *</Label>
-                                        <Input
-                                            id="email"
-                                            type="email"
-                                            required
-                                            value={formData.email}
-                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                            placeholder="Enter your email"
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="phone">Phone Number</Label>
-                                        <Input
-                                            id="phone"
-                                            value={formData.phone}
-                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                            placeholder="+91 XXXXX XXXXX"
-                                        />
-                                    </div>
-
-                                    <div className="flex gap-2 pt-2">
-                                        <Button type="button" variant="outline" onClick={() => setStep(1)} className="flex-1">
-                                            Back
-                                        </Button>
-                                        <Button type="submit" className="flex-1">
-                                            Next
-                                            <ArrowRight className="w-4 h-4 ml-2" />
-                                        </Button>
-                                    </div>
-                                </form>
-                            </div>
-                        )}
-
-                        {/* Step 3: NSAT Registration ID */}
-                        {step === 3 && (
-                            <div className="space-y-4">
-                                <div className="text-center mb-4">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                                        Step 3: Verification Details
-                                    </h3>
-                                    <p className="text-sm text-gray-500">
-                                        Enter your NSAT registration ID for verification
-                                    </p>
-                                </div>
-
-                                <form onSubmit={handleSubmit} className="space-y-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="nsat_id">NSAT Registration ID / Email *</Label>
-                                        <Input
-                                            id="nsat_id"
-                                            required
-                                            value={formData.nsat_registration_id}
-                                            onChange={(e) => setFormData({ ...formData, nsat_registration_id: e.target.value })}
-                                            placeholder="Enter your NSAT registration ID or email"
-                                        />
-                                        <p className="text-xs text-gray-400">
-                                            This is the email/ID you used during NSAT registration
+                                    <div>
+                                        <p className="font-medium text-gray-900">{selectedSession.title} with {mentor?.name}</p>
+                                        <p className="text-sm text-gray-500">
+                                            {selectedSlot?.date} at {formatTime(selectedSlot?.startTime)}
                                         </p>
                                     </div>
+                                </div>
 
-                                    <div className="flex gap-2 pt-2">
-                                        <Button type="button" variant="outline" onClick={() => setStep(2)} className="flex-1">
+                                {/* Step Cards */}
+                                <div className="space-y-4">
+                                    {/* Step A: Register on NSAT */}
+                                    <div className="border rounded-lg p-4">
+                                        <div className="flex items-start gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold shrink-0">
+                                                1
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="font-medium text-gray-900">Register for NSAT Exam</h4>
+                                                <p className="text-sm text-gray-500 mb-3">
+                                                    Use our referral link to register and get ₹300 off on registration fee!
+                                                </p>
+                                                <a
+                                                    href={NSAT_LINK}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+                                                >
+                                                    Register on NSAT
+                                                    <ExternalLink className="w-4 h-4" />
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Step B: Fill Google Form */}
+                                    <div className="border rounded-lg p-4">
+                                        <div className="flex items-start gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold shrink-0">
+                                                2
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="font-medium text-gray-900">Fill Verification Form</h4>
+                                                <p className="text-sm text-gray-500 mb-3">
+                                                    Submit your details and NSAT registration screenshot for verification
+                                                </p>
+                                                <a
+                                                    href={GOOGLE_FORM_LINK}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+                                                >
+                                                    Fill Google Form
+                                                    <ExternalLink className="w-4 h-4" />
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="pt-4 border-t">
+                                    <p className="text-sm text-gray-500 text-center mb-4">
+                                        After completing both steps, click below to submit your slot request
+                                    </p>
+                                    <div className="flex gap-3">
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => setStep(1)}
+                                            className="flex-1"
+                                        >
                                             Back
                                         </Button>
-                                        <Button type="submit" disabled={loading} className="flex-1">
-                                            {loading ? (
-                                                <>
-                                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                                    Submitting...
-                                                </>
-                                            ) : (
-                                                "Submit"
-                                            )}
+                                        <Button
+                                            onClick={handleSubmit}
+                                            className="flex-1 bg-gradient-to-r from-primary to-purple-500 text-white"
+                                        >
+                                            Submit for Verification
                                         </Button>
                                     </div>
-                                </form>
+                                </div>
                             </div>
                         )}
 
-                        {/* Step 4: Success */}
-                        {step === 4 && submitted && (
+                        {/* Step 3: Success */}
+                        {step === 3 && submitted && (
                             <div className="text-center py-6">
                                 <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
                                     <CheckCircle className="w-8 h-8 text-green-500" />
                                 </div>
                                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                                    Application Submitted!
+                                    Request Submitted!
                                 </h3>
-                                <p className="text-gray-500 mb-6">
-                                    We'll verify your NSAT registration and send you an email once your free session is scheduled.
+                                <p className="text-gray-500 mb-2">
+                                    We'll verify your NSAT registration and confirm your session.
+                                </p>
+                                <div className="bg-gray-50 rounded-lg p-4 mb-6 inline-block">
+                                    <p className="text-sm text-gray-600">
+                                        <strong>Requested Slot:</strong> {selectedSlot?.date} at {formatTime(selectedSlot?.startTime)}
+                                    </p>
+                                </div>
+                                <p className="text-sm text-gray-500 mb-6">
+                                    You'll receive an email once your free session is approved.
                                 </p>
                                 <Button onClick={handleClose} className="w-full">
                                     Done
