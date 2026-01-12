@@ -359,6 +359,8 @@ export async function POST(request) {
       bookingData.slot_id = slotId;
     }
 
+    console.log("Creating booking with data:", JSON.stringify(bookingData, null, 2));
+
     const { data: booking, error: bookingError } = await supabase
       .from("bookings")
       .insert(bookingData)
@@ -367,6 +369,9 @@ export async function POST(request) {
 
     if (bookingError) {
       console.error("Error creating booking:", bookingError);
+      console.error("Booking data that failed:", bookingData);
+    } else {
+      console.log("Booking created successfully:", booking?.id);
     }
 
     if (booking) {
