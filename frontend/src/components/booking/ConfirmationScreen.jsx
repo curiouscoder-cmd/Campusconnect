@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { CheckCircle, Calendar, Clock, Video, Mail, Copy, ExternalLink } from "lucide-react";
+import { CheckCircle, Calendar, Clock, Video, Mail, Copy, ExternalLink, Gift } from "lucide-react";
 import { formatTime } from "@/lib/booking-utils";
 import { useState } from "react";
 
@@ -12,6 +12,7 @@ export function ConfirmationScreen({
   userDetails,
   meetLink,
   onClose,
+  isNsatMode = false,
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -24,14 +25,16 @@ export function ConfirmationScreen({
   };
 
   const handleAddToCalendar = () => {
+    if (!selectedSession) return;
+
     const startDate = new Date(`${selectedSlot.date}T${selectedSlot.startTime}:00`);
     const endDate = new Date(startDate.getTime() + selectedSession.duration * 60000);
 
     const event = {
       title: `Campus Connect: ${selectedSession.title} with ${mentor.name}`,
-      start: startDate.toISOString().replace(/-|:|\.\d+/g, ""),
-      end: endDate.toISOString().replace(/-|:|\.\d+/g, ""),
-      details: `Session with ${mentor.name} from ${mentor.college}.\n\nMeet Link: ${meetLink || "Will be shared via email"}`,
+      start: startDate.toISOString().replace(/-|:|\\.\\d+/g, ""),
+      end: endDate.toISOString().replace(/-|:|\\.\\d+/g, ""),
+      details: `Session with ${mentor.name} from ${mentor.college}.\\n\\nMeet Link: ${meetLink || "Will be shared via email"}`,
       location: meetLink || "Online",
     };
 
@@ -40,6 +43,120 @@ export function ConfirmationScreen({
     window.open(googleCalendarUrl, "_blank");
   };
 
+  // NSAT Mode Confirmation
+  if (isNsatMode) {
+    return (
+      <div className="text-center space-y-6 p-6">
+        {/* Success Animation */}
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 200, damping: 15 }}
+          className="w-20 h-20 mx-auto rounded-full bg-gradient-to-r from-primary/20 to-purple-500/20 flex items-center justify-center"
+        >
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Gift className="w-10 h-10 text-primary" />
+          </motion.div>
+        </motion.div>
+
+        {/* Success Message */}
+        <div>
+          <motion.h2
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-2xl font-bold text-gray-900"
+          >
+            Request Submitted!
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="text-gray-500 mt-2"
+          >
+            We'll verify your NSAT registration and confirm your session
+          </motion.p>
+        </div>
+
+        {/* Booking Details Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-gray-50 rounded-xl p-5 text-left space-y-4"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
+              <span className="text-lg font-bold text-indigo-600">
+                {mentor?.name?.charAt(0) || "M"}
+              </span>
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">{mentor?.name}</p>
+              <p className="text-sm text-gray-500">{mentor?.college}</p>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-200 pt-4 space-y-3">
+            <div className="flex items-center gap-3 text-sm">
+              <Calendar className="w-4 h-4 text-gray-400" />
+              <span className="text-gray-600">
+                {selectedSlot?.date ? new Date(selectedSlot.date).toLocaleDateString("en-US", {
+                  weekday: "long",
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                }) : "To be confirmed"}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 text-sm">
+              <Clock className="w-4 h-4 text-gray-400" />
+              <span className="text-gray-600">
+                {selectedSlot?.startTime ? formatTime(selectedSlot.startTime) : "To be confirmed"}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 text-sm">
+              <Gift className="w-4 h-4 text-primary" />
+              <span className="text-primary font-medium">NSAT Offer - Free Session</span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Info Message */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="text-sm text-gray-500 bg-yellow-50 border border-yellow-200 rounded-lg p-4"
+        >
+          <p>📧 You'll receive an email once your free session is approved and scheduled.</p>
+        </motion.div>
+
+        {/* Done Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+        >
+          <button
+            onClick={onClose}
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-purple-500 text-white font-medium hover:opacity-90 transition-opacity"
+          >
+            Done
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Regular Paid Booking Confirmation
   return (
     <div className="text-center space-y-6">
       {/* Success Animation */}
@@ -74,7 +191,7 @@ export function ConfirmationScreen({
           transition={{ delay: 0.4 }}
           className="text-gray-500 mt-2"
         >
-          Your session with {mentor.name} has been scheduled
+          Your session with {mentor?.name} has been scheduled
         </motion.p>
       </div>
 
@@ -88,12 +205,12 @@ export function ConfirmationScreen({
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
             <span className="text-lg font-bold text-indigo-600">
-              {mentor.name.charAt(0)}
+              {mentor?.name?.charAt(0) || "M"}
             </span>
           </div>
           <div>
-            <p className="font-semibold text-gray-900">{mentor.name}</p>
-            <p className="text-sm text-gray-500">{mentor.college}</p>
+            <p className="font-semibold text-gray-900">{mentor?.name}</p>
+            <p className="text-sm text-gray-500">{mentor?.college}</p>
           </div>
         </div>
 
@@ -101,25 +218,25 @@ export function ConfirmationScreen({
           <div className="flex items-center gap-3 text-sm">
             <Calendar className="w-4 h-4 text-gray-400" />
             <span className="text-gray-600">
-              {new Date(selectedSlot.date).toLocaleDateString("en-US", {
+              {selectedSlot?.date ? new Date(selectedSlot.date).toLocaleDateString("en-US", {
                 weekday: "long",
                 month: "long",
                 day: "numeric",
                 year: "numeric",
-              })}
+              }) : ""}
             </span>
           </div>
 
           <div className="flex items-center gap-3 text-sm">
             <Clock className="w-4 h-4 text-gray-400" />
             <span className="text-gray-600">
-              {formatTime(selectedSlot.startTime)} ({selectedSession.duration} min)
+              {formatTime(selectedSlot?.startTime)} {selectedSession?.duration ? `(${selectedSession.duration} min)` : ""}
             </span>
           </div>
 
           <div className="flex items-center gap-3 text-sm">
             <Video className="w-4 h-4 text-gray-400" />
-            <span className="text-gray-600">{selectedSession.title}</span>
+            <span className="text-gray-600">{selectedSession?.title || "Session"}</span>
           </div>
         </div>
 
@@ -158,15 +275,17 @@ export function ConfirmationScreen({
       </motion.div>
 
       {/* Email Confirmation */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
-        className="flex items-center justify-center gap-2 text-sm text-gray-500"
-      >
-        <Mail className="w-4 h-4" />
-        <span>Confirmation sent to {userDetails.email}</span>
-      </motion.div>
+      {userDetails?.email && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="flex items-center justify-center gap-2 text-sm text-gray-500"
+        >
+          <Mail className="w-4 h-4" />
+          <span>Confirmation sent to {userDetails.email}</span>
+        </motion.div>
+      )}
 
       {/* Action Buttons */}
       <motion.div
@@ -175,13 +294,15 @@ export function ConfirmationScreen({
         transition={{ delay: 0.7 }}
         className="space-y-3"
       >
-        <button
-          onClick={handleAddToCalendar}
-          className="w-full py-3 rounded-xl border-2 border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-        >
-          <Calendar className="w-4 h-4" />
-          Add to Google Calendar
-        </button>
+        {selectedSession && (
+          <button
+            onClick={handleAddToCalendar}
+            className="w-full py-3 rounded-xl border-2 border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+          >
+            <Calendar className="w-4 h-4" />
+            Add to Google Calendar
+          </button>
+        )}
 
         <button
           onClick={onClose}
@@ -193,3 +314,4 @@ export function ConfirmationScreen({
     </div>
   );
 }
+
