@@ -15,7 +15,7 @@ async function sendBookingConfirmationEmail(userDetails, sessionType, meetLink, 
 
   try {
     const { error } = await resend.emails.send({
-      from: "Campus Connect <contact@campus-connect.co.in>",
+      from: "Campus Connect <noreply@campus-connect.co.in>",
       to: [userDetails.email],
       subject: "🎉 Your Session is Booked! - Campus Connect",
       html: `
@@ -142,7 +142,7 @@ async function sendMentorNotificationEmail(mentorEmail, mentorName, studentName,
 
   try {
     const { error } = await resend.emails.send({
-      from: "Campus Connect <contact@campus-connect.co.in>",
+      from: "Campus Connect <noreply@campus-connect.co.in>",
       to: [mentorEmail],
       subject: "🔔 New Session Booked! - Campus Connect",
       html: `

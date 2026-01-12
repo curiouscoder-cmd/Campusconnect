@@ -8,32 +8,32 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Verify webhook signature
 function verifyWebhookSignature(body, signature) {
-    if (!RAZORPAY_WEBHOOK_SECRET) {
-        console.warn("Webhook secret not configured");
-        return false;
-    }
+  if (!RAZORPAY_WEBHOOK_SECRET) {
+    console.warn("Webhook secret not configured");
+    return false;
+  }
 
-    const expectedSignature = crypto
-        .createHmac("sha256", RAZORPAY_WEBHOOK_SECRET)
-        .update(body)
-        .digest("hex");
+  const expectedSignature = crypto
+    .createHmac("sha256", RAZORPAY_WEBHOOK_SECRET)
+    .update(body)
+    .digest("hex");
 
-    return expectedSignature === signature;
+  return expectedSignature === signature;
 }
 
 // Send booking confirmation email
 async function sendBookingConfirmationEmail(userEmail, userName, sessionType, meetLink, mentorName, amount) {
-    if (!process.env.RESEND_API_KEY || !userEmail) {
-        console.log("Skipping email: Resend not configured or no user email");
-        return;
-    }
+  if (!process.env.RESEND_API_KEY || !userEmail) {
+    console.log("Skipping email: Resend not configured or no user email");
+    return;
+  }
 
-    try {
-        const { error } = await resend.emails.send({
-            from: "Campus Connect <contact@campus-connect.co.in>",
-            to: [userEmail],
-            subject: "🎉 Your Session is Booked! - Campus Connect",
-            html: `
+  try {
+    const { error } = await resend.emails.send({
+      from: "Campus Connect <noreply@campus-connect.co.in>",
+      to: [userEmail],
+      subject: "🎉 Your Session is Booked! - Campus Connect",
+      html: `
         <!DOCTYPE html>
         <html>
         <head>
@@ -124,144 +124,144 @@ async function sendBookingConfirmationEmail(userEmail, userName, sessionType, me
         </body>
         </html>
       `,
-        });
+    });
 
-        if (error) {
-            console.error("Failed to send booking confirmation email:", error);
-        } else {
-            console.log("Booking confirmation email sent to:", userEmail);
-        }
-    } catch (emailError) {
-        console.error("Error sending booking confirmation email:", emailError);
+    if (error) {
+      console.error("Failed to send booking confirmation email:", error);
+    } else {
+      console.log("Booking confirmation email sent to:", userEmail);
     }
+  } catch (emailError) {
+    console.error("Error sending booking confirmation email:", emailError);
+  }
 }
 
 export async function POST(request) {
-    try {
-        const body = await request.text();
-        const signature = request.headers.get("x-razorpay-signature");
+  try {
+    const body = await request.text();
+    const signature = request.headers.get("x-razorpay-signature");
 
-        console.log("Webhook received:", body.substring(0, 200));
+    console.log("Webhook received:", body.substring(0, 200));
 
-        // Verify signature in production
-        if (RAZORPAY_WEBHOOK_SECRET && signature) {
-            const isValid = verifyWebhookSignature(body, signature);
-            if (!isValid) {
-                console.error("Invalid webhook signature");
-                return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
-            }
-        }
-
-        const event = JSON.parse(body);
-        const eventType = event.event;
-
-        console.log("Webhook event type:", eventType);
-
-        // Handle payment.captured event
-        if (eventType === "payment.captured") {
-            const payment = event.payload.payment.entity;
-            const orderId = payment.order_id;
-            const paymentId = payment.id;
-            const amount = payment.amount / 100; // Convert from paise
-            const email = payment.email;
-            const contact = payment.contact;
-            const notes = payment.notes || {};
-
-            console.log("Payment captured:", { orderId, paymentId, amount, email });
-
-            const supabase = createServerClient();
-
-            if (supabase) {
-                // Update payment status
-                const { error: paymentError } = await supabase
-                    .from("payments")
-                    .update({
-                        razorpay_payment_id: paymentId,
-                        status: "captured",
-                        updated_at: new Date().toISOString(),
-                    })
-                    .eq("razorpay_order_id", orderId);
-
-                if (paymentError) {
-                    console.error("Error updating payment:", paymentError);
-                }
-
-                // Get booking details for email
-                const { data: booking } = await supabase
-                    .from("bookings")
-                    .select("*, mentors(name)")
-                    .eq("razorpay_order_id", orderId)
-                    .single();
-
-                if (booking) {
-                    // Send confirmation email
-                    await sendBookingConfirmationEmail(
-                        booking.user_email || email,
-                        booking.user_name || notes.userName,
-                        booking.session_type,
-                        booking.meet_link,
-                        booking.mentors?.name,
-                        amount
-                    );
-                } else {
-                    // If no booking found, still try to send email with available info
-                    await sendBookingConfirmationEmail(
-                        email,
-                        notes.userName,
-                        notes.sessionType,
-                        null,
-                        null,
-                        amount
-                    );
-                }
-            }
-
-            return NextResponse.json({ received: true, status: "processed" });
-        }
-
-        // Handle payment.failed event
-        if (eventType === "payment.failed") {
-            const payment = event.payload.payment.entity;
-            const orderId = payment.order_id;
-            const paymentId = payment.id;
-
-            console.log("Payment failed:", { orderId, paymentId });
-
-            const supabase = createServerClient();
-
-            if (supabase) {
-                await supabase
-                    .from("payments")
-                    .update({
-                        razorpay_payment_id: paymentId,
-                        status: "failed",
-                        updated_at: new Date().toISOString(),
-                    })
-                    .eq("razorpay_order_id", orderId);
-            }
-
-            return NextResponse.json({ received: true, status: "processed" });
-        }
-
-        // Handle order.paid event (backup for payment.captured)
-        if (eventType === "order.paid") {
-            const order = event.payload.order.entity;
-            const payment = event.payload.payment.entity;
-
-            console.log("Order paid:", { orderId: order.id, paymentId: payment.id });
-
-            // Similar processing as payment.captured
-            return NextResponse.json({ received: true, status: "processed" });
-        }
-
-        // Acknowledge other events
-        return NextResponse.json({ received: true, event: eventType });
-
-    } catch (error) {
-        console.error("Webhook error:", error);
-        return NextResponse.json(
-            { error: "Webhook processing failed", details: error.message },
-            { status: 500 }
-        );
+    // Verify signature in production
+    if (RAZORPAY_WEBHOOK_SECRET && signature) {
+      const isValid = verifyWebhookSignature(body, signature);
+      if (!isValid) {
+        console.error("Invalid webhook signature");
+        return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+      }
     }
+
+    const event = JSON.parse(body);
+    const eventType = event.event;
+
+    console.log("Webhook event type:", eventType);
+
+    // Handle payment.captured event
+    if (eventType === "payment.captured") {
+      const payment = event.payload.payment.entity;
+      const orderId = payment.order_id;
+      const paymentId = payment.id;
+      const amount = payment.amount / 100; // Convert from paise
+      const email = payment.email;
+      const contact = payment.contact;
+      const notes = payment.notes || {};
+
+      console.log("Payment captured:", { orderId, paymentId, amount, email });
+
+      const supabase = createServerClient();
+
+      if (supabase) {
+        // Update payment status
+        const { error: paymentError } = await supabase
+          .from("payments")
+          .update({
+            razorpay_payment_id: paymentId,
+            status: "captured",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("razorpay_order_id", orderId);
+
+        if (paymentError) {
+          console.error("Error updating payment:", paymentError);
+        }
+
+        // Get booking details for email
+        const { data: booking } = await supabase
+          .from("bookings")
+          .select("*, mentors(name)")
+          .eq("razorpay_order_id", orderId)
+          .single();
+
+        if (booking) {
+          // Send confirmation email
+          await sendBookingConfirmationEmail(
+            booking.user_email || email,
+            booking.user_name || notes.userName,
+            booking.session_type,
+            booking.meet_link,
+            booking.mentors?.name,
+            amount
+          );
+        } else {
+          // If no booking found, still try to send email with available info
+          await sendBookingConfirmationEmail(
+            email,
+            notes.userName,
+            notes.sessionType,
+            null,
+            null,
+            amount
+          );
+        }
+      }
+
+      return NextResponse.json({ received: true, status: "processed" });
+    }
+
+    // Handle payment.failed event
+    if (eventType === "payment.failed") {
+      const payment = event.payload.payment.entity;
+      const orderId = payment.order_id;
+      const paymentId = payment.id;
+
+      console.log("Payment failed:", { orderId, paymentId });
+
+      const supabase = createServerClient();
+
+      if (supabase) {
+        await supabase
+          .from("payments")
+          .update({
+            razorpay_payment_id: paymentId,
+            status: "failed",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("razorpay_order_id", orderId);
+      }
+
+      return NextResponse.json({ received: true, status: "processed" });
+    }
+
+    // Handle order.paid event (backup for payment.captured)
+    if (eventType === "order.paid") {
+      const order = event.payload.order.entity;
+      const payment = event.payload.payment.entity;
+
+      console.log("Order paid:", { orderId: order.id, paymentId: payment.id });
+
+      // Similar processing as payment.captured
+      return NextResponse.json({ received: true, status: "processed" });
+    }
+
+    // Acknowledge other events
+    return NextResponse.json({ received: true, event: eventType });
+
+  } catch (error) {
+    console.error("Webhook error:", error);
+    return NextResponse.json(
+      { error: "Webhook processing failed", details: error.message },
+      { status: 500 }
+    );
+  }
 }
