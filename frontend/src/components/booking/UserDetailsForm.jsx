@@ -80,33 +80,19 @@ export function UserDetailsForm({ userDetails, onUpdateDetails, onSubmit }) {
         )}
       </div>
 
-      {/* Email Field */}
+      {/* Email Field - Read Only */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
           <Mail className="w-4 h-4 text-gray-400" />
           Email Address
+          <span className="text-xs text-gray-400 font-normal">(from your account)</span>
         </label>
         <input
           type="email"
           value={userDetails.email || ""}
-          onChange={(e) => handleChange("email", e.target.value)}
-          placeholder="Enter your email"
-          className={cn(
-            "w-full px-4 py-3 rounded-xl border-2 bg-white text-gray-900 placeholder:text-gray-400 transition-all duration-200 focus:outline-none focus:ring-0",
-            errors.email
-              ? "border-red-300 focus:border-red-500"
-              : "border-gray-200 focus:border-indigo-500"
-          )}
+          readOnly
+          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-600 cursor-not-allowed"
         />
-        {errors.email && (
-          <motion.p
-            initial={{ opacity: 0, y: -5 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-xs text-red-500"
-          >
-            {errors.email}
-          </motion.p>
-        )}
       </div>
 
       {/* Phone Field */}
