@@ -1,4 +1,4 @@
-// Booking utility functions
+
 
 // Session types configuration
 // NOTE: Prices set to ₹1 for testing. Change back to 99, 199, 49 after testing.

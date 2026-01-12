@@ -93,13 +93,13 @@ const allMentors = [
 const pricingPlans = [
   {
     title: "Quick Chat",
-    price: "₹99",
+    price: "₹49",
     features: ["15 min video call", "Ask quick doubts", "Get honest answers"],
     popular: false
   },
   {
     title: "Deep Dive",
-    price: "₹199",
+    price: "₹98",
     features: ["30 min video call", "Detailed college insights", "Admission guidance", "All your questions answered"],
     popular: true
   },
