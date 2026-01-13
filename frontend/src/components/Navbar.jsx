@@ -37,7 +37,7 @@ export function Navbar() {
                 .from("mentors")
                 .select("id")
                 .eq("email", user.email)
-                .single();
+                .maybeSingle();
 
             setIsMentor(!!data && !error);
         }

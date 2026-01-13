@@ -67,13 +67,22 @@ export async function POST(request) {
     try {
       const supabase = createServerClient();
       if (supabase) {
-        await supabase.from("payments").insert({
-          razorpay_order_id: order.id,
-          amount: amount,
-          currency: "INR",
-          status: "created",
-        });
+        console.log("Inserting payment record for order:", order.id);
+        const { data: paymentData, error: paymentError } = await supabase
+          .from("payments")
+          .insert({
+            razorpay_order_id: order.id,
+            amount: amount,
+            currency: "INR",
+            status: "created",
+          })
+          .select();
 
+        if (paymentError) {
+          console.error("Payment insert error:", paymentError);
+        } else {
+          console.log("Payment inserted successfully:", paymentData);
+        }
         // Reserve the slot for 10 minutes while user completes payment
         const reserveUntil = new Date(Date.now() + 10 * 60 * 1000).toISOString();
         await supabase

@@ -18,12 +18,16 @@ export const supabase = createClient(
 // Server client for API routes (uses service role key)
 export function createServerClient() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  
+
   if (!supabaseUrl || !serviceRoleKey) {
-    console.warn("Supabase server credentials not configured");
+    console.error("Supabase server credentials not configured!");
+    console.error("NEXT_PUBLIC_SUPABASE_URL:", supabaseUrl ? "SET" : "MISSING");
+    console.error("SUPABASE_SERVICE_ROLE_KEY:", serviceRoleKey ? "SET" : "MISSING");
     return null;
   }
-  
+
+  console.log("Creating Supabase server client with service role key");
+
   return createClient(supabaseUrl, serviceRoleKey, {
     auth: {
       autoRefreshToken: false,

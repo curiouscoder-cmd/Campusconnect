@@ -326,8 +326,7 @@ export async function POST(request) {
     }
 
     // Update payment status
-    console.log("Updating payment with order_id:", razorpay_order_id);
-    const { error: paymentUpdateError } = await supabase
+    await supabase
       .from("payments")
       .update({
         razorpay_payment_id,
@@ -336,12 +335,6 @@ export async function POST(request) {
         updated_at: new Date().toISOString(),
       })
       .eq("razorpay_order_id", razorpay_order_id);
-
-    if (paymentUpdateError) {
-      console.error("Error updating payment:", paymentUpdateError);
-    } else {
-      console.log("Payment updated successfully");
-    }
 
     // Create booking record
     // Note: slot_id might be null if using mock slots (not from availability table)
@@ -366,7 +359,7 @@ export async function POST(request) {
       bookingData.slot_id = slotId;
     }
 
-    console.log("Creating booking with data:", JSON.stringify(bookingData, null, 2));
+    console.log("Attempting to create booking with data:", JSON.stringify(bookingData, null, 2));
 
     const { data: booking, error: bookingError } = await supabase
       .from("bookings")
@@ -376,7 +369,12 @@ export async function POST(request) {
 
     if (bookingError) {
       console.error("Error creating booking:", bookingError);
-      console.error("Booking error details:", JSON.stringify(bookingError, null, 2));
+      console.error("Booking error details:", {
+        code: bookingError.code,
+        message: bookingError.message,
+        details: bookingError.details,
+        hint: bookingError.hint,
+      });
     } else {
       console.log("Booking created successfully:", booking?.id);
     }
@@ -385,14 +383,10 @@ export async function POST(request) {
       bookingId = booking.id;
 
       // Update payment with booking ID
-      const { error: paymentLinkError } = await supabase
+      await supabase
         .from("payments")
         .update({ booking_id: bookingId })
         .eq("razorpay_order_id", razorpay_order_id);
-
-      if (paymentLinkError) {
-        console.error("Error linking payment to booking:", paymentLinkError);
-      }
 
       // Mark slot as booked
       await supabase
