@@ -5,53 +5,56 @@ import { supabase } from "@/lib/supabase";
 
 const AuthContext = createContext({});
 
-// Helper function to ensure profile exists
-async function ensureProfileExists(user) {
+// Cache keys
+const MENTOR_CACHE_KEY = 'campus_connect_is_mentor';
+
+// Helper function to ensure profile exists (non-blocking)
+function ensureProfileExists(user) {
   if (!user?.id) return;
 
-  try {
-    // Check if profile exists
-    const { data: existingProfile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    // If no profile, create one
-    if (!existingProfile) {
-      const fullName = user.user_metadata?.full_name ||
-        user.user_metadata?.name ||
-        '';
-
-      const { error } = await supabase
-        .from("profiles")
-        .insert({
-          id: user.id,
-          email: user.email,
-          full_name: fullName,
-          role: 'user',
-        });
-
-      if (error && error.code !== '23505') { // Ignore duplicate key error
-        console.error("Error creating profile:", error);
-      } else {
-        console.log("Profile created for user:", user.email);
+  // Run in background, don't await
+  supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", user.id)
+    .maybeSingle()
+    .then(({ data: existingProfile }) => {
+      if (!existingProfile) {
+        const fullName = user.user_metadata?.full_name || user.user_metadata?.name || '';
+        supabase
+          .from("profiles")
+          .insert({
+            id: user.id,
+            email: user.email,
+            full_name: fullName,
+            role: 'user',
+          })
+          .then(({ error }) => {
+            if (error && error.code !== '23505') {
+              console.error("Error creating profile:", error);
+            }
+          });
       }
-    }
-  } catch (err) {
-    console.error("Error ensuring profile exists:", err);
-  }
+    })
+    .catch(err => console.error("Error ensuring profile exists:", err));
 }
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isMentor, setIsMentor] = useState(false);
+  const [isMentor, setIsMentor] = useState(() => {
+    // Initialize from cache
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(MENTOR_CACHE_KEY) === 'true';
+    }
+    return false;
+  });
 
-  // Check if user is a mentor
+  // Check if user is a mentor (with caching)
   async function checkMentorStatus(email) {
     if (!email) {
       setIsMentor(false);
+      localStorage.removeItem(MENTOR_CACHE_KEY);
       return;
     }
 
@@ -62,24 +65,41 @@ export function AuthProvider({ children }) {
         .eq("email", email)
         .maybeSingle();
 
-      setIsMentor(!!data);
+      const mentorStatus = !!data;
+      setIsMentor(mentorStatus);
+
+      // Cache the result
+      if (mentorStatus) {
+        localStorage.setItem(MENTOR_CACHE_KEY, 'true');
+      } else {
+        localStorage.removeItem(MENTOR_CACHE_KEY);
+      }
     } catch (err) {
       console.error("Error checking mentor status:", err);
-      setIsMentor(false);
+      // Keep cached value on error
     }
   }
 
   useEffect(() => {
     // Get initial session
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      setLoading(false);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        setLoading(false);
 
-      // Check mentor status on initial load
-      if (currentUser?.email) {
-        checkMentorStatus(currentUser.email);
+        // Check mentor status on initial load
+        if (currentUser?.email) {
+          checkMentorStatus(currentUser.email);
+        } else {
+          // No user, clear cache
+          setIsMentor(false);
+          localStorage.removeItem(MENTOR_CACHE_KEY);
+        }
+      } catch (err) {
+        console.error("Error getting session:", err);
+        setLoading(false);
       }
     };
 
@@ -87,20 +107,21 @@ export function AuthProvider({ children }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         setLoading(false);
 
-        // Ensure profile exists when user signs in
         if (currentUser && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
-          await ensureProfileExists(currentUser);
-          await checkMentorStatus(currentUser.email);
+          // Non-blocking profile check
+          ensureProfileExists(currentUser);
+          // Check mentor status
+          checkMentorStatus(currentUser.email);
         }
 
-        // Clear mentor status on sign out
         if (event === 'SIGNED_OUT') {
           setIsMentor(false);
+          localStorage.removeItem(MENTOR_CACHE_KEY);
         }
       }
     );
@@ -111,9 +132,15 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    // Clear state immediately
     setUser(null);
     setIsMentor(false);
+    localStorage.removeItem(MENTOR_CACHE_KEY);
+
+    // Then sign out (don't wait if it's slow)
+    supabase.auth.signOut().catch(err => {
+      console.error("Sign out error:", err);
+    });
   };
 
   const value = {
