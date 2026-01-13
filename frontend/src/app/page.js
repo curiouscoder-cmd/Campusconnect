@@ -404,7 +404,7 @@ export default function Home() {
               <div className="text-center mb-16 max-w-2xl mx-auto">
                 <h2 className="text-3xl font-bold tracking-tight mb-4" style={{ fontFamily: 'var(--font-display)' }}>Affordable & Transparent</h2>
                 <p className="text-muted-foreground">
-                  Get clarity on your college decision for less than a movie ticket. 100% money-back guarantee if you&apos;re not satisfied.
+                  Get clarity on your college decision for less than a movie ticket. 
                 </p>
               </div>
             </FadeIn>
