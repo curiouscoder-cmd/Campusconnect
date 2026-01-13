@@ -283,11 +283,11 @@ export default function Home() {
       <Navbar />
       <main className="flex-1 mt-16"> {/* Added mt-16 to clear fixed navbar */}
         {/* Hero Section - Full viewport with NSAT at bottom */}
-        <section className="relative overflow-hidden h-[calc(100vh-64px)] flex flex-col">
+        <section className="relative overflow-hidden min-h-[calc(100vh-64px)] md:h-[calc(100vh-64px)] flex flex-col">
           <FloatingOrbs />
 
           {/* Hero Content - Takes remaining space */}
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center py-8 md:py-0">
             <HeroHighlight containerClassName="w-full h-full flex items-center justify-center">
               <div className="text-center px-4 max-w-4xl mx-auto relative z-10">
                 <TextReveal delay={0.1}>
