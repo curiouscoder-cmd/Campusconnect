@@ -1,15 +1,9 @@
-"use server";
-
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
 
 export async function POST(request) {
     try {
         const body = await request.json();
-
-        console.log("Creating mentor via API:", body.name);
-        console.time("mentor-api-insert");
-
         const supabase = createServerClient();
 
         if (!supabase) {
@@ -23,8 +17,6 @@ export async function POST(request) {
             .from("mentors")
             .insert([body])
             .select();
-
-        console.timeEnd("mentor-api-insert");
 
         if (error) {
             console.error("Mentor insert error:", error);

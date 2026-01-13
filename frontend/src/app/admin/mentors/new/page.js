@@ -63,61 +63,39 @@ export default function AddMentorPage() {
         const file = e.target.files[0];
         if (!file) return;
 
-        console.log('=== IMAGE UPLOAD START ===');
-        console.log('Original file size:', Math.round(file.size / 1024), 'KB');
-
         setUploading(true);
         try {
             // Show preview immediately
             setPreviewUrl(URL.createObjectURL(file));
-            console.log('Preview set');
 
             // Compress image if it's larger than 500KB
             let uploadFile = file;
             if (file.size > 500 * 1024) {
-                console.log('Compressing...');
-                console.time('compression');
                 const compressedBlob = await compressImage(file);
-                console.timeEnd('compression');
-
-                if (!compressedBlob) {
-                    console.error('Compression returned null!');
-                    uploadFile = file; // Use original
-                } else {
+                if (compressedBlob) {
                     uploadFile = new File([compressedBlob], 'image.jpg', { type: 'image/jpeg' });
-                    console.log('Compressed to:', Math.round(uploadFile.size / 1024), 'KB');
                 }
             }
 
             // Upload to Supabase Storage
             const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.jpg`;
-            console.log('Uploading to Supabase...', fileName);
-            console.time('supabase-upload');
 
-            const { data: uploadData, error: uploadError } = await supabase.storage
+            const { error: uploadError } = await supabase.storage
                 .from('mentors')
                 .upload(fileName, uploadFile, {
                     cacheControl: '3600',
                     upsert: false
                 });
 
-            console.timeEnd('supabase-upload');
-            console.log('Upload result:', { uploadData, uploadError });
-
-            if (uploadError) {
-                console.error('Upload error details:', uploadError);
-                throw uploadError;
-            }
+            if (uploadError) throw uploadError;
 
             // Get Public URL
             const { data } = supabase.storage.from('mentors').getPublicUrl(fileName);
-            console.log('Public URL:', data.publicUrl);
 
             setFormData(prev => ({ ...prev, image: data.publicUrl }));
             setPreviewUrl(data.publicUrl);
-            console.log('=== IMAGE UPLOAD SUCCESS ===');
         } catch (error) {
-            console.error('=== IMAGE UPLOAD FAILED ===', error);
+            console.error('Error uploading image:', error);
             alert('Error uploading image: ' + (error.message || 'Unknown error'));
         } finally {
             setUploading(false);
@@ -129,12 +107,8 @@ export default function AddMentorPage() {
         setLoading(true);
 
         try {
-            console.time('mentor-insert');
             const expertiseArray = formData.expertise.split(',').map(item => item.trim()).filter(item => item !== "");
 
-            console.log('Starting mentor insert via API...');
-
-            // Use API route with service role (bypasses RLS for speed)
             const response = await fetch('/api/admin/mentors', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -145,14 +119,11 @@ export default function AddMentorPage() {
             });
 
             const result = await response.json();
-            console.timeEnd('mentor-insert');
-            console.log('Insert result:', result);
 
             if (!response.ok) {
                 throw new Error(result.error || 'Failed to create mentor');
             }
 
-            // Redirect immediately
             router.push("/admin/mentors");
         } catch (error) {
             console.error("Error adding mentor:", error);
