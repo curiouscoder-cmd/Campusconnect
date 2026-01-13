@@ -46,13 +46,41 @@ async function ensureProfileExists(user) {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isMentor, setIsMentor] = useState(false);
+
+  // Check if user is a mentor
+  async function checkMentorStatus(email) {
+    if (!email) {
+      setIsMentor(false);
+      return;
+    }
+
+    try {
+      const { data } = await supabase
+        .from("mentors")
+        .select("id")
+        .eq("email", email)
+        .maybeSingle();
+
+      setIsMentor(!!data);
+    } catch (err) {
+      console.error("Error checking mentor status:", err);
+      setIsMentor(false);
+    }
+  }
 
   useEffect(() => {
     // Get initial session
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
       setLoading(false);
+
+      // Check mentor status on initial load
+      if (currentUser?.email) {
+        checkMentorStatus(currentUser.email);
+      }
     };
 
     getSession();
@@ -60,12 +88,19 @@ export function AuthProvider({ children }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setUser(session?.user ?? null);
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
         setLoading(false);
 
         // Ensure profile exists when user signs in
-        if (session?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
-          await ensureProfileExists(session.user);
+        if (currentUser && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+          await ensureProfileExists(currentUser);
+          await checkMentorStatus(currentUser.email);
+        }
+
+        // Clear mentor status on sign out
+        if (event === 'SIGNED_OUT') {
+          setIsMentor(false);
         }
       }
     );
@@ -78,6 +113,7 @@ export function AuthProvider({ children }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
+    setIsMentor(false);
   };
 
   const value = {
@@ -85,6 +121,7 @@ export function AuthProvider({ children }) {
     loading,
     signOut,
     isAuthenticated: !!user,
+    isMentor,
   };
 
   return (

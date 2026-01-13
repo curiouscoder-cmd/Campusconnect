@@ -22,28 +22,7 @@ const ADMIN_EMAIL = "nityaprofessional6402@gmail.com";
 
 export function Navbar() {
     const router = useRouter();
-    const { user, isAuthenticated, signOut, loading } = useAuth();
-    const [isMentor, setIsMentor] = useState(false);
-
-    // Check if user is a mentor
-    useEffect(() => {
-        async function checkMentorStatus() {
-            if (!user?.email) {
-                setIsMentor(false);
-                return;
-            }
-
-            const { data, error } = await supabase
-                .from("mentors")
-                .select("id")
-                .eq("email", user.email)
-                .maybeSingle();
-
-            setIsMentor(!!data && !error);
-        }
-
-        checkMentorStatus();
-    }, [user?.email]);
+    const { user, isAuthenticated, signOut, loading, isMentor } = useAuth();
 
     const handleSignOut = async () => {
         await signOut();
