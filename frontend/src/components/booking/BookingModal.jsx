@@ -12,7 +12,6 @@ import { NsatVerificationScreen } from "./NsatVerificationScreen";
 import { generateMockSlots, formatDateISO } from "@/lib/booking-utils";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/context/AuthContext";
 import Script from "next/script";
 
 const STEPS = {
@@ -34,7 +33,6 @@ const STEP_TITLES = {
 };
 
 export function BookingModal({ mentor, isOpen, onClose, mode = "paid" }) {
-  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(STEPS.SLOT_SELECTION);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [selectedSession, setSelectedSession] = useState(null);
@@ -51,17 +49,6 @@ export function BookingModal({ mentor, isOpen, onClose, mode = "paid" }) {
   const [nsatSubmitting, setNsatSubmitting] = useState(false);
 
   const isNsatMode = mode === "nsat";
-
-  // Pre-fill user details from auth
-  useEffect(() => {
-    if (user) {
-      setUserDetails(prev => ({
-        ...prev,
-        email: user.email || prev.email,
-        name: user.user_metadata?.full_name || user.user_metadata?.name || prev.name,
-      }));
-    }
-  }, [user]);
 
   // Fetch real slots from database
   const mentorId = mentor?.id;
@@ -182,6 +169,7 @@ export function BookingModal({ mentor, isOpen, onClose, mode = "paid" }) {
 
   const handleContinueFromDetails = () => {
     // Validate user details before proceeding
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^[6-9]\d{9}$/;
 
     if (!userDetails.name?.trim()) {
@@ -189,7 +177,11 @@ export function BookingModal({ mentor, isOpen, onClose, mode = "paid" }) {
       return;
     }
     if (!userDetails.email?.trim()) {
-      setError("Please log in to book a session");
+      setError("Please enter your email");
+      return;
+    }
+    if (!emailRegex.test(userDetails.email)) {
+      setError("Please enter a valid email address");
       return;
     }
     if (!userDetails.phone?.trim()) {

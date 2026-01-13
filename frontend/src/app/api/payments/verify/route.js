@@ -326,7 +326,8 @@ export async function POST(request) {
     }
 
     // Update payment status
-    await supabase
+    console.log("Updating payment with order_id:", razorpay_order_id);
+    const { error: paymentUpdateError } = await supabase
       .from("payments")
       .update({
         razorpay_payment_id,
@@ -335,6 +336,12 @@ export async function POST(request) {
         updated_at: new Date().toISOString(),
       })
       .eq("razorpay_order_id", razorpay_order_id);
+
+    if (paymentUpdateError) {
+      console.error("Error updating payment:", paymentUpdateError);
+    } else {
+      console.log("Payment updated successfully");
+    }
 
     // Create booking record
     // Note: slot_id might be null if using mock slots (not from availability table)
@@ -369,7 +376,7 @@ export async function POST(request) {
 
     if (bookingError) {
       console.error("Error creating booking:", bookingError);
-      console.error("Booking data that failed:", bookingData);
+      console.error("Booking error details:", JSON.stringify(bookingError, null, 2));
     } else {
       console.log("Booking created successfully:", booking?.id);
     }
@@ -378,10 +385,14 @@ export async function POST(request) {
       bookingId = booking.id;
 
       // Update payment with booking ID
-      await supabase
+      const { error: paymentLinkError } = await supabase
         .from("payments")
         .update({ booking_id: bookingId })
         .eq("razorpay_order_id", razorpay_order_id);
+
+      if (paymentLinkError) {
+        console.error("Error linking payment to booking:", paymentLinkError);
+      }
 
       // Mark slot as booked
       await supabase

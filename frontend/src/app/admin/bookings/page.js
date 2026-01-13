@@ -37,9 +37,7 @@ export default function BookingsPage() {
 
     const filteredBookings = bookings.filter(booking =>
         booking.mentors?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.user_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.user_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (booking.date && booking.date.includes(searchTerm))
+        booking.date.includes(searchTerm)
     );
 
     const getStatusColor = (status) => {
