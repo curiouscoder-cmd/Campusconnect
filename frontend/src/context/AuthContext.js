@@ -5,6 +5,44 @@ import { supabase } from "@/lib/supabase";
 
 const AuthContext = createContext({});
 
+// Helper function to ensure profile exists
+async function ensureProfileExists(user) {
+  if (!user?.id) return;
+
+  try {
+    // Check if profile exists
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    // If no profile, create one
+    if (!existingProfile) {
+      const fullName = user.user_metadata?.full_name ||
+        user.user_metadata?.name ||
+        '';
+
+      const { error } = await supabase
+        .from("profiles")
+        .insert({
+          id: user.id,
+          email: user.email,
+          full_name: fullName,
+          role: 'user',
+        });
+
+      if (error && error.code !== '23505') { // Ignore duplicate key error
+        console.error("Error creating profile:", error);
+      } else {
+        console.log("Profile created for user:", user.email);
+      }
+    }
+  } catch (err) {
+    console.error("Error ensuring profile exists:", err);
+  }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,6 +62,11 @@ export function AuthProvider({ children }) {
       async (event, session) => {
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Ensure profile exists when user signs in
+        if (session?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+          await ensureProfileExists(session.user);
+        }
       }
     );
 
