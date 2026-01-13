@@ -282,79 +282,82 @@ export default function Home() {
     <div className="min-h-screen flex flex-col font-sans">
       <Navbar />
       <main className="flex-1 mt-16"> {/* Added mt-16 to clear fixed navbar */}
-        {/* Hero Section */}
-        <section className="relative overflow-hidden">
+        {/* Hero Section - Full viewport with NSAT at bottom */}
+        <section className="relative overflow-hidden h-[calc(100vh-64px)] flex flex-col">
           <FloatingOrbs />
-          <HeroHighlight containerClassName="h-[70vh] min-h-[600px]">
-            <div className="text-center px-4 max-w-4xl mx-auto relative z-10">
-              <TextReveal delay={0.1}>
-                <Badge variant="outline" className="mb-6 py-1.5 px-4 text-sm font-medium rounded-full border-primary/20 bg-primary/5 backdrop-blur-sm text-primary">
-                  For applicants to NST, Vedam, NIAT & more
-                </Badge>
-              </TextReveal>
-              <div className="mb-6">
-                <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground leading-[1.1]">
-                  Talk to real students.
-                </h1>
-                <div className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mt-2">
-                  <TypewriterEffectSmooth
-                    words={[
-                      { text: "Choose", className: "gradient-text" },
-                      { text: "the", className: "gradient-text" },
-                      { text: "right", className: "gradient-text" },
-                      { text: "college.", className: "gradient-text" },
-                    ]}
-                    className="justify-center"
-                  />
+
+          {/* Hero Content - Takes remaining space */}
+          <div className="flex-1 flex items-center justify-center">
+            <HeroHighlight containerClassName="w-full h-full flex items-center justify-center">
+              <div className="text-center px-4 max-w-4xl mx-auto relative z-10">
+                <TextReveal delay={0.1}>
+                  <Badge variant="outline" className="mb-6 py-1.5 px-4 text-sm font-medium rounded-full border-primary/20 bg-primary/5 backdrop-blur-sm text-primary">
+                    For applicants to NST, Vedam, NIAT & more
+                  </Badge>
+                </TextReveal>
+                <div className="mb-6">
+                  <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground leading-[1.1]">
+                    Talk to real students.
+                  </h1>
+                  <div className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mt-2">
+                    <TypewriterEffectSmooth
+                      words={[
+                        { text: "Choose", className: "gradient-text" },
+                        { text: "the", className: "gradient-text" },
+                        { text: "right", className: "gradient-text" },
+                        { text: "college.", className: "gradient-text" },
+                      ]}
+                      className="justify-center"
+                    />
+                  </div>
                 </div>
+                <TextReveal delay={0.3}>
+                  <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
+                    Get real, honest insights from students currently studying at new-gen colleges. Ask about campus life, placements, faculty, and everything that matters before you join.
+                  </p>
+                </TextReveal>
+
+                <TextReveal delay={0.4}>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <Link href={isAuthenticated ? "/#mentors" : "/login"}>
+                      <Button size="lg" className="rounded-full px-8 h-12 text-base gradient-bg text-white shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all hover:-translate-y-0.5 border-0">
+                        Book Session <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </Link>
+                    <Link href={isAuthenticated ? "/contact" : "/login"}>
+                      <Button variant="outline" size="lg" className="rounded-full h-12 text-base border-primary/20 text-primary hover:bg-primary/5 hover:text-primary">
+                        Contact Us
+                      </Button>
+                    </Link>
+                  </div>
+                </TextReveal>
               </div>
-              <TextReveal delay={0.3}>
-                <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-                  Get real, honest insights from students currently studying at new-gen colleges. Ask about campus life, placements, faculty, and everything that matters before you join.
-                </p>
-              </TextReveal>
+            </HeroHighlight>
+          </div>
 
-              <TextReveal delay={0.4}>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <Link href={isAuthenticated ? "/#mentors" : "/login"}>
-                    <Button size="lg" className="rounded-full px-8 h-12 text-base gradient-bg text-white shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all hover:-translate-y-0.5 border-0">
-                      Book Session <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Link href={isAuthenticated ? "/contact" : "/login"}>
-                    <Button variant="outline" size="lg" className="rounded-full h-12 text-base border-primary/20 text-primary hover:bg-primary/5 hover:text-primary">
-                      Contact Us
-                    </Button>
-                  </Link>
+          {/* NSAT Offer Banner - Fixed at bottom of hero */}
+          <div className="w-full py-4 bg-gradient-to-r from-primary/10 via-purple-500/10 to-primary/10 border-y border-primary/20">
+            <div className="container px-4 md:px-6 mx-auto">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-primary to-purple-500 flex items-center justify-center shrink-0">
+                    <Gift className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">🎉 NSAT Offer: Get Your First Session FREE!</h3>
+                    <p className="text-sm text-gray-600">Register for NSAT using our link & get ₹300 off + a free mentorship session</p>
+                  </div>
                 </div>
-              </TextReveal>
-            </div>
-          </HeroHighlight>
-
-        </section>
-
-        {/* NSAT Offer Banner */}
-        <section className="py-6 bg-gradient-to-r from-primary/10 via-purple-500/10 to-primary/10 border-y border-primary/20">
-          <div className="container px-4 md:px-6 mx-auto">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-primary to-purple-500 flex items-center justify-center shrink-0">
-                  <Gift className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">🎉 NSAT Offer: Get Your First Session FREE!</h3>
-                  <p className="text-sm text-gray-600">Register for NSAT using our link & get ₹300 off + a free mentorship session</p>
-                </div>
+                <Button
+                  onClick={() => {
+                    document.getElementById('mentors')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="rounded-full px-6 bg-gradient-to-r from-primary to-purple-500 text-white hover:opacity-90 transition-opacity shrink-0"
+                >
+                  Claim Free Session
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
               </div>
-              <Button
-                onClick={() => {
-                  document.getElementById('mentors')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="rounded-full px-6 bg-gradient-to-r from-primary to-purple-500 text-white hover:opacity-90 transition-opacity shrink-0"
-              >
-                Claim Free Session
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
             </div>
           </div>
         </section>
@@ -371,7 +374,7 @@ export default function Home() {
                   </p>
                 </div>
                 <Link href={isAuthenticated ? "/#mentors" : "/login"}>
-                  <Button variant="outline" className="rounded-full border-primary/20 text-primary hover:bg-primary/5">View All Students</Button>
+                  <Button variant="outline" className="rounded-full border-primary/20 text-primary hover:bg-primary/5">View All Mentors</Button>
                 </Link>
               </div>
             </FadeIn>
