@@ -132,8 +132,8 @@ export default function PrivacyPage() {
                                 If you have questions or concerns about this Privacy Policy or our data practices, please contact us at:
                             </p>
                             <p className="text-muted-foreground mt-2">
-                                <strong>Email:</strong> nityaprofessional6402@gmail.com<br />
-                                <strong>Website:</strong> campusconnect.vercel.app
+                                <strong>Email:</strong> contact@campus-connect.co.in<br />
+                                <strong>Website:</strong> https://campus-connect.co.in
                             </p>
                         </section>
                     </div>

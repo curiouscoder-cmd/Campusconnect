@@ -105,8 +105,8 @@ export default function TermsPage() {
                                 If you have any questions about these Terms and Conditions, please contact us at:
                             </p>
                             <p className="text-muted-foreground mt-2">
-                                <strong>Email:</strong> nityaprofessional6402@gmail.com<br />
-                                <strong>Website:</strong> campusconnect.vercel.app
+                                <strong>Email:</strong> contact@campus-connect.co.in<br />
+                                <strong>Website:</strong> https://campus-connect.co.in
                             </p>
                         </section>
 
