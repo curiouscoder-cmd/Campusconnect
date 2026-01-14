@@ -411,7 +411,7 @@ export default function Home() {
               }
               {mentors.filter(mentor => selectedCollege === "all" || mentor.college_id === selectedCollege).length === 0 && !loadingMentors && (
                 <div className="col-span-full text-center py-12 text-muted-foreground">
-                  <p className="mb-2">No mentors available from this college yet.</p>
+                  <p className="mb-2">mentors from this college coming soon!</p>
                   <p className="text-sm">Check back soon or explore mentors from other colleges!</p>
                 </div>
               )}
