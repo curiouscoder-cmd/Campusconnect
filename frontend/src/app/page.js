@@ -33,7 +33,8 @@ const COLLEGES = [
   { id: "nst", name: "Newton School of Technology", short: "NST" },
   { id: "sst", name: "Scaler School of Technology", short: "SST" },
   { id: "vedam", name: "Vedam School of Technology", short: "Vedam" },
-  { id: "niat", name: "NIAT", short: "NIAT" },
+  { id: "niat", name: "NxtWave Institute of Advanced Technology", short: "NIAT" },
+  { id: "polaris", name: "Polaris School of Technology", short: "Polaris" }
 ];
 
 // Mock Data - All mentors with college IDs for filtering
