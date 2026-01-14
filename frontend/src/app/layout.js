@@ -3,6 +3,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import SmoothScroll from "@/components/smooth-scroll";
 import { AuthProvider } from "@/context/AuthContext";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" });
@@ -31,6 +32,16 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <SmoothScroll />
           {children}
+          <Toaster
+            position="top-right"
+            richColors
+            closeButton
+            toastOptions={{
+              style: {
+                fontFamily: 'var(--font-inter)',
+              },
+            }}
+          />
         </AuthProvider>
       </body>
     </html>

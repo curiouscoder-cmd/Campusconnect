@@ -9,6 +9,7 @@ import { Loader2, Lock, CheckCircle, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import { toast } from "sonner";
 
 function ResetPasswordForm() {
     const router = useRouter();
@@ -78,10 +79,11 @@ function ResetPasswordForm() {
             }
 
             setSuccess(true);
+            toast.success("Password updated!", { description: "Redirecting to login..." });
 
             // Redirect to login after 3 seconds
             setTimeout(() => {
-                router.push("/login?message=Password updated successfully");
+                router.push("/login");
             }, 3000);
         } catch (err) {
             setError("Something went wrong. Please try again.");

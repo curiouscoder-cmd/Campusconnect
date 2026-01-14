@@ -9,6 +9,7 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 export default function SignupPage() {
     const router = useRouter();
@@ -55,8 +56,9 @@ export default function SignupPage() {
                 return;
             }
 
-            // Redirect to login with success message for truly new registrations
-            router.push("/login?message=Check your email to confirm your account");
+            // Redirect to login with success toast
+            toast.success("Account created!", { description: "Check your email to confirm your account." });
+            router.push("/login");
         } catch (err) {
             setError("Something went wrong. Please try again.");
         } finally {

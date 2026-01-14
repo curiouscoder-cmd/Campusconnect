@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
 
 export default function AddMentorPage() {
     const router = useRouter();
@@ -153,10 +154,11 @@ export default function AddMentorPage() {
             }
 
             // Redirect immediately
+            toast.success("Mentor added!", { description: `${formData.name} has been added successfully.` });
             router.push("/admin/mentors");
         } catch (error) {
             console.error("Error adding mentor:", error);
-            alert("Failed to add mentor: " + error.message);
+            toast.error("Failed to add mentor", { description: error.message });
         } finally {
             setLoading(false);
         }

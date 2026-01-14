@@ -9,6 +9,7 @@ import { useState, useEffect, Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 function LoginForm() {
     const router = useRouter();
@@ -53,6 +54,7 @@ function LoginForm() {
             }
 
             // Redirect to home page on success
+            toast.success("Welcome back!", { description: "You've been logged in successfully." });
             router.push("/");
             router.refresh();
         } catch (err) {

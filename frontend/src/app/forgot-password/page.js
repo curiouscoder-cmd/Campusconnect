@@ -8,6 +8,7 @@ import { useState } from "react";
 import { Loader2, ArrowLeft, Mail, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 export default function ForgotPasswordPage() {
     const [isLoading, setIsLoading] = useState(false);
@@ -31,6 +32,7 @@ export default function ForgotPasswordPage() {
             }
 
             setSuccess(true);
+            toast.success("Email sent!", { description: "Check your inbox for the reset link." });
         } catch (err) {
             setError("Something went wrong. Please try again.");
         } finally {
