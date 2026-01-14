@@ -27,17 +27,14 @@ import { Accordion as AccordionEldora, AccordionContent as AccordionContentEldor
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight } from "lucide-react";
 
-// Available colleges - easy to expand later
+// Available colleges for filtering
 const COLLEGES = [
+  { id: "all", name: "All Colleges", short: "All" },
   { id: "nst", name: "Newton School of Technology", short: "NST" },
-  // Future colleges - uncomment when ready
-  // { id: "vedam", name: "Vedam School of Technology", short: "Vedam" },
-  // { id: "niat", name: "NIAT", short: "NIAT" },
-  // { id: "sst", name: "Scaler School of Technology", short: "SST" },
+  { id: "sst", name: "Scaler School of Technology", short: "SST" },
+  { id: "vedam", name: "Vedam School of Technology", short: "Vedam" },
+  { id: "niat", name: "NIAT", short: "NIAT" },
 ];
-
-// Current active college for MVP (change this to show different colleges)
-const ACTIVE_COLLEGE = "nst";
 
 // Mock Data - All mentors with college IDs for filtering
 const allMentors = [
@@ -241,6 +238,7 @@ export default function Home() {
   const { isAuthenticated } = useAuth();
   const [mentors, setMentors] = useState([]);
   const [loadingMentors, setLoadingMentors] = useState(true);
+  const [selectedCollege, setSelectedCollege] = useState("all");
 
   useEffect(() => {
     let isMounted = true;
@@ -249,7 +247,7 @@ export default function Home() {
       try {
         const { data, error } = await supabase
           .from("mentors")
-          .select("id, name, role, college, image, rating, price, bio, is_active, created_at")
+          .select("id, name, role, college, college_id, image, rating, price, bio, is_active, created_at")
           .order("created_at", { ascending: false });
 
         console.log("Mentors fetch result:", { data, error });
@@ -366,31 +364,55 @@ export default function Home() {
         <section id="mentors" className="py-24 bg-gradient-to-b from-primary/5 to-transparent border-t border-primary/10">
           <div className="container px-4 md:px-6 mx-auto">
             <FadeIn direction="up">
-              <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+              <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-6">
                 <div>
                   <h2 className="text-3xl font-bold tracking-tight mb-4" style={{ fontFamily: 'var(--font-display)' }}>Meet top mentors</h2>
                   <p className="text-muted-foreground max-w-xl">
                     Connect with students who are living the college experience right now. Get honest answers about what it&apos;s really like.
                   </p>
                 </div>
-                <Link href={isAuthenticated ? "/#mentors" : "/login"}>
-                  <Button variant="outline" className="rounded-full border-primary/20 text-primary hover:bg-primary/5">View All Mentors</Button>
-                </Link>
               </div>
             </FadeIn>
 
+            {/* Campus Selector Tabs */}
+            <div className="mb-10">
+              <div className="flex flex-wrap gap-2 p-1.5 bg-muted/50 rounded-2xl w-fit">
+                {COLLEGES.map((college) => (
+                  <button
+                    key={college.id}
+                    onClick={() => setSelectedCollege(college.id)}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${selectedCollege === college.id
+                        ? 'bg-primary text-white shadow-md'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      }`}
+                  >
+                    {college.short}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-3 text-sm text-muted-foreground">
+                {selectedCollege === "all"
+                  ? "Showing mentors from all colleges"
+                  : `Showing mentors from ${COLLEGES.find(c => c.id === selectedCollege)?.name}`
+                }
+              </p>
+            </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mentors.map((mentor, i) => (
-                <div key={mentor.id || i}>
-                  <MentorCardWithBooking mentor={mentor}>
-                    <MentorCard mentor={mentor} />
-                  </MentorCardWithBooking>
-                </div>
-              ))}
-              {mentors.length === 0 && !loadingMentors && (
+              {mentors
+                .filter(mentor => selectedCollege === "all" || mentor.college_id === selectedCollege)
+                .map((mentor, i) => (
+                  <div key={mentor.id || i}>
+                    <MentorCardWithBooking mentor={mentor}>
+                      <MentorCard mentor={mentor} />
+                    </MentorCardWithBooking>
+                  </div>
+                ))
+              }
+              {mentors.filter(mentor => selectedCollege === "all" || mentor.college_id === selectedCollege).length === 0 && !loadingMentors && (
                 <div className="col-span-full text-center py-12 text-muted-foreground">
-                  No mentors available at the moment. Please check back later.
+                  <p className="mb-2">No mentors available from this college yet.</p>
+                  <p className="text-sm">Check back soon or explore mentors from other colleges!</p>
                 </div>
               )}
             </div>
@@ -404,7 +426,7 @@ export default function Home() {
               <div className="text-center mb-16 max-w-2xl mx-auto">
                 <h2 className="text-3xl font-bold tracking-tight mb-4" style={{ fontFamily: 'var(--font-display)' }}>Affordable & Transparent</h2>
                 <p className="text-muted-foreground">
-                  Get clarity on your college decision for less than a movie ticket. 
+                  Get clarity on your college decision for less than a movie ticket.
                 </p>
               </div>
             </FadeIn>
