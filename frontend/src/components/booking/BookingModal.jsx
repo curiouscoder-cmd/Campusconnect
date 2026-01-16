@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ArrowLeft, ChevronRight, Clock } from "lucide-react";
+import { X, ArrowLeft, ChevronRight, Clock, AlertCircle } from "lucide-react";
 import { SlotPicker } from "./SlotPicker";
 import { SessionTypeSelector } from "./SessionTypeSelector";
 import { UserDetailsForm } from "./UserDetailsForm";
@@ -47,6 +47,7 @@ export function BookingModal({ mentor, isOpen, onClose, mode = "paid" }) {
   const [slots, setSlots] = useState([]);
   const [slotsLoading, setSlotsLoading] = useState(true);
   const [nsatSubmitting, setNsatSubmitting] = useState(false);
+  const [mentorHasSetAvailability, setMentorHasSetAvailability] = useState(true);
 
   const isNsatMode = mode === "nsat";
 
@@ -71,6 +72,8 @@ export function BookingModal({ mentor, isOpen, onClose, mode = "paid" }) {
           .order("start_time", { ascending: true });
 
         if (data && data.length > 0) {
+          // Mentor has set real availability
+          setMentorHasSetAvailability(true);
           // Transform DB slots to the format expected by SlotPicker
           const transformedSlots = data.map(slot => {
             // Normalize date to YYYY-MM-DD format (handle timezone issues)
@@ -94,13 +97,15 @@ export function BookingModal({ mentor, isOpen, onClose, mode = "paid" }) {
           });
           setSlots(transformedSlots);
         } else {
-          // Fallback to mock slots if no real data
+          // Mentor hasn't set availability - show placeholder slots
+          setMentorHasSetAvailability(false);
           const mockSlots = generateMockSlots(mentorId, 14);
           setSlots(mockSlots);
         }
       } catch (err) {
         console.error("Error fetching slots:", err);
         // Fallback to mock slots on error
+        setMentorHasSetAvailability(false);
         const mockSlots = generateMockSlots(mentorId, 14);
         setSlots(mockSlots);
       } finally {
@@ -371,12 +376,23 @@ export function BookingModal({ mentor, isOpen, onClose, mode = "paid" }) {
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.2 }}
                   >
+                    {/* Warning banner if mentor hasn't set availability */}
+                    {!mentorHasSetAvailability && (
+                      <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3">
+                        <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium text-amber-800">Mentor hasn't set their availability yet</p>
+                          <p className="text-xs text-amber-600 mt-0.5">These are sample time slots. Booking will be available once the mentor sets their schedule.</p>
+                        </div>
+                      </div>
+                    )}
                     <SlotPicker
                       slots={slots}
                       selectedSlot={selectedSlot}
-                      onSelectSlot={handleSlotSelect}
+                      onSelectSlot={mentorHasSetAvailability ? handleSlotSelect : () => { }}
                       mentor={mentor}
                       sessionType={selectedSession}
+                      disabled={!mentorHasSetAvailability}
                     />
                   </motion.div>
                 )}
@@ -485,24 +501,24 @@ export function BookingModal({ mentor, isOpen, onClose, mode = "paid" }) {
                       : {}
                   }
                   whileTap={
-                    !((currentStep === STEPS.SLOT_SELECTION && !selectedSlot) ||
+                    !((currentStep === STEPS.SLOT_SELECTION && (!selectedSlot || !mentorHasSetAvailability)) ||
                       (currentStep === STEPS.SESSION_TYPE && !selectedSession))
                       ? { scale: 0.99 }
                       : {}
                   }
                   disabled={
-                    (currentStep === STEPS.SLOT_SELECTION && !selectedSlot) ||
+                    (currentStep === STEPS.SLOT_SELECTION && (!selectedSlot || !mentorHasSetAvailability)) ||
                     (currentStep === STEPS.SESSION_TYPE && !selectedSession)
                   }
                   className={cn(
                     "w-full py-3.5 rounded-full font-semibold text-sm transition-all duration-200",
-                    (currentStep === STEPS.SLOT_SELECTION && !selectedSlot) ||
+                    (currentStep === STEPS.SLOT_SELECTION && (!selectedSlot || !mentorHasSetAvailability)) ||
                       (currentStep === STEPS.SESSION_TYPE && !selectedSession)
                       ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                       : "bg-slate-900 text-white hover:bg-slate-800"
                   )}
                 >
-                  {currentStep === STEPS.SLOT_SELECTION && "Next"}
+                  {currentStep === STEPS.SLOT_SELECTION && (mentorHasSetAvailability ? "Next" : "Slots Not Available")}
                   {currentStep === STEPS.SESSION_TYPE && "Continue"}
                   {currentStep === STEPS.USER_DETAILS && "Schedule Event"}
                 </motion.button>

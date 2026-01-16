@@ -19,6 +19,7 @@ export function SlotPicker({
   currentUserId,
   mentor,
   sessionType,
+  disabled = false,
 }) {
   const [selectedDate, setSelectedDate] = useState(formatDateISO(new Date()));
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -232,18 +233,21 @@ export function SlotPicker({
                     return (
                       <motion.button
                         key={slot.id}
-                        onClick={() => onSelectSlot(slot)}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                        onClick={() => !disabled && onSelectSlot(slot)}
+                        whileHover={!disabled ? { scale: 1.02 } : {}}
+                        whileTap={!disabled ? { scale: 0.98 } : {}}
+                        disabled={disabled}
                         className={cn(
                           "w-full py-3 px-4 rounded-lg text-sm font-semibold transition-all duration-200 border",
-                          isSelected
-                            ? "bg-slate-900 text-white border-slate-900"
-                            : "bg-white text-slate-900 border-slate-200 hover:border-slate-400"
+                          disabled
+                            ? "bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed opacity-60"
+                            : isSelected
+                              ? "bg-slate-900 text-white border-slate-900"
+                              : "bg-white text-slate-900 border-slate-200 hover:border-slate-400"
                         )}
                       >
                         <div className="flex items-center justify-center gap-2">
-                          {!isSelected && (
+                          {!isSelected && !disabled && (
                             <span className="w-2 h-2 rounded-full bg-emerald-500" />
                           )}
                           {formatTime(slot.startTime)}
