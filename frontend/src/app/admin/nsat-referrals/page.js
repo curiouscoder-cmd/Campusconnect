@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function NsatReferralsPage() {
     const [referrals, setReferrals] = useState([]);
@@ -37,68 +38,29 @@ export default function NsatReferralsPage() {
     const handleApprove = async (referral) => {
         setProcessingId(referral.id);
         try {
-            // Mark the slot as booked in availability table
-            if (referral.preferred_mentor_id && referral.preferred_date && referral.preferred_time) {
-                const { error: slotError } = await supabase
-                    .from("availability")
-                    .update({ is_booked: true, is_reserved: false })
-                    .eq("mentor_id", referral.preferred_mentor_id)
-                    .eq("date", referral.preferred_date)
-                    .eq("start_time", referral.preferred_time);
-
-                if (slotError) {
-                    console.error("Error marking slot as booked:", slotError);
-                }
-
-                // Create a booking record for the free session
-                const { error: bookingError } = await supabase
-                    .from("bookings")
-                    .insert({
-                        mentor_id: referral.preferred_mentor_id,
-                        user_name: referral.name,
-                        user_email: referral.email,
-                        user_phone: referral.phone || null,
-                        session_type: "nsat_free",
-                        session_duration: 15,
-                        session_price: 0,
-                        date: referral.preferred_date,
-                        start_time: referral.preferred_time,
-                        status: "confirmed",
-                        confirmed_at: new Date().toISOString(),
-                    });
-
-                if (bookingError) {
-                    console.error("Error creating booking:", bookingError);
-                }
-            }
-
-            // Update referral status to approved
-            const { error } = await supabase
-                .from("nsat_referrals")
-                .update({
-                    status: "approved",
-                    approved_at: new Date().toISOString(),
-                })
-                .eq("id", referral.id);
-
-            if (error) throw error;
-
-            // Send approval email
-            await fetch("/api/send-nsat-approval", {
+            const response = await fetch("/api/admin/nsat-referral", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    name: referral.name,
-                    email: referral.email,
+                    referralId: referral.id,
+                    action: "approve"
                 }),
             });
 
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "Failed to approve");
+            }
+
             // Refresh list
             fetchReferrals();
-            alert("Referral approved! Slot booked and email sent to " + referral.email);
+            toast.success("Referral approved!", {
+                description: `Booking created and email sent to ${referral.email}`
+            });
         } catch (error) {
             console.error("Error approving referral:", error);
-            alert("Failed to approve referral");
+            toast.error("Failed to approve referral", { description: error.message });
         } finally {
             setProcessingId(null);
         }
@@ -109,16 +71,26 @@ export default function NsatReferralsPage() {
 
         setProcessingId(referral.id);
         try {
-            const { error } = await supabase
-                .from("nsat_referrals")
-                .update({ status: "rejected" })
-                .eq("id", referral.id);
+            const response = await fetch("/api/admin/nsat-referral", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    referralId: referral.id,
+                    action: "reject"
+                }),
+            });
 
-            if (error) throw error;
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "Failed to reject");
+            }
+
             fetchReferrals();
+            toast.success("Referral rejected");
         } catch (error) {
             console.error("Error rejecting referral:", error);
-            alert("Failed to reject referral");
+            toast.error("Failed to reject referral");
         } finally {
             setProcessingId(null);
         }
