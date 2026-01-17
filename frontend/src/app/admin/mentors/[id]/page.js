@@ -9,6 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
+
+// Available colleges for mentor selection
+const COLLEGES = [
+    { id: "nst", name: "Newton School of Technology" },
+    { id: "sst", name: "Scaler School of Technology" },
+    { id: "vst", name: "Vedam School of Technology" },
+    { id: "niat", name: "NxtWave Institute of Advanced Technology" },
+    { id: "pst", name: "Polaris School of Technology" },
+];
 
 export default function EditMentorPage() {
     const router = useRouter();
@@ -75,6 +85,16 @@ export default function EditMentorPage() {
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleCollegeChange = (e) => {
+        const selectedId = e.target.value;
+        const selectedCollege = COLLEGES.find(c => c.id === selectedId);
+        setFormData({
+            ...formData,
+            college_id: selectedId,
+            college: selectedCollege?.name || ""
+        });
     };
 
     const handleImageUpload = async (e) => {
@@ -208,27 +228,22 @@ export default function EditMentorPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="college" className="text-gray-700">College Name</Label>
-                                <Input
-                                    id="college"
-                                    name="college"
-                                    required
-                                    value={formData.college}
-                                    onChange={handleChange}
-                                    className="bg-white border-gray-300 text-gray-900"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="college_id" className="text-gray-700">College ID</Label>
-                                <Input
+                                <Label htmlFor="college_id" className="text-gray-700">College</Label>
+                                <select
                                     id="college_id"
                                     name="college_id"
                                     required
                                     value={formData.college_id}
-                                    onChange={handleChange}
-                                    className="bg-white border-gray-300 text-gray-900"
-                                />
+                                    onChange={handleCollegeChange}
+                                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                >
+                                    <option value="">Select College</option>
+                                    {COLLEGES.map((college) => (
+                                        <option key={college.id} value={college.id}>
+                                            {college.name}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
 
                             <div className="space-y-2">
