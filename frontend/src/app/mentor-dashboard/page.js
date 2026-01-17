@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 import {
     Calendar,
     Clock,
@@ -22,6 +23,10 @@ import {
     AlertCircle,
     Save,
     Check,
+    Upload,
+    User,
+    FileText,
+    Tags,
 } from "lucide-react";
 
 // Predefined time slots (30 min each, 9 AM to 10 PM)
@@ -42,9 +47,16 @@ export default function MentorDashboardPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [savingMeetLink, setSavingMeetLink] = useState(false);
+    const [savingProfile, setSavingProfile] = useState(false);
+    const [uploadingImage, setUploadingImage] = useState(false);
     const [selectedDate, setSelectedDate] = useState("");
     const [selectedTimeSlots, setSelectedTimeSlots] = useState([]);
     const [meetLink, setMeetLink] = useState("");
+
+    // Profile editing state
+    const [bio, setBio] = useState("");
+    const [expertise, setExpertise] = useState("");
+    const [imagePreview, setImagePreview] = useState("");
 
     useEffect(() => {
         if (!authLoading && !user) {
@@ -73,6 +85,9 @@ export default function MentorDashboardPage() {
 
             setMentor(mentorData);
             setMeetLink(mentorData.meet_link || "");
+            setBio(mentorData.bio || "");
+            setExpertise(Array.isArray(mentorData.expertise) ? mentorData.expertise.join(", ") : mentorData.expertise || "");
+            setImagePreview(mentorData.image || "");
 
             await fetchSlots(mentorData.id);
             await fetchUpcomingBookings(mentorData.id);
@@ -190,12 +205,95 @@ export default function MentorDashboardPage() {
             if (error) throw error;
 
             setMentor({ ...mentor, meet_link: meetLink });
-            alert("Meet link saved successfully!");
+            toast.success("Meet link saved successfully!");
         } catch (error) {
             console.error("Error saving meet link:", error);
-            alert("Failed to save meet link: " + error.message);
+            toast.error("Failed to save meet link: " + error.message);
         } finally {
             setSavingMeetLink(false);
+        }
+    }
+
+    async function handleImageUpload(e) {
+        const file = e.target.files?.[0];
+        if (!file || !mentor) return;
+
+        // Validate file
+        if (!file.type.startsWith("image/")) {
+            toast.error("Please upload an image file");
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error("Image must be less than 5MB");
+            return;
+        }
+
+        setUploadingImage(true);
+        try {
+            // Create unique filename
+            const fileExt = file.name.split(".").pop();
+            const fileName = `mentor-${mentor.id}-${Date.now()}.${fileExt}`;
+
+            // Upload to Supabase storage
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from("mentor-images")
+                .upload(fileName, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            // Get public URL
+            const { data: { publicUrl } } = supabase.storage
+                .from("mentor-images")
+                .getPublicUrl(fileName);
+
+            // Update mentor profile with new image URL
+            const { error: updateError } = await supabase
+                .from("mentors")
+                .update({ image: publicUrl })
+                .eq("id", mentor.id);
+
+            if (updateError) throw updateError;
+
+            setImagePreview(publicUrl);
+            setMentor({ ...mentor, image: publicUrl });
+            toast.success("Profile picture updated!");
+        } catch (error) {
+            console.error("Error uploading image:", error);
+            toast.error("Failed to upload image: " + error.message);
+        } finally {
+            setUploadingImage(false);
+        }
+    }
+
+    async function handleSaveProfile() {
+        if (!mentor) return;
+
+        setSavingProfile(true);
+        try {
+            // Parse expertise from comma-separated string to array
+            const expertiseArray = expertise
+                .split(",")
+                .map((e) => e.trim())
+                .filter((e) => e.length > 0);
+
+            const { error } = await supabase
+                .from("mentors")
+                .update({
+                    bio: bio,
+                    expertise: expertiseArray,
+                })
+                .eq("id", mentor.id);
+
+            if (error) throw error;
+
+            setMentor({ ...mentor, bio, expertise: expertiseArray });
+            toast.success("Profile updated successfully!");
+        } catch (error) {
+            console.error("Error saving profile:", error);
+            toast.error("Failed to save profile: " + error.message);
+        } finally {
+            setSavingProfile(false);
         }
     }
 
@@ -344,6 +442,131 @@ export default function MentorDashboardPage() {
                         <p className="text-xs text-gray-500 mt-2">
                             This link will be shared with students who book sessions with you.
                         </p>
+                    </CardContent>
+                </Card>
+
+                {/* Profile Settings Card */}
+                <Card className="mb-6">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <User className="w-5 h-5" />
+                            Your Profile
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        {/* Profile Picture */}
+                        <div className="flex items-start gap-6">
+                            <div className="relative">
+                                <div className="w-24 h-24 rounded-full bg-gray-100 overflow-hidden border-2 border-gray-200">
+                                    {imagePreview ? (
+                                        <img
+                                            src={imagePreview}
+                                            alt={mentor.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center">
+                                            <User className="w-10 h-10 text-gray-400" />
+                                        </div>
+                                    )}
+                                </div>
+                                {uploadingImage && (
+                                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                                        <Loader2 className="w-6 h-6 text-white animate-spin" />
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex-1">
+                                <Label htmlFor="image-upload" className="text-sm font-medium">
+                                    Profile Picture
+                                </Label>
+                                <p className="text-xs text-gray-500 mb-2">
+                                    Upload a profile photo (max 5MB, JPG/PNG)
+                                </p>
+                                <label htmlFor="image-upload">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={uploadingImage}
+                                        className="cursor-pointer"
+                                        asChild
+                                    >
+                                        <span>
+                                            <Upload className="w-4 h-4 mr-2" />
+                                            {uploadingImage ? "Uploading..." : "Upload Photo"}
+                                        </span>
+                                    </Button>
+                                </label>
+                                <input
+                                    id="image-upload"
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageUpload}
+                                    className="hidden"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Bio */}
+                        <div className="space-y-2">
+                            <Label htmlFor="bio" className="flex items-center gap-2">
+                                <FileText className="w-4 h-4" />
+                                Bio
+                            </Label>
+                            <textarea
+                                id="bio"
+                                placeholder="Write a short bio about yourself, your interests, and what you can help students with..."
+                                value={bio}
+                                onChange={(e) => setBio(e.target.value)}
+                                rows={4}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+                            />
+                            <p className="text-xs text-gray-500">
+                                This will be shown on your mentor profile card.
+                            </p>
+                        </div>
+
+                        {/* Expertise */}
+                        <div className="space-y-2">
+                            <Label htmlFor="expertise" className="flex items-center gap-2">
+                                <Tags className="w-4 h-4" />
+                                Expertise Tags
+                            </Label>
+                            <Input
+                                id="expertise"
+                                placeholder="e.g., Placements, Campus Life, Coding, Academics"
+                                value={expertise}
+                                onChange={(e) => setExpertise(e.target.value)}
+                            />
+                            <p className="text-xs text-gray-500">
+                                Enter your expertise areas separated by commas.
+                            </p>
+                            {expertise && (
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                    {expertise.split(",").map((tag, i) => (
+                                        tag.trim() && (
+                                            <span
+                                                key={i}
+                                                className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full"
+                                            >
+                                                {tag.trim()}
+                                            </span>
+                                        )
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Save Button */}
+                        <Button onClick={handleSaveProfile} disabled={savingProfile} className="w-full sm:w-auto">
+                            {savingProfile ? (
+                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            ) : (
+                                <Save className="w-4 h-4 mr-2" />
+                            )}
+                            Save Profile
+                        </Button>
                     </CardContent>
                 </Card>
 
