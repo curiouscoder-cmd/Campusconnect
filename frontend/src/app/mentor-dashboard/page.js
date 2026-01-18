@@ -231,32 +231,24 @@ export default function MentorDashboardPage() {
 
         setUploadingImage(true);
         try {
-            // Create unique filename
-            const fileExt = file.name.split(".").pop();
-            const fileName = `mentor-${mentor.id}-${Date.now()}.${fileExt}`;
+            // Use API route to upload image (bypasses storage permissions)
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("mentorId", mentor.id);
 
-            // Upload to Supabase storage
-            const { data: uploadData, error: uploadError } = await supabase.storage
-                .from("mentor-images")
-                .upload(fileName, file, { upsert: true });
+            const response = await fetch("/api/mentor/upload-image", {
+                method: "POST",
+                body: formData,
+            });
 
-            if (uploadError) throw uploadError;
+            const result = await response.json();
 
-            // Get public URL
-            const { data: { publicUrl } } = supabase.storage
-                .from("mentor-images")
-                .getPublicUrl(fileName);
+            if (!response.ok) {
+                throw new Error(result.error || "Upload failed");
+            }
 
-            // Update mentor profile with new image URL
-            const { error: updateError } = await supabase
-                .from("mentors")
-                .update({ image: publicUrl })
-                .eq("id", mentor.id);
-
-            if (updateError) throw updateError;
-
-            setImagePreview(publicUrl);
-            setMentor({ ...mentor, image: publicUrl });
+            setImagePreview(result.imageUrl);
+            setMentor({ ...mentor, image: result.imageUrl });
             toast.success("Profile picture updated!");
         } catch (error) {
             console.error("Error uploading image:", error);
@@ -318,6 +310,19 @@ export default function MentorDashboardPage() {
         return slots.some(
             (slot) => slot.date === selectedDate && slot.start_time === time
         );
+    }
+
+    // Check if a time slot has already passed (for today)
+    function isSlotPast(time) {
+        const today = new Date().toISOString().split("T")[0];
+        if (selectedDate !== today) return false;
+
+        const now = new Date();
+        const [hours, minutes] = time.split(":").map(Number);
+        const slotTime = new Date();
+        slotTime.setHours(hours, minutes, 0, 0);
+
+        return slotTime <= now;
     }
 
     if (authLoading || loading) {
@@ -602,17 +607,19 @@ export default function MentorDashboardPage() {
                                     <div className="grid grid-cols-4 gap-2 max-h-[250px] overflow-y-auto">
                                         {TIME_SLOTS.map((time) => {
                                             const isTaken = isSlotTaken(time);
+                                            const isPast = isSlotPast(time);
+                                            const isDisabled = isTaken || isPast;
                                             const isSelected = selectedTimeSlots.includes(time);
 
                                             return (
                                                 <button
                                                     key={time}
                                                     type="button"
-                                                    disabled={isTaken}
-                                                    onClick={() => !isTaken && toggleTimeSlot(time)}
+                                                    disabled={isDisabled}
+                                                    onClick={() => !isDisabled && toggleTimeSlot(time)}
                                                     className={`
                                                         p-2 text-sm rounded-lg border transition-all
-                                                        ${isTaken
+                                                        ${isDisabled
                                                             ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200"
                                                             : isSelected
                                                                 ? "bg-primary text-white border-primary"
@@ -623,6 +630,9 @@ export default function MentorDashboardPage() {
                                                     {formatTime(time)}
                                                     {isTaken && (
                                                         <span className="block text-[10px]">Added</span>
+                                                    )}
+                                                    {isPast && !isTaken && (
+                                                        <span className="block text-[10px]">Past</span>
                                                     )}
                                                 </button>
                                             );
