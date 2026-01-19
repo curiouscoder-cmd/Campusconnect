@@ -273,26 +273,40 @@ export async function POST(request) {
 
     let isValid = false;
 
-    // Verify signature if Razorpay is configured
-    if (RAZORPAY_KEY_SECRET && razorpay_order_id && razorpay_signature) {
-      const expectedSignature = crypto
-        .createHmac("sha256", RAZORPAY_KEY_SECRET)
-        .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-        .digest("hex");
-
-      isValid = expectedSignature === razorpay_signature;
-    } else {
-      // For development without Razorpay configured
-      console.warn("Razorpay not configured, skipping signature verification");
-      isValid = true;
+    // ALWAYS verify signature - this is critical for security
+    if (!RAZORPAY_KEY_SECRET) {
+      console.error("RAZORPAY_KEY_SECRET is not configured!");
+      return NextResponse.json(
+        { error: "Payment verification not configured. Please contact support." },
+        { status: 500 }
+      );
     }
 
-    if (!isValid) {
+    if (!razorpay_order_id || !razorpay_signature) {
+      console.error("Missing order_id or signature");
       return NextResponse.json(
-        { error: "Invalid payment signature" },
+        { error: "Missing payment verification data" },
         { status: 400 }
       );
     }
+
+    // Verify Razorpay signature
+    const expectedSignature = crypto
+      .createHmac("sha256", RAZORPAY_KEY_SECRET)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest("hex");
+
+    isValid = expectedSignature === razorpay_signature;
+
+    if (!isValid) {
+      console.error("Invalid payment signature - possible fraud attempt");
+      return NextResponse.json(
+        { error: "Invalid payment signature. Payment not verified." },
+        { status: 400 }
+      );
+    }
+
+    console.log("Payment signature verified successfully");
 
     const supabase = createServerClient();
 
