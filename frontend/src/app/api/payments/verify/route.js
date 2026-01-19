@@ -308,6 +308,42 @@ export async function POST(request) {
 
     console.log("Payment signature verified successfully");
 
+    // IMPORTANT: Double-check payment status with Razorpay API
+    // This prevents issues where handler is called but payment later fails
+    try {
+      const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+      const authString = Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString("base64");
+
+      const paymentCheckResponse = await fetch(
+        `https://api.razorpay.com/v1/payments/${razorpay_payment_id}`,
+        {
+          headers: {
+            "Authorization": `Basic ${authString}`,
+          },
+        }
+      );
+
+      if (paymentCheckResponse.ok) {
+        const paymentData = await paymentCheckResponse.json();
+        console.log("Razorpay payment status:", paymentData.status);
+
+        // Only proceed if payment is captured or authorized
+        if (paymentData.status !== "captured" && paymentData.status !== "authorized") {
+          console.error("Payment not in valid state:", paymentData.status);
+          return NextResponse.json(
+            { error: `Payment not completed. Status: ${paymentData.status}` },
+            { status: 400 }
+          );
+        }
+      } else {
+        console.error("Failed to verify payment with Razorpay API:", await paymentCheckResponse.text());
+        // Continue anyway as signature was valid
+      }
+    } catch (apiError) {
+      console.error("Error checking payment status with Razorpay:", apiError);
+      // Continue as signature verification passed
+    }
+
     const supabase = createServerClient();
 
     // Create booking in database
