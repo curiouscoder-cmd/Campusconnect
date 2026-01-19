@@ -69,16 +69,22 @@ export function formatTime(time) {
   return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
 }
 
-// Check if a slot is available (not booked, not reserved, and not in the past)
+// Minimum advance booking time in hours
+const MIN_ADVANCE_BOOKING_HOURS = 2;
+
+// Check if a slot is available (not booked, not reserved, and has enough advance time)
 export function isSlotAvailable(slot, currentUserId) {
-  // Check if slot is in the past
+  // Check if slot is in the past or within the minimum advance booking window
   if (slot.date && slot.startTime) {
     const [hours, minutes] = slot.startTime.split(':').map(Number);
     const slotDateTime = new Date(slot.date);
     slotDateTime.setHours(hours, minutes, 0, 0);
 
-    if (slotDateTime < new Date()) {
-      return false; // Slot is in the past
+    const now = new Date();
+    const minBookingTime = new Date(now.getTime() + MIN_ADVANCE_BOOKING_HOURS * 60 * 60 * 1000);
+
+    if (slotDateTime < minBookingTime) {
+      return false; // Slot is too soon - must book at least 2 hours in advance
     }
   }
 
