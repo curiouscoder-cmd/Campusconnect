@@ -26,7 +26,7 @@ import { PricingCard } from "@/components/PricingCard";
 import { Accordion as AccordionEldora, AccordionContent as AccordionContentEldora, AccordionItem as AccordionItemEldora, AccordionTrigger as AccordionTriggerEldora } from "@/components/ui/accordion-eldora";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight } from "lucide-react";
-
+import { Analytics } from "@vercel/analytics/next"
 // Available colleges for filtering
 const COLLEGES = [
   { id: "all", name: "All Colleges", short: "All" },
@@ -383,8 +383,8 @@ export default function Home() {
                     key={college.id}
                     onClick={() => setSelectedCollege(college.id)}
                     className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${selectedCollege === college.id
-                        ? 'bg-primary text-white shadow-md'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      ? 'bg-primary text-white shadow-md'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                       }`}
                   >
                     {college.short}
