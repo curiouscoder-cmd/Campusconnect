@@ -135,11 +135,12 @@ export async function POST(request) {
     await sendBookingConfirmationEmail({
       userEmail: userDetails?.email,
       userName: userDetails?.name,
-      sessionType: sessionType?.title || sessionType, // Adjust based on how object is passed
+      sessionType: sessionType?.title || "Quick Chat",
       meetLink,
       slotDate,
       slotTime,
-      mentorName: fetchedMentorName
+      mentorName: fetchedMentorName,
+      duration: sessionType?.duration || "15 mins"
     });
 
     await sendMentorNotificationEmail({

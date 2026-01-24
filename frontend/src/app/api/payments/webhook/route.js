@@ -98,11 +98,8 @@ export async function POST(request) {
       const userEmail = notes.userEmail;
       const userName = notes.userName;
 
-      // Need to fetch Mentor Details for Meet Link & Name
-      let meetLink = null;
-      let mentorName = "Mentor";
-      let mentorEmail = null;
-      let sessionTypeTitle = sessionTypeId; // Fallback
+      // Extract title from notes (created in create-order) or fallback to ID
+      let sessionTypeTitle = notes.sessionTypeTitle || sessionTypeId;
 
       // Fetch Mentor
       if (mentorId) {
@@ -207,14 +204,16 @@ export async function POST(request) {
       }
 
       // Send Email
-      await sendBookingConfirmationEmail(
-        { email: userEmail, name: userName },
-        sessionTypeTitle,
-        meetLink,
-        slotDate,
-        slotTime,
-        mentorName
-      );
+      await sendBookingConfirmationEmail({
+        userEmail: userEmail,
+        userName: userName,
+        sessionType: sessionTypeTitle,
+        meetLink: meetLink,
+        slotDate: slotDate,
+        slotTime: slotTime,
+        mentorName: mentorName,
+        duration: "15 mins" // Default fallback for webhook
+      });
 
       // Send Mentor Notification (CRITICAL: ensure mentor knows!)
       let mentorEmailToUse = mentorEmail;
