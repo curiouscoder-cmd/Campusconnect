@@ -220,7 +220,7 @@ export default function ContactMessage({
                                     Message Content
                                 </Text>
                                 <Text style={{ fontSize: "16px", color: "#334155", lineHeight: "1.6" }}>
-                                    "{message}"
+                                    &quot;{message}&quot;
                                 </Text>
                             </div>
 

@@ -183,7 +183,7 @@ export default function NSATApproval({
                                 </div>
                             </div>
 
-                            <Heading style={heading}>You're In!</Heading>
+                            <Heading style={heading}>You&apos;re In!</Heading>
 
                             <div style={heroBox}>
                                 <Text style={subText}>

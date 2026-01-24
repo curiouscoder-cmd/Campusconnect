@@ -310,7 +310,7 @@ export default function MentorNotification({
                                         Topic / Note
                                     </Text>
                                     <Text style={tipItem}>
-                                        "{topic}"
+                                        &quot;{topic}&quot;
                                     </Text>
                                     <div style={{ marginTop: "16px" }}>
                                         <Text style={tipItem}>Check your dashboard for more details.</Text>

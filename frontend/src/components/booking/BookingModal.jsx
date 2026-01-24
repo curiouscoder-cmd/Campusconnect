@@ -381,7 +381,7 @@ export function BookingModal({ mentor, isOpen, onClose, mode = "paid" }) {
                       <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3">
                         <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                         <div>
-                          <p className="text-sm font-medium text-amber-800">Mentor hasn't set their availability yet</p>
+                          <p className="text-sm font-medium text-amber-800">Mentor hasn&apos;t set their availability yet</p>
                           <p className="text-xs text-amber-600 mt-0.5">These are sample time slots. Booking will be available once the mentor sets their schedule.</p>
                         </div>
                       </div>

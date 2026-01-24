@@ -273,7 +273,7 @@ export default function BookingConfirmation({
 
                             <div style={heroBox}>
                                 <Text style={subText}>
-                                    You're all set, {userName}.
+                                    You&apos;re all set, {userName}.
                                     <br /><br />
                                     This session with <strong style={{ color: "#4f46e5" }}>{mentorName}</strong> is a massive advantage for your career. Make it count.
                                 </Text>

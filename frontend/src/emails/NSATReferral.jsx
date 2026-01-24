@@ -218,7 +218,7 @@ export default function NSATReferral({
                                 <Text style={subText}>
                                     Great news {name}!
                                     <br /><br />
-                                    Your referral worked and we've unlocked your free session.
+                                    Your referral worked and we&apos;ve unlocked your free session.
                                 </Text>
                             </div>
 

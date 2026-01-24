@@ -79,7 +79,7 @@ export function ConfirmationScreen({
             transition={{ delay: 0.4 }}
             className="text-gray-500 mt-2"
           >
-            We'll verify your NSAT registration and confirm your session
+            We&apos;ll verify your NSAT registration and confirm your session
           </motion.p>
         </div>
 
@@ -136,7 +136,7 @@ export function ConfirmationScreen({
           transition={{ delay: 0.6 }}
           className="text-sm text-gray-500 bg-yellow-50 border border-yellow-200 rounded-lg p-4"
         >
-          <p>📧 You'll receive an email once your free session is approved and scheduled.</p>
+          <p>📧 You&apos;ll receive an email once your free session is approved and scheduled.</p>
         </motion.div>
 
         {/* Done Button */}

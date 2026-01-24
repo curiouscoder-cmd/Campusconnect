@@ -30,32 +30,34 @@ export default function ProfilePage() {
             return;
         }
 
+        async function fetchProfile() {
+            try {
+                const { data, error } = await supabase
+                    .from("profiles")
+                    .select("*")
+                    .eq("id", user.id)
+                    .single();
+
+                if (data) {
+                    setProfile(data);
+                    setFormData({
+                        full_name: data.full_name || "",
+                        phone: data.phone || "",
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching profile:", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+
         if (user) {
             fetchProfile();
         }
     }, [user, authLoading, router]);
 
-    async function fetchProfile() {
-        try {
-            const { data, error } = await supabase
-                .from("profiles")
-                .select("*")
-                .eq("id", user.id)
-                .single();
 
-            if (data) {
-                setProfile(data);
-                setFormData({
-                    full_name: data.full_name || "",
-                    phone: data.phone || "",
-                });
-            }
-        } catch (error) {
-            console.error("Error fetching profile:", error);
-        } finally {
-            setLoading(false);
-        }
-    }
 
     async function handleSave() {
         setSaving(true);

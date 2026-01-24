@@ -51,7 +51,7 @@ export function NsatVerificationScreen({ mentor, slot, onSuccess, onBack }) {
                     Request Submitted!
                 </h3>
                 <p className="text-gray-500 mb-2">
-                    We'll verify your NSAT registration and confirm your session.
+                    We&apos;ll verify your NSAT registration and confirm your session.
                 </p>
                 <div className="bg-gray-50 rounded-lg p-4 mb-4 inline-block">
                     <p className="text-sm text-gray-600">
@@ -62,7 +62,7 @@ export function NsatVerificationScreen({ mentor, slot, onSuccess, onBack }) {
                     </p>
                 </div>
                 <p className="text-sm text-gray-500">
-                    You'll receive an email once your free session is approved.
+                    You&apos;ll receive an email once your free session is approved.
                 </p>
             </div>
         );

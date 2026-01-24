@@ -3,6 +3,7 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Users, GraduationCap, MessageCircle, Target } from "lucide-react";
+import Link from "next/link";
 
 export default function AboutPage() {
     return (
@@ -127,12 +128,12 @@ export default function AboutPage() {
                         <p className="text-white/70 mb-8">
                             Talk to a real student today and make your college decision with confidence.
                         </p>
-                        <a
+                        <Link
                             href="/#mentors"
                             className="inline-block px-8 py-3 bg-white text-slate-900 font-semibold rounded-full hover:bg-white/90 transition-colors"
                         >
                             Browse Mentors
-                        </a>
+                        </Link>
                     </div>
                 </section>
             </main>
