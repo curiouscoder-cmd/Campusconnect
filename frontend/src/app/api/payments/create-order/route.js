@@ -47,18 +47,23 @@ export async function POST(request) {
     const sanitizedSlotId = String(slotId).replace(/[^a-zA-Z0-9]/g, '').substring(0, 20);
     const receipt = `bk_${sanitizedSlotId}_${Date.now()}`.substring(0, 40);
 
-    // Create order - notes must be strings only
+    // Create order - notes must be strings only (CRITICAL for Webhook Fallback)
+    const notes = {
+      slotId: String(slotId || ""),
+      mentorId: String(mentorId || ""),
+      sessionTypeId: String(sessionType?.id || sessionType || ""),
+      sessionTypeTitle: String(sessionType?.title || sessionType?.id || "Session"),
+      userName: String(userDetails?.name || ""),
+      userEmail: String(userDetails?.email || ""),
+      userPhone: String(userDetails?.phone || ""),
+      bookingDate: new Date().toISOString(), // Timestamp for reference
+    };
+
     const order = await razorpay.orders.create({
       amount: Math.round(amount * 100), // Amount in paise, ensure it's an integer
       currency: "INR",
       receipt: receipt,
-      notes: {
-        slotId: String(slotId || ""),
-        mentorId: String(mentorId || ""),
-        sessionType: String(sessionType?.id || sessionType || ""),
-        userName: String(userDetails?.name || ""),
-        userEmail: String(userDetails?.email || ""),
-      },
+      notes: notes, // Pass the robust notes object
     });
 
     console.log("Order created successfully:", order.id);

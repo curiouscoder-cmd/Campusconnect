@@ -22,8 +22,8 @@ function verifyWebhookSignature(body, signature) {
 }
 
 // Send booking confirmation email
-async function sendBookingConfirmationEmail(userEmail, userName, sessionType, meetLink, mentorName, amount) {
-  if (!process.env.RESEND_API_KEY || !userEmail) {
+async function sendBookingConfirmationEmail(userDetails, sessionType, meetLink, slotDate, slotTime, mentorName) {
+  if (!process.env.RESEND_API_KEY || !userDetails?.email) {
     console.log("Skipping email: Resend not configured or no user email");
     return;
   }
@@ -31,7 +31,7 @@ async function sendBookingConfirmationEmail(userEmail, userName, sessionType, me
   try {
     const { error } = await resend.emails.send({
       from: "Campus Connect <noreply@campus-connect.co.in>",
-      to: [userEmail],
+      to: [userDetails.email],
       subject: "🎉 Your Session is Booked! - Campus Connect",
       html: `
         <!DOCTYPE html>
@@ -49,76 +49,58 @@ async function sendBookingConfirmationEmail(userEmail, userName, sessionType, me
             <div style="background: white; border-radius: 16px; padding: 40px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
               <div style="text-align: center; margin-bottom: 24px;">
                 <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%); border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
-                  <span style="font-size: 40px; color: white;">✓</span>
+                  <span style="font-size: 40px;">✓</span>
                 </div>
               </div>
               
               <h2 style="color: #0f172a; text-align: center; margin: 0 0 8px 0; font-size: 24px;">
-                Payment Successful!
+                Booking Confirmed!
               </h2>
               <p style="color: #64748b; text-align: center; margin: 0 0 32px 0; font-size: 16px;">
-                Hi ${userName || 'there'}, your session is confirmed.
+                Your session with ${mentorName || 'your mentor'} has been successfully booked.
               </p>
               
               <div style="background: #f8fafc; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
                 <h3 style="color: #0f172a; margin: 0 0 16px 0; font-size: 16px; font-weight: 600;">
-                  📅 Session Details
+                  Session Details
                 </h3>
                 <table style="width: 100%; border-collapse: collapse;">
                   <tr>
                     <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Session Type</td>
                     <td style="padding: 8px 0; color: #0f172a; font-size: 14px; font-weight: 500; text-align: right;">
-                      ${sessionType || 'Quick Chat'}
+                      ${sessionType?.title || sessionType || 'Quick Chat'}
                     </td>
                   </tr>
-                  ${mentorName ? `
+                  ${slotDate ? `
                   <tr>
-                    <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Mentor</td>
+                    <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Date & Time</td>
                     <td style="padding: 8px 0; color: #0f172a; font-size: 14px; font-weight: 500; text-align: right;">
-                      ${mentorName}
+                      ${slotDate} ${slotTime ? 'at ' + slotTime : ''}
                     </td>
                   </tr>
                   ` : ''}
-                  <tr>
-                    <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Amount Paid</td>
-                    <td style="padding: 8px 0; color: #10b981; font-size: 14px; font-weight: 600; text-align: right;">
-                      ₹${amount || 99}
-                    </td>
-                  </tr>
                 </table>
               </div>
               
               ${meetLink ? `
               <div style="background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%); border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
                 <p style="color: rgba(255,255,255,0.9); margin: 0 0 12px 0; font-size: 14px;">
-                  Join your session using this link:
+                  Join the Google Meet link below at the scheduled time:
                 </p>
                 <a href="${meetLink}" style="display: inline-block; background: white; color: #6366F1; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">
-                  Join Google Meet
+                  Join Meeting
                 </a>
               </div>
               ` : ''}
               
-              <div style="border-top: 1px solid #e2e8f0; padding-top: 24px;">
-                <h4 style="color: #0f172a; margin: 0 0 12px 0; font-size: 14px;">💡 Tips for your session:</h4>
-                <ul style="color: #64748b; font-size: 14px; margin: 0; padding-left: 20px; line-height: 1.8;">
-                  <li>Join 2-3 minutes before the scheduled time</li>
-                  <li>Prepare your questions in advance</li>
-                  <li>Ensure you have a stable internet connection</li>
-                </ul>
+              <div style="text-align: center; margin-top: 32px;">
+                <p style="color: #64748b; font-size: 14px; margin: 0 0 8px 0;">
+                  Questions? Reply to this email or contact us at
+                </p>
+                <a href="mailto:contact@campus-connect.co.in" style="color: #6366F1; text-decoration: none; font-weight: 500;">
+                  contact@campus-connect.co.in
+                </a>
               </div>
-            </div>
-            
-            <div style="text-align: center; margin-top: 32px;">
-              <p style="color: #64748b; font-size: 14px; margin: 0 0 8px 0;">
-                Questions? Contact us at
-              </p>
-              <a href="mailto:contact@campus-connect.co.in" style="color: #6366F1; text-decoration: none; font-weight: 500;">
-                contact@campus-connect.co.in
-              </a>
-              <p style="color: #94a3b8; font-size: 12px; margin: 24px 0 0 0;">
-                © ${new Date().getFullYear()} Campus Connect. All rights reserved.
-              </p>
             </div>
           </div>
         </body>
@@ -129,51 +111,70 @@ async function sendBookingConfirmationEmail(userEmail, userName, sessionType, me
     if (error) {
       console.error("Failed to send booking confirmation email:", error);
     } else {
-      console.log("Booking confirmation email sent to:", userEmail);
+      console.log("Booking confirmation email sent to:", userDetails.email);
     }
   } catch (emailError) {
     console.error("Error sending booking confirmation email:", emailError);
   }
 }
 
+// Generate fallback meet link
+function generateMeetCode() {
+  const chars = "abcdefghijklmnopqrstuvwxyz";
+  const segments = [3, 4, 3];
+  return segments
+    .map((len) =>
+      Array.from({ length: len }, () =>
+        chars.charAt(Math.floor(Math.random() * chars.length))
+      ).join("")
+    )
+    .join("-");
+}
+
 export async function POST(request) {
   try {
-    const body = await request.text();
+    const bodyText = await request.text();
     const signature = request.headers.get("x-razorpay-signature");
 
-    console.log("Webhook received:", body.substring(0, 200));
-
-    // Verify signature in production
-    if (RAZORPAY_WEBHOOK_SECRET && signature) {
-      const isValid = verifyWebhookSignature(body, signature);
-      if (!isValid) {
-        console.error("Invalid webhook signature");
-        return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
-      }
+    if (!verifyWebhookSignature(bodyText, signature)) {
+      console.error("Invalid webhook signature");
+      return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 
-    const event = JSON.parse(body);
+    const event = JSON.parse(bodyText);
+    console.log("Webhook received:", event.event);
+
     const eventType = event.event;
 
-    console.log("Webhook event type:", eventType);
-
-    // Handle payment.captured event
-    if (eventType === "payment.captured") {
+    // Handle payment.captured event - THIS IS THE CRITICAL ONE
+    if (eventType === "payment.captured" || eventType === "order.paid") {
       const payment = event.payload.payment.entity;
       const orderId = payment.order_id;
       const paymentId = payment.id;
-      const amount = payment.amount / 100; // Convert from paise
-      const email = payment.email;
-      const contact = payment.contact;
-      const notes = payment.notes || {};
+      const amount = payment.amount / 100; // Convert to rupees
+      const notes = payment.notes; // This contains your metadata!
 
-      console.log("Payment captured:", { orderId, paymentId, amount, email });
+      console.log("Processing successful payment:", { orderId, paymentId });
 
       const supabase = createServerClient();
 
-      if (supabase) {
-        // Update payment status
-        const { error: paymentError } = await supabase
+      if (!supabase) {
+        console.error("Supabase client not initialized");
+        return NextResponse.json({ error: "Database unavailable" }, { status: 500 });
+      }
+
+      // 1. Check if booking already exists (Idempotency)
+      const { data: existingBooking } = await supabase
+        .from("bookings")
+        .select("id")
+        .eq("razorpay_order_id", orderId)
+        .single();
+
+      if (existingBooking) {
+        console.log("Booking already exists, skipping creation. ID:", existingBooking.id);
+
+        // Ensure payment status is updated just in case
+        await supabase
           .from("payments")
           .update({
             razorpay_payment_id: paymentId,
@@ -182,53 +183,149 @@ export async function POST(request) {
           })
           .eq("razorpay_order_id", orderId);
 
-        if (paymentError) {
-          console.error("Error updating payment:", paymentError);
-        }
+        return NextResponse.json({ received: true, status: "already_processed" });
+      }
 
-        // Get booking details for email
-        const { data: booking } = await supabase
-          .from("bookings")
-          .select("*, mentors(name)")
-          .eq("razorpay_order_id", orderId)
+      // 2. Booking doesn't exist - CREATE IT from Notes
+      console.log("Booking missing - Creating from webhook notes:", notes);
+
+      // Extract details from notes (ensure you send these in create-order!)
+      const slotId = notes.slotId;
+      const mentorId = notes.mentorId;
+      const sessionTypeId = notes.sessionTypeId || notes.sessionType; // Handle both naming conventions
+      const userEmail = notes.userEmail;
+      const userName = notes.userName;
+
+      // Need to fetch Mentor Details for Meet Link & Name
+      let meetLink = null;
+      let mentorName = "Mentor";
+      let mentorEmail = null;
+      let sessionTypeTitle = sessionTypeId; // Fallback
+
+      // Fetch Mentor
+      if (mentorId) {
+        const { data: mentor } = await supabase
+          .from("mentors")
+          .select("name, email, meet_link")
+          .eq("id", mentorId)
           .single();
 
-        if (booking) {
-          // Send confirmation email
-          await sendBookingConfirmationEmail(
-            booking.user_email || email,
-            booking.user_name || notes.userName,
-            booking.session_type,
-            booking.meet_link,
-            booking.mentors?.name,
-            amount
-          );
-        } else {
-          // If no booking found, still try to send email with available info
-          await sendBookingConfirmationEmail(
-            email,
-            notes.userName,
-            notes.sessionType,
-            null,
-            null,
-            amount
-          );
+        if (mentor) {
+          mentorName = mentor.name;
+          mentorEmail = mentor.email;
+          meetLink = mentor.meet_link;
         }
       }
 
-      return NextResponse.json({ received: true, status: "processed" });
+      // Fallback Meet Link
+      if (!meetLink) {
+        meetLink = `https://meet.google.com/${generateMeetCode()}`;
+      }
+
+      // Fetch Slot Date/Time if possible (or use current if notes don't have it)
+      // Ideally, slotId lookup would give us this, but let's be safe
+      let slotDate = new Date().toISOString().split('T')[0];
+      let slotTime = null;
+
+      if (slotId && slotId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        const { data: slot } = await supabase
+          .from("availability")
+          .select("start_time, date")
+          .eq("id", slotId)
+          .single();
+
+        if (slot) {
+          slotDate = slot.date;
+          slotTime = slot.start_time;
+        }
+      }
+
+      // Create Payment Record (if it doesn't exist either)
+      // Ideally create-order made it, but let's upsert to be safe
+      const { data: paymentRecord, error: payError } = await supabase
+        .from("payments")
+        .upsert({
+          razorpay_order_id: orderId,
+          razorpay_payment_id: paymentId,
+          amount: amount,
+          currency: "INR",
+          status: "captured",
+          booking_id: null, // Update later
+        }, { onConflict: 'razorpay_order_id' })
+        .select()
+        .single();
+
+      if (payError) console.error("Error upserting payment:", payError);
+
+      // Insert Booking
+      const bookingData = {
+        mentor_id: mentorId,
+        user_name: userName,
+        user_email: userEmail,
+        session_type: sessionTypeId,
+        session_price: amount,
+        date: slotDate,
+        start_time: slotTime,
+        status: "confirmed",
+        meet_link: meetLink,
+        razorpay_order_id: orderId, // Link strictly
+        confirmed_at: new Date().toISOString(),
+      };
+
+      if (slotId && slotId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        bookingData.slot_id = slotId;
+      }
+
+      const { data: newBooking, error: bookingError } = await supabase
+        .from("bookings")
+        .insert(bookingData)
+        .select()
+        .single();
+
+      if (bookingError) {
+        console.error("CRITICAL: Failed to create booking in webhook:", bookingError);
+        // Even if booking fails, payment is captured. We must log this critical error.
+        return NextResponse.json({ error: "Failed to create booking" }, { status: 500 });
+      }
+
+      console.log("Booking created successfully via Webhook:", newBooking.id);
+
+      // Link Payment to Booking
+      await supabase
+        .from("payments")
+        .update({ booking_id: newBooking.id })
+        .eq("razorpay_order_id", orderId);
+
+      // Mark Slot as Booked
+      if (slotId) {
+        await supabase
+          .from("availability")
+          .update({ is_booked: true, is_reserved: false })
+          .eq("id", slotId);
+      }
+
+      // Send Email
+      await sendBookingConfirmationEmail(
+        { email: userEmail, name: userName },
+        sessionTypeTitle,
+        meetLink,
+        slotDate,
+        slotTime,
+        mentorName
+      );
+
+      return NextResponse.json({ received: true, status: "created_via_webhook", bookingId: newBooking.id });
     }
 
-    // Handle payment.failed event
+    // Handle payment.failed
     if (eventType === "payment.failed") {
       const payment = event.payload.payment.entity;
       const orderId = payment.order_id;
       const paymentId = payment.id;
 
-      console.log("Payment failed:", { orderId, paymentId });
+      console.log("Payment failed webhook:", { orderId });
 
       const supabase = createServerClient();
-
       if (supabase) {
         await supabase
           .from("payments")
@@ -238,27 +335,19 @@ export async function POST(request) {
             updated_at: new Date().toISOString(),
           })
           .eq("razorpay_order_id", orderId);
+
+        // Release the slot if it was reserved? 
+        // Strategy: Let the reservation expire naturally (10 mins) or handle here.
+        // Safer to let it expire to avoid race conditions with retries.
       }
-
-      return NextResponse.json({ received: true, status: "processed" });
+      return NextResponse.json({ received: true, status: "failed_recorded" });
     }
 
-    // Handle order.paid event (backup for payment.captured)
-    if (eventType === "order.paid") {
-      const order = event.payload.order.entity;
-      const payment = event.payload.payment.entity;
-
-      console.log("Order paid:", { orderId: order.id, paymentId: payment.id });
-
-      // Similar processing as payment.captured
-      return NextResponse.json({ received: true, status: "processed" });
-    }
-
-    // Acknowledge other events
-    return NextResponse.json({ received: true, event: eventType });
-
+    return NextResponse.json({ received: true });
   } catch (error) {
     console.error("Webhook error:", error);
+    // Return 200 to stop retries if it's a logic error? 
+    // No, keep 500 for system errors so Razorpay retries if DB was down.
     return NextResponse.json(
       { error: "Webhook processing failed", details: error.message },
       { status: 500 }
