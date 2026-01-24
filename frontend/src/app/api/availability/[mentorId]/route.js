@@ -65,37 +65,27 @@ export async function GET(request, { params }) {
         .order("date", { ascending: true })
         .order("start_time", { ascending: true });
 
-      if (!error && slots && slots.length > 0) {
-        // Transform database format to frontend format
-        const formattedSlots = slots.map((slot) => ({
-          id: slot.id,
-          mentorId: slot.mentor_id,
-          date: slot.date,
-          startTime: slot.start_time,
-          endTime: slot.end_time,
-          isBooked: slot.is_booked,
-          isReserved: slot.is_reserved,
-          reservedUntil: slot.reserved_until,
-        }));
+      // Return DB results (even if empty)
+      const formattedSlots = (slots || []).map((slot) => ({
+        id: slot.id,
+        mentorId: slot.mentor_id,
+        date: slot.date,
+        startTime: slot.start_time,
+        endTime: slot.end_time,
+        isBooked: slot.is_booked,
+        isReserved: slot.is_reserved,
+        reservedUntil: slot.reserved_until,
+      }));
 
-        return NextResponse.json({
-          success: true,
-          mentorId,
-          slots: formattedSlots,
-          source: "database",
-        });
-      }
+      return NextResponse.json({
+        success: true,
+        mentorId,
+        slots: formattedSlots,
+        source: "database",
+      });
     }
-    
-    // Fallback to mock data
-    const slots = generateMockSlots(mentorId);
-    
-    return NextResponse.json({
-      success: true,
-      mentorId,
-      slots,
-      source: "mock",
-    });
+
+    return NextResponse.json({ error: "Supabase client initialization failed" }, { status: 500 });
   } catch (error) {
     console.error("Error fetching availability:", error);
     return NextResponse.json(

@@ -675,7 +675,7 @@ export default function MentorDashboardPage() {
                                     <p className="text-sm">Add your first availability slot!</p>
                                 </div>
                             ) : (
-                                <div className="space-y-2 max-h-[350px] overflow-y-auto">
+                                <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
                                     {slots.map((slot) => (
                                         <div
                                             key={slot.id}
