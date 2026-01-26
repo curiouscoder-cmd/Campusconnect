@@ -4,6 +4,7 @@ import {
     sendMentorOnboardingEmail,
     sendCustomEmail
 } from "@/lib/email";
+import { logEmail } from "@/lib/email-logger";
 
 export async function POST(req) {
     try {
@@ -15,24 +16,39 @@ export async function POST(req) {
         }
 
         let result;
+        let subject = "";
 
         switch (type) {
             case "promotion":
                 result = await sendPromotionEmail(data);
+                subject = data.subject || "Promotion";
                 break;
             case "onboarding":
                 result = await sendMentorOnboardingEmail(data);
+                subject = `Welcome to Campus Connect, ${data.mentorName}!`;
                 break;
             case "custom":
                 result = await sendCustomEmail(data);
+                subject = data.subject;
                 break;
             default:
                 return NextResponse.json({ error: "Invalid email type" }, { status: 400 });
         }
 
         if (result && result.error) {
+            // Log failure if needed, or just return error
+            console.error("Email send failed:", result.error);
             return NextResponse.json({ error: result.error.message || "Failed to send email" }, { status: 500 });
         }
+
+        // Log success
+        await logEmail({
+            recipient: data.email,
+            type,
+            subject,
+            status: "sent",
+            metadata: data
+        });
 
         return NextResponse.json({ success: true, message: "Email sent successfully" });
 
