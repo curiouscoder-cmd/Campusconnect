@@ -27,15 +27,7 @@ export async function GET(request) {
     if (error || !payments || payments.length === 0) {
       const { data: bookingsProxy, error: bookingError } = await supabase
         .from("bookings")
-        .select(`
-            id,
-            created_at,
-            amount,
-            status,
-            mentor:mentors(
-                profile:profiles(full_name)
-            )
-        `)
+        .select("id, created_at, amount, status, mentor_id")
         .eq("student_id", userId)
         .eq("status", "confirmed")
         .order("created_at", { ascending: false });
@@ -45,12 +37,31 @@ export async function GET(request) {
         return NextResponse.json({ payments: [] });
       }
 
+      // Get mentor names
+      const mentorIds = [...new Set(bookingsProxy.map(b => b.mentor_id))];
+      const { data: mentors } = await supabase
+        .from("mentors")
+        .select("id, user_id")
+        .in("id", mentorIds);
+
+      const userIds = mentors?.map(m => m.user_id) || [];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", userIds);
+
+      const mentorMap = {};
+      mentors?.forEach(m => {
+        const profile = profiles?.find(p => p.id === m.user_id);
+        mentorMap[m.id] = profile?.full_name || "Mentor";
+      });
+
       const transformedPayments = bookingsProxy.map(b => ({
         id: b.id,
         date: new Date(b.created_at).toLocaleDateString(),
         amount: b.amount ? `₹${b.amount}` : "₹500",
         status: "Completed",
-        mentor: b.mentor?.profile?.full_name || "Mentor"
+        mentor: mentorMap[b.mentor_id] || "Mentor"
       }));
 
       return NextResponse.json({ payments: transformedPayments });

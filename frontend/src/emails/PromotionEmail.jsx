@@ -20,7 +20,7 @@ export default function PromotionEmail({
     subheading = "Get exclusive access to top mentors, premium resources, and personalized career guidance. Start your journey today.",
     ctaText = "Get Started Now",
     ctaLink = "https://campus-connect.co.in/pricing",
-    heroImage = "https://campus-connect.co.in/assets/promotion-hero.png",
+    bannerUrl = "https://campus-connect.co.in/assets/promotion-hero.png",
 }) {
     return (
         <Html>
@@ -60,7 +60,7 @@ export default function PromotionEmail({
                         <Section className="bg-white rounded-3xl overflow-hidden shadow-[0_30px_60px_-12px_rgba(79,70,229,0.1),0_0_0_1px_rgba(0,0,0,0.03)]">
                             <div className="p-10 animate-fade-in border-t-8 border-brand">
                                 {/* BRAND LOGO */}
-                                <div className="text-center mb-10">
+                                <div className="text-center mb-8">
                                     <Img
                                         src="https://campus-connect.co.in/icon.png"
                                         width="40"
@@ -73,14 +73,16 @@ export default function PromotionEmail({
                                     </span>
                                 </div>
 
-                                {heroImage && (
-                                    <Img
-                                        src={heroImage}
-                                        width="100%"
-                                        height="auto"
-                                        alt="Promotion"
-                                        className="rounded-2xl mb-8 border border-gray-100 shadow-sm"
-                                    />
+                                {bannerUrl && (
+                                    <div className="mb-8 rounded-2xl overflow-hidden border border-gray-100 shadow-sm bg-gray-50 flex justify-center">
+                                        <Img
+                                            src={bannerUrl}
+                                            width="100%"
+                                            height="auto"
+                                            alt="Promotion"
+                                            className="w-full object-cover max-h-[200px]"
+                                        />
+                                    </div>
                                 )}
 
                                 <Heading className="text-3xl font-extrabold text-slate-900 tracking-tight leading-tight m-0 mb-6 text-center">

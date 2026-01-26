@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Users, Calendar, TrendingUp, ArrowUpRight } from "lucide-react";
+import { Users, Calendar, TrendingUp, ArrowUpRight, Mail } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
@@ -141,6 +141,13 @@ export default function AdminDashboard() {
                         <Link href="/admin/mentors" className="flex items-center justify-between p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-100 cursor-pointer">
                             <span className="font-medium text-gray-900">Add New Mentor</span>
                             <ArrowUpRight className="w-4 h-4 text-gray-400" />
+                        </Link>
+                        <Link href="/admin/emails" className="flex items-center justify-between p-4 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition-colors border border-indigo-100 cursor-pointer">
+                            <div className="flex items-center gap-2">
+                                <Mail className="w-4 h-4 text-indigo-600" />
+                                <span className="font-medium text-indigo-900">Send Emails</span>
+                            </div>
+                            <ArrowUpRight className="w-4 h-4 text-indigo-400" />
                         </Link>
                         <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-100 cursor-pointer">
                             <span className="font-medium text-gray-900">View Analytics Report</span>
