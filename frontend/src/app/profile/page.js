@@ -6,11 +6,13 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Mail, Phone, Edit2, Save, Loader2, LogOut } from "lucide-react";
+import { Loader2, User, Mail, Phone, Edit2, LogOut, Check, Calendar, CreditCard, TrendingUp, Clock, AlertCircle } from "lucide-react";
+import { GridPattern } from "@/components/ui/fancy/GridPattern";
+import { GlassCard } from "@/components/ui/fancy/GlassCard";
+import { SpotlightButton } from "@/components/ui/fancy/SpotlightButton";
+import { AnimatePresence, motion } from "framer-motion";
 
 export default function ProfilePage() {
     const { user, signOut, loading: authLoading } = useAuth();
@@ -24,47 +26,59 @@ export default function ProfilePage() {
         phone: "",
     });
 
+    const [recentActivity, setRecentActivity] = useState([]);
+    const [paymentHistory, setPaymentHistory] = useState([]);
+    const [dataLoading, setDataLoading] = useState(true);
+
     useEffect(() => {
         if (!authLoading && !user) {
             router.push("/login");
             return;
         }
 
-        async function fetchProfile() {
+        async function fetchData() {
             try {
-                const { data, error } = await supabase
+                // Profile
+                const { data: profileData, error: profileError } = await supabase
                     .from("profiles")
                     .select("*")
                     .eq("id", user.id)
                     .single();
 
-                if (data) {
-                    setProfile(data);
+                if (profileData) {
+                    setProfile(profileData);
                     setFormData({
-                        full_name: data.full_name || "",
-                        phone: data.phone || "",
+                        full_name: profileData.full_name || "",
+                        phone: profileData.phone || "",
                     });
                 }
+
+                // Activity
+                const activityRes = await fetch(`/api/user/recent-activity?userId=${user.id}`);
+                const activityData = await activityRes.json();
+                if (activityData.activity) setRecentActivity(activityData.activity);
+
+                // Payments
+                const paymentsRes = await fetch(`/api/user/payments?userId=${user.id}`);
+                const paymentsData = await paymentsRes.json();
+                if (paymentsData.payments) setPaymentHistory(paymentsData.payments);
+
             } catch (error) {
-                console.error("Error fetching profile:", error);
+                console.error("Error fetching data:", error);
             } finally {
                 setLoading(false);
+                setDataLoading(false);
             }
         }
 
         if (user) {
-            fetchProfile();
+            fetchData();
         }
     }, [user, authLoading, router]);
-
-
 
     async function handleSave() {
         setSaving(true);
         try {
-            console.log("Updating profile for user:", user.id);
-            console.log("Form data:", formData);
-
             const { data, error } = await supabase
                 .from("profiles")
                 .update({
@@ -74,13 +88,10 @@ export default function ProfilePage() {
                 .eq("id", user.id)
                 .select();
 
-            console.log("Update result:", { data, error });
-
             if (error) throw error;
 
             setProfile({ ...profile, ...formData });
             setEditing(false);
-            alert("Profile updated successfully!");
         } catch (error) {
             console.error("Error updating profile:", error);
             alert("Failed to update profile: " + error.message);
@@ -94,7 +105,6 @@ export default function ProfilePage() {
         router.push("/");
     };
 
-    // Generate initials for avatar
     const getInitials = (name) => {
         if (!name) return user?.email?.charAt(0).toUpperCase() || "U";
         return name
@@ -105,166 +115,226 @@ export default function ProfilePage() {
             .slice(0, 2);
     };
 
-    // Generate a consistent color based on user id
-    const getAvatarColor = () => {
-        const colors = [
-            "from-purple-500 to-indigo-600",
-            "from-pink-500 to-rose-600",
-            "from-blue-500 to-cyan-600",
-            "from-green-500 to-emerald-600",
-            "from-orange-500 to-amber-600",
-        ];
-        const index = user?.id ? user.id.charCodeAt(0) % colors.length : 0;
-        return colors[index];
-    };
-
     if (authLoading || loading) {
         return (
-            <div className="min-h-screen flex flex-col font-sans">
-                <Navbar />
-                <main className="flex-1 flex items-center justify-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <div className="min-h-screen flex flex-col font-sans bg-gray-50 text-slate-900">
+                <Navbar className="z-50 relative" />
+                <main className="flex-1 flex items-center justify-center relative z-10">
+                    <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
                 </main>
-                <Footer />
+                <GridPattern width={40} height={40} className="opacity-50 text-indigo-100" />
             </div>
         );
     }
 
-    if (!user) {
-        return null;
-    }
+    if (!user) return null;
 
     return (
-        <div className="min-h-screen flex flex-col font-sans">
-            <Navbar />
-            <main className="flex-1 container mx-auto px-4 py-16 max-w-4xl mt-16">
-                {/* Profile Header */}
-                <div className="flex flex-col md:flex-row items-center gap-6 mb-8">
-                    {/* Avatar */}
-                    <div
-                        className={`w-24 h-24 rounded-full bg-gradient-to-br ${getAvatarColor()} flex items-center justify-center text-white text-2xl font-bold shadow-lg`}
-                    >
-                        {getInitials(profile?.full_name)}
-                    </div>
+        <div className="min-h-screen flex flex-col font-sans bg-gray-50 text-slate-900 relative overflow-hidden">
+            <Navbar className="z-50 relative" />
+            <GridPattern width={60} height={60} className="absolute inset-0 opacity-[0.4] text-indigo-200" />
 
-                    <div className="text-center md:text-left flex-1">
-                        <h1 className="text-3xl font-bold text-gray-900">
-                            {profile?.full_name || "Welcome!"}
-                        </h1>
-                        <p className="text-gray-500 flex items-center justify-center md:justify-start gap-2 mt-1">
-                            <Mail className="w-4 h-4" />
-                            {user.email}
-                        </p>
-                    </div>
-
-                    <Button
-                        onClick={handleSignOut}
-                        variant="outline"
-                        className="text-red-500 border-red-200 hover:bg-red-50"
-                    >
-                        <LogOut className="w-4 h-4 mr-2" />
-                        Sign Out
-                    </Button>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                    {/* Profile Info Card */}
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle className="text-lg">Profile Information</CardTitle>
-                            {!editing && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setEditing(true)}
-                                >
-                                    <Edit2 className="w-4 h-4 mr-1" />
-                                    Edit
-                                </Button>
-                            )}
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {editing ? (
-                                <>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="full_name">Full Name</Label>
-                                        <Input
-                                            id="full_name"
-                                            value={formData.full_name}
-                                            onChange={(e) =>
-                                                setFormData({ ...formData, full_name: e.target.value })
-                                            }
-                                            placeholder="Enter your name"
-                                        />
+            <main className="flex-1 container mx-auto px-4 py-12 max-w-7xl relative z-10 mt-6">
+                <div className="flex flex-col gap-6">
+                    {/* Top Row: Profile Card & Stats */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Profile Card (Left) */}
+                        <div className="lg:col-span-1">
+                            <GlassCard className="h-full flex flex-col items-center text-center p-6 bg-white/80 border-indigo-50">
+                                <div className="relative group mb-4 w-fit mx-auto">
+                                    <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                                    <div className="relative w-32 h-32 rounded-full bg-white flex items-center justify-center border-4 border-white shadow-lg text-4xl font-bold tracking-wider text-indigo-600">
+                                        {getInitials(profile?.full_name)}
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="phone">Phone Number</Label>
-                                        <Input
-                                            id="phone"
-                                            value={formData.phone}
-                                            onChange={(e) =>
-                                                setFormData({ ...formData, phone: e.target.value })
-                                            }
-                                            placeholder="+91 XXXXX XXXXX"
-                                        />
-                                    </div>
-                                    <div className="flex gap-2 pt-2">
-                                        <Button onClick={handleSave} disabled={saving}>
-                                            {saving ? (
-                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                            ) : (
-                                                <Save className="w-4 h-4 mr-2" />
-                                            )}
-                                            Save
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            onClick={() => {
-                                                setEditing(false);
-                                                setFormData({
-                                                    full_name: profile?.full_name || "",
-                                                    phone: profile?.phone || "",
-                                                });
-                                            }}
+                                </div>
+
+                                <h1 className="text-2xl font-bold text-slate-900">
+                                    {profile?.full_name || "Welcome User"}
+                                </h1>
+                                <p className="text-slate-500 text-sm mt-1 mb-6 flex items-center justify-center gap-2">
+                                    <Mail className="w-3 h-3" /> {user.email}
+                                </p>
+
+                                <div className="w-full mt-auto space-y-3">
+                                    {!editing && (
+                                        <SpotlightButton
+                                            onClick={() => setEditing(true)}
+                                            className="w-full bg-white text-indigo-600 border border-indigo-100 shadow-sm hover:shadow-md hover:bg-indigo-50"
                                         >
-                                            Cancel
-                                        </Button>
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                        <User className="w-5 h-5 text-gray-400" />
-                                        <div>
-                                            <p className="text-xs text-gray-500">Full Name</p>
-                                            <p className="font-medium">
-                                                {profile?.full_name || "Not set"}
-                                            </p>
+                                            <div className="flex items-center justify-center gap-2 font-medium">
+                                                <Edit2 className="w-4 h-4" /> Edit Profile
+                                            </div>
+                                        </SpotlightButton>
+                                    )}
+                                    <SpotlightButton
+                                        onClick={handleSignOut}
+                                        className="w-full bg-white text-rose-500 border border-rose-100 shadow-sm hover:shadow-md hover:bg-rose-50"
+                                    >
+                                        <div className="flex items-center justify-center gap-2 font-medium">
+                                            <LogOut className="w-4 h-4" /> Sign Out
                                         </div>
+                                    </SpotlightButton>
+                                </div>
+                            </GlassCard>
+                        </div>
+
+                        {/* Bento Grid (Right) */}
+                        <div className="lg:col-span-2 space-y-6">
+                            {/* Profile Details Edit / View */}
+                            <GlassCard className="bg-white/90">
+                                <div className="flex items-center gap-2 mb-6 text-slate-900 font-bold border-b border-gray-100 pb-3">
+                                    <User className="w-5 h-5 text-indigo-500" /> Profile Details
+                                </div>
+
+                                <AnimatePresence mode="wait">
+                                    {editing ? (
+                                        <motion.div
+                                            key="editing"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            className="grid md:grid-cols-2 gap-6"
+                                        >
+                                            <div className="space-y-2">
+                                                <Label className="text-slate-700 font-medium">Full Name</Label>
+                                                <Input
+                                                    value={formData.full_name}
+                                                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                                                    className="bg-white border-gray-200 text-slate-900 focus:ring-indigo-500"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-slate-700 font-medium">Phone Number</Label>
+                                                <Input
+                                                    value={formData.phone}
+                                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                                    className="bg-white border-gray-200 text-slate-900 focus:ring-indigo-500"
+                                                />
+                                            </div>
+                                            <div className="md:col-span-2 flex justify-end gap-3 pt-4 border-t border-gray-50">
+                                                <SpotlightButton onClick={handleSave} className="bg-slate-900 text-white hover:bg-slate-800 px-8">
+                                                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
+                                                </SpotlightButton>
+                                                <button onClick={() => setEditing(false)} className="px-4 py-2 text-slate-500 hover:text-slate-700 font-medium">Cancel</button>
+                                            </div>
+                                        </motion.div>
+                                    ) : (
+                                        <motion.div
+                                            key="viewing"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            className="grid md:grid-cols-2 gap-4"
+                                        >
+                                            <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Full Name</span>
+                                                <p className="font-semibold text-slate-900 text-lg mt-1">{profile?.full_name || "Not set"}</p>
+                                            </div>
+                                            <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Email</span>
+                                                <p className="font-semibold text-slate-900 text-lg mt-1">{user.email}</p>
+                                            </div>
+                                            <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Phone</span>
+                                                <p className="font-semibold text-slate-900 text-lg mt-1">{profile?.phone || "Not set"}</p>
+                                            </div>
+                                            <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100 flex items-center justify-between">
+                                                <div>
+                                                    <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider">Account Status</span>
+                                                    <p className="font-bold text-indigo-700 text-lg mt-1">Active</p>
+                                                </div>
+                                                <Check className="w-6 h-6 text-indigo-500" />
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </GlassCard>
+
+                            {/* Recent Activity */}
+                            <GlassCard className="bg-white/90">
+                                <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-3">
+                                    <div className="flex items-center gap-2 text-slate-900 font-bold">
+                                        <TrendingUp className="w-5 h-5 text-emerald-500" /> Recent Activity
                                     </div>
-                                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                        <Mail className="w-5 h-5 text-gray-400" />
-                                        <div>
-                                            <p className="text-xs text-gray-500">Email</p>
-                                            <p className="font-medium">{user.email}</p>
+                                    <span className="text-xs text-slate-400 font-medium">Last 7 Days</span>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {recentActivity.length > 0 ? (
+                                        recentActivity.map((activity) => (
+                                            <div key={activity.id} className="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                                                <div className={`p-2 rounded-full ${activity.type === 'booking' ? 'bg-blue-50 text-blue-500' : 'bg-purple-50 text-purple-500'}`}>
+                                                    {activity.type === 'booking' ? <Calendar className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <p className="text-sm font-semibold text-slate-900">{activity.message}</p>
+                                                    <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+                                                        <Clock className="w-3 h-3" /> {activity.date}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-6 text-slate-400 text-sm">
+                                            No recent activity found.
                                         </div>
-                                    </div>
-                                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                        <Phone className="w-5 h-5 text-gray-400" />
-                                        <div>
-                                            <p className="text-xs text-gray-500">Phone</p>
-                                            <p className="font-medium">
-                                                {profile?.phone || "Not set"}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-                        </CardContent>
-                    </Card>
+                                    )}
+                                </div>
+                            </GlassCard>
+                        </div>
+                    </div>
+
+                    {/* Bottom Row: Payment History */}
+                    <GlassCard className="bg-white/90">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-2 text-slate-900 font-bold">
+                                <CreditCard className="w-5 h-5 text-purple-500" /> Payment History
+                            </div>
+                            <button className="text-xs font-bold text-indigo-600 hover:underline">View All</button>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                                <thead className="text-xs text-gray-500 uppercase bg-gray-50/50">
+                                    <tr>
+                                        <th className="px-4 py-3 rounded-l-lg">Transaction ID</th>
+                                        <th className="px-4 py-3">Date</th>
+                                        <th className="px-4 py-3">Mentor</th>
+                                        <th className="px-4 py-3">Amount</th>
+                                        <th className="px-4 py-3 rounded-r-lg">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {paymentHistory.length > 0 ? (
+                                        paymentHistory.map((payment) => (
+                                            <tr key={payment.id} className="hover:bg-gray-50/50 transition-colors">
+                                                <td className="px-4 py-4 font-mono text-xs text-slate-500">#{payment.id.toString().slice(-6)}</td>
+                                                <td className="px-4 py-4 text-slate-900 font-medium">{payment.date}</td>
+                                                <td className="px-4 py-4 text-slate-600">{payment.mentor}</td>
+                                                <td className="px-4 py-4 font-bold text-slate-900">{payment.amount}</td>
+                                                <td className="px-4 py-4">
+                                                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${payment.status === "Completed" || payment.status === "captured" ? "bg-emerald-100 text-emerald-700" :
+                                                        payment.status === "Refunded" ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-gray-700"
+                                                        }`}>
+                                                        {payment.status === "captured" ? "Completed" : payment.status}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="5" className="px-4 py-6 text-center text-slate-400 text-sm">
+                                                No payment history available.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </GlassCard>
                 </div>
             </main>
-            <Footer />
+            <Footer className="relative z-10 border-t border-gray-100 bg-white text-slate-600" />
         </div>
     );
 }

@@ -5,6 +5,9 @@ import MentorNotification from "../emails/MentorNotification";
 import NSATApproval from "../emails/NSATApproval";
 import NSATReferral from "../emails/NSATReferral";
 import ContactMessage from "../emails/ContactMessage";
+import PromotionEmail from "../emails/PromotionEmail";
+import MentorOnboardingEmail from "../emails/MentorOnboardingEmail";
+import CustomEmail from "../emails/CustomEmail";
 
 
 export function getResendClient() {
@@ -35,6 +38,18 @@ export const generateNSATReferralHtml = async (props) => {
 
 export const generateContactHtml = async (props) => {
     return await render(<ContactMessage {...props} />);
+};
+
+export const generatePromotionHtml = async (props) => {
+    return await render(<PromotionEmail {...props} />);
+};
+
+export const generateMentorOnboardingHtml = async (props) => {
+    return await render(<MentorOnboardingEmail {...props} />);
+};
+
+export const generateCustomHtml = async (props) => {
+    return await render(<CustomEmail {...props} />);
 };
 
 
@@ -137,6 +152,66 @@ export async function sendContactFormEmail(params) {
         });
     } catch (error) {
         console.error("Contact Email Error:", error);
+        return { error };
+    }
+}
+
+export async function sendPromotionEmail(params) {
+    const { email, subject = "Exclusive Offer from Campus Connect" } = params;
+    if (!process.env.RESEND_API_KEY || !email) return { error: "Missing config" };
+    const resend = getResendClient();
+    if (!resend) return { error: "Client unavailable" };
+
+    try {
+        const html = await generatePromotionHtml(params);
+        return await resend.emails.send({
+            from: "Campus Connect <noreply@campus-connect.co.in>",
+            to: email,
+            subject: subject,
+            html
+        });
+    } catch (error) {
+        console.error("Promotion Email Error:", error);
+        return { error };
+    }
+}
+
+export async function sendMentorOnboardingEmail(params) {
+    const { email, mentorName } = params;
+    if (!process.env.RESEND_API_KEY || !email) return { error: "Missing config" };
+    const resend = getResendClient();
+    if (!resend) return { error: "Client unavailable" };
+
+    try {
+        const html = await generateMentorOnboardingHtml(params);
+        return await resend.emails.send({
+            from: "Campus Connect <noreply@campus-connect.co.in>",
+            to: email,
+            subject: `Welcome to Campus Connect, ${mentorName}!`,
+            html
+        });
+    } catch (error) {
+        console.error("Mentor Onboarding Email Error:", error);
+        return { error };
+    }
+}
+
+export async function sendCustomEmail(params) {
+    const { email, subject } = params;
+    if (!process.env.RESEND_API_KEY || !email) return { error: "Missing config" };
+    const resend = getResendClient();
+    if (!resend) return { error: "Client unavailable" };
+
+    try {
+        const html = await generateCustomHtml(params);
+        return await resend.emails.send({
+            from: "Campus Connect <noreply@campus-connect.co.in>",
+            to: email,
+            subject: subject,
+            html
+        });
+    } catch (error) {
+        console.error("Custom Email Error:", error);
         return { error };
     }
 }
