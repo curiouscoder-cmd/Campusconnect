@@ -15,6 +15,7 @@ import { SpotlightButton } from "@/components/ui/fancy/SpotlightButton";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { BookingDetailsModal } from "@/components/profile/BookingDetailsModal";
+import { PaymentDetailsModal } from "@/components/profile/PaymentDetailsModal";
 
 export default function ProfilePage() {
     const { user, signOut, loading: authLoading } = useAuth();
@@ -32,6 +33,7 @@ export default function ProfilePage() {
     const [paymentHistory, setPaymentHistory] = useState([]);
     const [dataLoading, setDataLoading] = useState(true);
     const [selectedBooking, setSelectedBooking] = useState(null);
+    const [selectedPayment, setSelectedPayment] = useState(null);
 
     useEffect(() => {
         if (!authLoading && !user) {
@@ -336,7 +338,11 @@ export default function ProfilePage() {
                                 <tbody className="divide-y divide-gray-100">
                                     {paymentHistory.length > 0 ? (
                                         paymentHistory.map((payment) => (
-                                            <tr key={payment.id} className="hover:bg-gray-50/50 transition-colors">
+                                            <tr
+                                                key={payment.id}
+                                                className="hover:bg-gray-50/50 transition-colors cursor-pointer"
+                                                onClick={() => setSelectedPayment(payment)}
+                                            >
                                                 <td className="px-4 py-4 font-mono text-xs text-slate-500">#{payment.id.toString().slice(-6)}</td>
                                                 <td className="px-4 py-4 text-slate-900 font-medium">{payment.date}</td>
                                                 <td className="px-4 py-4 text-slate-600">{payment.mentor}</td>
@@ -360,10 +366,21 @@ export default function ProfilePage() {
                                 </tbody>
                             </table>
                         </div>
+
                     </GlassCard>
                 </div>
             </main>
             <Footer className="relative z-10 border-t border-gray-100 bg-white text-slate-600" />
+
+            {/* Payment Details Modal */}
+            <AnimatePresence>
+                {selectedPayment && (
+                    <PaymentDetailsModal
+                        payment={selectedPayment}
+                        onClose={() => setSelectedPayment(null)}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 }

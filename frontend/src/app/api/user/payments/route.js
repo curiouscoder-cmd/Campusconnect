@@ -29,7 +29,7 @@ export async function GET(request) {
     // 2. Fetch bookings as payments proxy (since payments table might not be linked to user directly)
     const { data: bookingsProxy, error: bookingError } = await supabase
       .from("bookings")
-      .select("id, created_at, session_price, status, mentor_id")
+      .select("id, created_at, session_price, status, mentor_id, date, start_time, session_duration, session_type, meet_link")
       .eq("user_email", profile.email)
       .eq("status", "confirmed")
       .order("created_at", { ascending: false });
@@ -39,23 +39,21 @@ export async function GET(request) {
       return NextResponse.json({ payments: [] });
     }
 
-    // Get mentor names
+    // Get mentor details directly from mentors table
     const mentorIds = [...new Set(bookingsProxy.map(b => b.mentor_id))];
     const { data: mentors } = await supabase
       .from("mentors")
-      .select("id, user_id")
+      .select("id, name, college, image")
       .in("id", mentorIds);
 
-    const userIds = mentors?.map(m => m.user_id) || [];
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", userIds);
-
     const mentorMap = {};
+    const mentorCollegeMap = {};
+    const mentorImageMap = {};
+
     mentors?.forEach(m => {
-      const profile = profiles?.find(p => p.id === m.user_id);
-      mentorMap[m.id] = profile?.full_name || "Mentor";
+      mentorMap[m.id] = m.name || "Mentor";
+      mentorCollegeMap[m.id] = m.college || "Unknown College";
+      mentorImageMap[m.id] = m.image;
     });
 
     const transformedPayments = bookingsProxy.map(b => ({
@@ -63,7 +61,18 @@ export async function GET(request) {
       date: new Date(b.created_at).toLocaleDateString(),
       amount: b.session_price ? `₹${b.session_price}` : "₹500",
       status: "Completed",
-      mentor: mentorMap[b.mentor_id] || "Mentor"
+      mentor: mentorMap[b.mentor_id] || "Mentor",
+      // Detailed fields for modal
+      mentor_id: b.mentor_id,
+      mentor_name: mentorMap[b.mentor_id] || "Mentor",
+      mentor_college: mentorCollegeMap[b.mentor_id],
+      mentor_image: mentorImageMap[b.mentor_id],
+      slot_date: b.date,
+      slot_time: b.start_time,
+      duration: b.session_duration,
+      session_title: b.session_type,
+      meet_link: b.meet_link,
+      created_at: b.created_at
     }));
 
     return NextResponse.json({ payments: transformedPayments });
