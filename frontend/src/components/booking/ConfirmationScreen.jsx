@@ -25,22 +25,42 @@ export function ConfirmationScreen({
   };
 
   const handleAddToCalendar = () => {
-    if (!selectedSession) return;
+    if (!selectedSession || !selectedSlot?.date) {
+      console.error("Missing session or slot details for calendar event");
+      return;
+    }
 
-    const startDate = new Date(`${selectedSlot.date}T${selectedSlot.startTime}:00`);
-    const endDate = new Date(startDate.getTime() + selectedSession.duration * 60000);
+    try {
+      // Ensure time is in HH:MM format
+      let cleanTime = selectedSlot.startTime || "12:00";
+      if (cleanTime.split(':').length === 3) {
+        cleanTime = cleanTime.substring(0, 5); // Take HH:MM from HH:MM:SS
+      }
 
-    const event = {
-      title: `Campus Connect: ${selectedSession.title} with ${mentor.name}`,
-      start: startDate.toISOString().replace(/-|:|\\.\\d+/g, ""),
-      end: endDate.toISOString().replace(/-|:|\\.\\d+/g, ""),
-      details: `Session with ${mentor.name} from ${mentor.college}.\\n\\nMeet Link: ${meetLink || "Will be shared via email"}`,
-      location: meetLink || "Online",
-    };
+      const startString = `${selectedSlot.date}T${cleanTime}:00`;
+      const startDate = new Date(startString);
 
-    const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${event.start}/${event.end}&details=${encodeURIComponent(event.details)}&location=${encodeURIComponent(event.location)}`;
+      if (isNaN(startDate.getTime())) {
+        console.error("Invalid start date created:", startString);
+        return;
+      }
 
-    window.open(googleCalendarUrl, "_blank");
+      const endDate = new Date(startDate.getTime() + (selectedSession.duration || 30) * 60000);
+
+      const event = {
+        title: `Campus Connect: ${selectedSession.title} with ${mentor.name}`,
+        start: startDate.toISOString().replace(/-|:|\\.\\d+/g, ""),
+        end: endDate.toISOString().replace(/-|:|\\.\\d+/g, ""),
+        details: `Session with ${mentor.name} from ${mentor.college}.\\n\\nMeet Link: ${meetLink || "Will be shared via email"}`,
+        location: meetLink || "Online",
+      };
+
+      const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${event.start}/${event.end}&details=${encodeURIComponent(event.details)}&location=${encodeURIComponent(event.location)}`;
+
+      window.open(googleCalendarUrl, "_blank");
+    } catch (err) {
+      console.error("Error creating calendar event:", err);
+    }
   };
 
   // NSAT Mode Confirmation

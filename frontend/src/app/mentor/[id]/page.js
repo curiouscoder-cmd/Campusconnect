@@ -65,7 +65,7 @@ export default function MentorDetailPage() {
         // First, try to fetch by UUID (for database mentors)
         let { data, error } = await supabase
           .from("mentors")
-          .select("id, name, role, college, image, rating, price, bio, is_active, created_at")
+          .select("id, name, role, college, image, rating, price, bio, is_active, created_at, meet_link")
           .eq("id", mentorId)
           .single();
 
@@ -73,7 +73,7 @@ export default function MentorDetailPage() {
           // If not found by UUID, try to find by slug (name-based ID)
           const { data: allMentors, error: allError } = await supabase
             .from("mentors")
-            .select("id, name, role, college, image, rating, price, bio, is_active, created_at")
+            .select("id, name, role, college, image, rating, price, bio, is_active, created_at, meet_link")
             .eq("is_active", true);
 
           if (!allError && allMentors) {
@@ -91,7 +91,8 @@ export default function MentorDetailPage() {
             ...data,
             price: data.price?.toString().startsWith('₹') ? data.price : `₹${data.price || 99}`,
             expertise: data.expertise || ["Campus Life", "Academics", "Placements"],
-            rating: data.rating || "5.0"
+            rating: data.rating || "5.0",
+            meetLink: data.meet_link // Map snake_case to camelCase
           };
           setMentor(normalizedMentor);
         } else {

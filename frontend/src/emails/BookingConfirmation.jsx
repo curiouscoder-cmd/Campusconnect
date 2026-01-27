@@ -331,6 +331,31 @@ export default function BookingConfirmation({
                                     <Button href={meetLink} style={button}>
                                         Join Session <span style={{ fontSize: "18px", verticalAlign: "middle", marginLeft: "4px" }}>›</span>
                                     </Button>
+
+                                    {/* Google Calendar Link Logic */}
+                                    {(() => {
+                                        try {
+                                            const cleanTime = (slotTime || "12:00").substring(0, 5);
+                                            const start = new Date(`${slotDate}T${cleanTime}:00`);
+                                            // Handle duration text "15 mins" -> 15
+                                            const durationMin = parseInt(duration) || 30;
+                                            const end = new Date(start.getTime() + durationMin * 60000);
+
+                                            const formatCalDate = (d) => d.toISOString().replace(/-|:|\\.\\d+/g, "");
+
+                                            if (!isNaN(start.getTime())) {
+                                                const calUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`Mentorship: ${mentorName} - ${sessionType}`)}&dates=${formatCalDate(start)}/${formatCalDate(end)}&details=${encodeURIComponent(`Session with ${mentorName}. Link: ${meetLink}`)}&location=${encodeURIComponent(meetLink)}`;
+
+                                                return (
+                                                    <Button href={calUrl} style={{ ...button, backgroundColor: "#ffffff", color: "#0f172a", border: "1px solid #cbd5e1", marginTop: "12px", boxShadow: "none" }}>
+                                                        Add to Google Calendar
+                                                    </Button>
+                                                );
+                                            }
+                                        } catch (e) {
+                                            return null;
+                                        }
+                                    })()}
                                 </Column>
                             </Row>
                         </div>
@@ -346,6 +371,6 @@ export default function BookingConfirmation({
                     </Text>
                 </Container>
             </Body>
-        </Html>
+        </Html >
     );
 }

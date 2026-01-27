@@ -121,10 +121,10 @@ export async function POST(request) {
                 }
             }
 
-            // Fallback Meet Link
-            if (!meetLink) {
-                meetLink = `https://meet.google.com/${generateMeetCode()}`;
-            }
+            // Fallback Meet Link - REMOVED per user request
+            // if (!meetLink) {
+            //     meetLink = `https://meet.google.com/${generateMeetCode()}`;
+            // }
 
             // Fetch Slot Date/Time if possible (or use current if notes don't have it)
             // Ideally, slotId lookup would give us this, but let's be safe

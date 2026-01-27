@@ -15,34 +15,43 @@ export async function GET(request) {
       return NextResponse.json({ error: "Database configuration error" }, { status: 500 });
     }
 
-    // Fetch bookings
+    // 1. Get user email from profile (Bookings are linked by email)
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("email")
+      .eq("id", userId)
+      .single();
+
+    if (!profile?.email) {
+      return NextResponse.json({ activity: [] });
+    }
+
+    // 2. Fetch bookings using email
     const { data: bookings, error } = await supabase
       .from("bookings")
-      .select("id, created_at, mentor_id, status")
-      .eq("student_id", userId)
+      .select("id, created_at, mentor_id, status, date, start_time, session_duration, session_price, meet_link, session_type")
+      .eq("user_email", profile.email)
       .order("created_at", { ascending: false })
-      .limit(5);
+      .limit(10);
 
     if (error) throw error;
 
-    // Get mentor names separately to avoid relationship issues
+    // Get mentor names directly from mentors table
     const mentorIds = [...new Set(bookings.map(b => b.mentor_id))];
     const { data: mentors } = await supabase
       .from("mentors")
-      .select("id, user_id")
+      .select("id, name, college, image")
       .in("id", mentorIds);
 
-    const userIds = mentors?.map(m => m.user_id) || [];
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", userIds);
-
-    // Map mentor names
+    // Map mentor details
     const mentorMap = {};
+    const mentorCollegeMap = {};
+    const mentorImageMap = {};
+
     mentors?.forEach(m => {
-      const profile = profiles?.find(p => p.id === m.user_id);
-      mentorMap[m.id] = profile?.full_name || "Mentor";
+      mentorMap[m.id] = m.name || "Mentor";
+      mentorCollegeMap[m.id] = m.college || "Unknown College";
+      mentorImageMap[m.id] = m.image;
     });
 
     const activity = bookings.map((booking) => ({
@@ -50,7 +59,18 @@ export async function GET(request) {
       type: "booking",
       message: `Booked a session with ${mentorMap[booking.mentor_id] || "Mentor"}`,
       date: new Date(booking.created_at).toLocaleDateString(),
-      meta: booking.created_at
+      meta: booking.created_at,
+      // Detailed fields for modal
+      mentor_name: mentorMap[booking.mentor_id] || "Mentor",
+      mentor_college: mentorCollegeMap[booking.mentor_id] || "Unknown College",
+      mentor_image: mentorImageMap[booking.mentor_id],
+      status: booking.status,
+      slot_date: booking.date,
+      slot_time: booking.start_time,
+      duration: booking.session_duration,
+      session_price: booking.session_price,
+      meet_link: booking.meet_link,
+      session_title: booking.session_type
     }));
 
     return NextResponse.json({ activity });

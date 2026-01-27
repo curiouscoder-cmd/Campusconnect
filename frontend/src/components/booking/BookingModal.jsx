@@ -12,6 +12,8 @@ import { NsatVerificationScreen } from "./NsatVerificationScreen";
 import { generateMockSlots, formatDateISO } from "@/lib/booking-utils";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { useRef } from "react";
+import { useAuth } from "@/context/AuthContext";
 import Script from "next/script";
 
 const STEPS = {
@@ -48,6 +50,31 @@ export function BookingModal({ mentor, isOpen, onClose, mode = "paid" }) {
   const [slotsLoading, setSlotsLoading] = useState(true);
   const [nsatSubmitting, setNsatSubmitting] = useState(false);
   const [mentorHasSetAvailability, setMentorHasSetAvailability] = useState(true);
+
+  const { user } = useAuth();
+
+  // Prefill user details
+  useEffect(() => {
+    async function prefillUserData() {
+      if (user && isOpen && !userDetails.email) {
+        // Fetch profile to get phone number
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('phone, full_name')
+          .eq('id', user.id)
+          .single();
+
+        setUserDetails(prev => ({
+          ...prev,
+          name: prev.name || user.user_metadata?.full_name || profile?.full_name || "",
+          email: prev.email || user.email || "",
+          phone: prev.phone || profile?.phone || user.phone || ""
+        }));
+      }
+    }
+
+    prefillUserData();
+  }, [user, isOpen]);
 
   const isNsatMode = mode === "nsat";
 
@@ -476,7 +503,7 @@ export function BookingModal({ mentor, isOpen, onClose, mode = "paid" }) {
                       selectedSlot={selectedSlot}
                       selectedSession={selectedSession}
                       userDetails={userDetails}
-                      meetLink={isNsatMode ? null : (mentor?.meetLink || "https://meet.google.com/abc-defg-hij")}
+                      meetLink={isNsatMode ? null : paymentData?.meetLink || mentor?.meetLink}
                       onClose={onClose}
                       isNsatMode={isNsatMode}
                     />

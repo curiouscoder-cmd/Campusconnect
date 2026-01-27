@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
+import { createServerClient } from "@/lib/supabase";
+import { sendBookingConfirmationEmail, sendMentorNotificationEmail } from "@/lib/email";
 
-// In-memory store for bookings (use database in production)
-const bookings = new Map();
-
+// Handle booking confirmation (Manual/Free/Direct)
 export async function POST(request) {
   try {
     const body = await request.json();
@@ -11,49 +11,125 @@ export async function POST(request) {
       mentorId,
       sessionType,
       userDetails,
-      paymentId,
-      orderId,
-      meetLink,
+      paymentId, // Optional for free
+      orderId, // Optional
+      slotDate,
+      slotTime
     } = body;
 
-    if (!slotId || !mentorId || !paymentId) {
-      return NextResponse.json(
-        { error: "Slot ID, Mentor ID, and Payment ID are required" },
-        { status: 400 }
-      );
+    const supabase = createServerClient();
+
+    // 1. Fetch Mentor Details (CRITICAL: Get Meet Link)
+    const { data: mentor, error: mentorError } = await supabase
+      .from("mentors")
+      .select("name, email, meet_link")
+      .eq("id", mentorId)
+      .single();
+
+    if (mentorError || !mentor) {
+      return NextResponse.json({ error: "Mentor not found" }, { status: 404 });
     }
 
-    // Create booking record
-    const bookingId = `booking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const booking = {
-      id: bookingId,
-      slotId,
-      mentorId,
-      sessionType,
-      userDetails,
-      paymentId,
-      orderId,
-      meetLink: meetLink || `https://meet.google.com/${generateMeetCode()}`,
+    const { name: mentorName, email: mentorEmail, meet_link: mentorMeetLink } = mentor;
+
+    // Use Mentor's Meet Link. Do NOT generate one.
+    const meetLink = mentorMeetLink;
+
+    // 2. Prepare Booking Data
+    // Ensure we have date/time
+    let finalSlotDate = slotDate;
+    let finalSlotTime = slotTime;
+
+    if (!finalSlotDate && slotId) {
+      // Try fetch from availability if not provided
+      const { data: slot } = await supabase.from("availability").select("date, start_time").eq("id", slotId).single();
+      if (slot) {
+        finalSlotDate = slot.date;
+        finalSlotTime = slot.start_time;
+      }
+    }
+
+    const bookingData = {
+      mentor_id: mentorId,
+      user_name: userDetails?.name,
+      user_email: userDetails?.email,
+      user_phone: userDetails?.phone,
+      session_type: sessionType?.id || sessionType || "quick_chat",
+      session_price: 0, // Assuming manual/free if this route is used directly
+      date: finalSlotDate || new Date().toISOString().split('T')[0],
+      start_time: finalSlotTime,
       status: "confirmed",
-      createdAt: new Date().toISOString(),
-      confirmedAt: new Date().toISOString(),
+      meet_link: meetLink, // Can be null if mentor has no link
+      razorpay_order_id: orderId || `manual_${Date.now()}`,
+      razorpay_payment_id: paymentId,
+      confirmed_at: new Date().toISOString(),
     };
 
-    // Store booking
-    bookings.set(bookingId, booking);
+    if (slotId && slotId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      bookingData.slot_id = slotId;
+    }
 
-    // In production:
-    // 1. Save to database
-    // 2. Mark slot as booked
-    // 3. Send confirmation email to user
-    // 4. Send notification to mentor
-    // 5. Create Google Calendar event
+    // 3. Insert Booking
+    const { data: booking, error: insertError } = await supabase
+      .from("bookings")
+      .insert(bookingData)
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error("Booking Insert Error:", insertError);
+      return NextResponse.json({ error: "Failed to create booking" }, { status: 500 });
+    }
+
+    // 4. Update Availability
+    if (slotId) {
+      await supabase
+        .from("availability")
+        .update({ is_booked: true, is_reserved: false })
+        .eq("id", slotId);
+    }
+
+    // 5. Update User Profile (Phone Number) if provided
+    if (userDetails?.phone && userDetails?.email) {
+      console.log("Updating phone for:", userDetails.email);
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ phone: userDetails.phone })
+        .eq("email", userDetails.email);
+
+      if (profileError) {
+        console.warn("Failed to update profile phone:", profileError);
+      }
+    }
+
+    // 6. Send Emails
+    await sendBookingConfirmationEmail({
+      userEmail: userDetails?.email,
+      userName: userDetails?.name,
+      sessionType: sessionType?.title || sessionType || "Mentorship Session",
+      meetLink: meetLink,
+      slotDate: finalSlotDate,
+      slotTime: finalSlotTime,
+      mentorName: mentorName,
+      duration: "30 mins" // Default
+    });
+
+    await sendMentorNotificationEmail({
+      mentorEmail: mentorEmail,
+      mentorName: mentorName,
+      studentName: userDetails?.name,
+      sessionType: sessionType?.title || sessionType,
+      slotDate: finalSlotDate,
+      slotTime: finalSlotTime,
+      meetLink: meetLink
+    });
 
     return NextResponse.json({
       success: true,
       booking,
       message: "Booking confirmed successfully",
     });
+
   } catch (error) {
     console.error("Error confirming booking:", error);
     return NextResponse.json(
@@ -63,56 +139,16 @@ export async function POST(request) {
   }
 }
 
+// Keep GET for compatibility if needed, but point to Supabase
 export async function GET(request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const bookingId = searchParams.get("id");
-    const mentorId = searchParams.get("mentorId");
-    const userId = searchParams.get("userId");
+  const supabase = createServerClient();
+  const { searchParams } = new URL(request.url);
+  const bookingId = searchParams.get("id");
 
-    if (bookingId) {
-      const booking = bookings.get(bookingId);
-      if (!booking) {
-        return NextResponse.json(
-          { error: "Booking not found" },
-          { status: 404 }
-        );
-      }
-      return NextResponse.json({ success: true, booking });
-    }
-
-    // Filter bookings by mentor or user
-    let filteredBookings = Array.from(bookings.values());
-    if (mentorId) {
-      filteredBookings = filteredBookings.filter((b) => b.mentorId === mentorId);
-    }
-    if (userId) {
-      filteredBookings = filteredBookings.filter(
-        (b) => b.userDetails?.email === userId
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      bookings: filteredBookings,
-    });
-  } catch (error) {
-    console.error("Error fetching bookings:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch bookings" },
-      { status: 500 }
-    );
+  if (bookingId) {
+    const { data } = await supabase.from("bookings").select("*").eq("id", bookingId).single();
+    return NextResponse.json({ success: true, booking: data });
   }
-}
 
-function generateMeetCode() {
-  const chars = "abcdefghijklmnopqrstuvwxyz";
-  const segments = [3, 4, 3];
-  return segments
-    .map((len) =>
-      Array.from({ length: len }, () =>
-        chars.charAt(Math.floor(Math.random() * chars.length))
-      ).join("")
-    )
-    .join("-");
+  return NextResponse.json({ success: true, message: "Use Supabase query" });
 }

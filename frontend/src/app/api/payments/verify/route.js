@@ -5,12 +5,6 @@ import { sendBookingConfirmationEmail, sendMentorNotificationEmail } from "@/lib
 
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
 
-function generateMeetCode() {
-  const chars = "abcdefghijklmnopqrstuvwxyz";
-  const segments = [3, 4, 3];
-  return segments.map(len => Array.from({ length: len }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join("")).join("-");
-}
-
 export async function POST(request) {
   try {
     const body = await request.json();
@@ -79,7 +73,8 @@ export async function POST(request) {
         mentorEmail = mentor.email;
       }
     }
-    if (!meetLink) meetLink = `https://meet.google.com/${generateMeetCode()}`;
+
+    // Removed generateMeetCode fallback per user request
 
     // Update Payment 
     await supabase.from("payments").update({
@@ -129,6 +124,14 @@ export async function POST(request) {
     await supabase.from("payments").update({ booking_id: booking.id }).eq("razorpay_order_id", razorpay_order_id);
     if (bookingData.slot_id) {
       await supabase.from("availability").update({ is_booked: true, is_reserved: false }).eq("id", bookingData.slot_id);
+    }
+
+    // Update User Profile (Phone Number)
+    if (userDetails?.phone && userDetails?.email) {
+      await supabase
+        .from("profiles")
+        .update({ phone: userDetails.phone })
+        .eq("email", userDetails.email);
     }
 
     // Send Emails 

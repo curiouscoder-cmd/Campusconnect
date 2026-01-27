@@ -14,6 +14,8 @@ import { GlassCard } from "@/components/ui/fancy/GlassCard";
 import { SpotlightButton } from "@/components/ui/fancy/SpotlightButton";
 import { AnimatePresence, motion } from "framer-motion";
 
+import { BookingDetailsModal } from "@/components/profile/BookingDetailsModal";
+
 export default function ProfilePage() {
     const { user, signOut, loading: authLoading } = useAuth();
     const router = useRouter();
@@ -29,6 +31,7 @@ export default function ProfilePage() {
     const [recentActivity, setRecentActivity] = useState([]);
     const [paymentHistory, setPaymentHistory] = useState([]);
     const [dataLoading, setDataLoading] = useState(true);
+    const [selectedBooking, setSelectedBooking] = useState(null);
 
     useEffect(() => {
         if (!authLoading && !user) {
@@ -262,7 +265,16 @@ export default function ProfilePage() {
                                 <div className="space-y-4">
                                     {recentActivity.length > 0 ? (
                                         recentActivity.map((activity) => (
-                                            <div key={activity.id} className="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                                            <motion.div
+                                                key={activity.id}
+                                                whileHover={{ scale: 1.01, backgroundColor: "#f9fafb" }}
+                                                onClick={() => {
+                                                    if (activity.type === 'booking') {
+                                                        setSelectedBooking(activity);
+                                                    }
+                                                }}
+                                                className={`flex items-start gap-4 p-3 rounded-lg transition-colors border border-transparent hover:border-gray-100 cursor-pointer`}
+                                            >
                                                 <div className={`p-2 rounded-full ${activity.type === 'booking' ? 'bg-blue-50 text-blue-500' : 'bg-purple-50 text-purple-500'}`}>
                                                     {activity.type === 'booking' ? <Calendar className="w-4 h-4" /> : <User className="w-4 h-4" />}
                                                 </div>
@@ -272,7 +284,15 @@ export default function ProfilePage() {
                                                         <Clock className="w-3 h-3" /> {activity.date}
                                                     </p>
                                                 </div>
-                                            </div>
+                                                {activity.type === 'booking' && (
+                                                    <div className="self-center">
+                                                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${activity.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                                                            }`}>
+                                                            {activity.status}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </motion.div>
                                         ))
                                     ) : (
                                         <div className="text-center py-6 text-slate-400 text-sm">
@@ -281,6 +301,15 @@ export default function ProfilePage() {
                                     )}
                                 </div>
                             </GlassCard>
+                            {/* Booking Details Modal */}
+                            <AnimatePresence>
+                                {selectedBooking && (
+                                    <BookingDetailsModal
+                                        booking={selectedBooking}
+                                        onClose={() => setSelectedBooking(null)}
+                                    />
+                                )}
+                            </AnimatePresence>
                         </div>
                     </div>
 
