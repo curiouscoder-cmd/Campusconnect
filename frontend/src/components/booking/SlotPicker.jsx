@@ -164,6 +164,7 @@ export function SlotPicker({
               const isCurrentMonth = isDateInCurrentMonth(date);
               const isSelectable = isDateSelectable(date);
               const isToday = formatDateISO(new Date()) === dateStr;
+              const hasSlots = slotsByDate[dateStr]?.length > 0;
 
               return (
                 <button
@@ -174,8 +175,8 @@ export function SlotPicker({
                     "relative aspect-square flex items-center justify-center text-sm rounded-full transition-all duration-200",
                     isSelected
                       ? "bg-slate-900 text-white font-semibold"
-                      : isSelectable && isCurrentMonth
-                        ? "text-slate-900 font-medium hover:bg-slate-100"
+                      : isSelectable
+                        ? "text-slate-900 font-medium hover:bg-slate-100" // Selectable dates always look active
                         : isCurrentMonth
                           ? "text-gray-300"
                           : "text-gray-200",
@@ -184,8 +185,13 @@ export function SlotPicker({
                   )}
                 >
                   {date.getDate()}
+                  {/* Today indicator */}
                   {isToday && !isSelected && (
                     <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-slate-900" />
+                  )}
+                  {/* Available slots indicator (green dot) */}
+                  {hasSlots && !isSelected && !isToday && (
+                    <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   )}
                 </button>
               );

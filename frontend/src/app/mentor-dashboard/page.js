@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
     Calendar,
@@ -27,6 +28,11 @@ import {
     User,
     FileText,
     Tags,
+    Repeat,
+    CalendarRange,
+    Sun,
+    Sunset,
+    Moon,
 } from "lucide-react";
 
 // Predefined time slots (30 min each, 9 AM to 10 PM)
@@ -52,6 +58,19 @@ export default function MentorDashboardPage() {
     const [selectedDate, setSelectedDate] = useState("");
     const [selectedTimeSlots, setSelectedTimeSlots] = useState([]);
     const [meetLink, setMeetLink] = useState("");
+
+    // Bulk schedule state
+    const [selectedWeekdays, setSelectedWeekdays] = useState([]);
+    const [bulkWeeks, setBulkWeeks] = useState(2);
+    const [bulkTimeSlots, setBulkTimeSlots] = useState([]);
+    const [savingBulk, setSavingBulk] = useState(false);
+    const [useCustomRange, setUseCustomRange] = useState(false);
+    const [customStartDate, setCustomStartDate] = useState("");
+    const [customEndDate, setCustomEndDate] = useState("");
+
+    // Multi-select deletion state
+    const [selectedSlotsToDelete, setSelectedSlotsToDelete] = useState([]);
+    const [isSelectionMode, setIsSelectionMode] = useState(false);
 
     // Profile editing state
     const [bio, setBio] = useState("");
@@ -99,7 +118,10 @@ export default function MentorDashboardPage() {
     }
 
     async function fetchSlots(mentorId) {
-        const today = new Date().toISOString().split("T")[0];
+        // Use local date instead of UTC
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
         const { data, error } = await supabase
             .from("availability")
             .select("*")
@@ -145,19 +167,32 @@ export default function MentorDashboardPage() {
 
     async function handleAddSlots() {
         if (!mentor || !selectedDate || selectedTimeSlots.length === 0) {
-            alert("Please select a date and at least one time slot");
+            toast.error("Please select a date and at least one time slot");
             return;
         }
 
         setSaving(true);
         try {
-            const slotsToInsert = selectedTimeSlots.map((time) => ({
-                mentor_id: mentor.id,
-                date: selectedDate,
-                start_time: time,
-                end_time: calculateEndTime(time),
-                is_booked: false,
-            }));
+            // Check for existing slots to prevent duplicates
+            const existingSlotKeys = new Set(
+                slots.map(s => `${s.date}-${s.start_time}`)
+            );
+
+            const slotsToInsert = selectedTimeSlots
+                .filter(time => !existingSlotKeys.has(`${selectedDate}-${time}`))
+                .map((time) => ({
+                    mentor_id: mentor.id,
+                    date: selectedDate,
+                    start_time: time,
+                    end_time: calculateEndTime(time),
+                    is_booked: false,
+                }));
+
+            if (slotsToInsert.length === 0) {
+                toast.info("All selected slots already exist!");
+                setSaving(false);
+                return;
+            }
 
             const { error } = await supabase.from("availability").insert(slotsToInsert);
 
@@ -165,12 +200,191 @@ export default function MentorDashboardPage() {
 
             await fetchSlots(mentor.id);
             setSelectedTimeSlots([]);
-            alert(`${selectedTimeSlots.length} slots added successfully!`);
+
+            const skipped = selectedTimeSlots.length - slotsToInsert.length;
+            if (skipped > 0) {
+                toast.success(`${slotsToInsert.length} slots added! (${skipped} duplicates skipped)`);
+            } else {
+                toast.success(`${slotsToInsert.length} slots added successfully!`);
+            }
         } catch (error) {
             console.error("Error adding slots:", error);
-            alert("Failed to add slots: " + error.message);
+            toast.error("Failed to add slots: " + error.message);
         } finally {
             setSaving(false);
+        }
+    }
+
+    // Bulk schedule functions
+    const WEEKDAYS = [
+        { id: 0, name: "Sun", fullName: "Sunday" },
+        { id: 1, name: "Mon", fullName: "Monday" },
+        { id: 2, name: "Tue", fullName: "Tuesday" },
+        { id: 3, name: "Wed", fullName: "Wednesday" },
+        { id: 4, name: "Thu", fullName: "Thursday" },
+        { id: 5, name: "Fri", fullName: "Friday" },
+        { id: 6, name: "Sat", fullName: "Saturday" },
+    ];
+
+    const TIME_PRESETS = {
+        morning: TIME_SLOTS.filter(t => {
+            const hour = parseInt(t.split(":")[0]);
+            return hour >= 9 && hour < 12;
+        }),
+        afternoon: TIME_SLOTS.filter(t => {
+            const hour = parseInt(t.split(":")[0]);
+            return hour >= 12 && hour < 17;
+        }),
+        evening: TIME_SLOTS.filter(t => {
+            const hour = parseInt(t.split(":")[0]);
+            return hour >= 17 && hour <= 22;
+        }),
+        all: TIME_SLOTS,
+    };
+
+    function toggleWeekday(dayId) {
+        if (selectedWeekdays.includes(dayId)) {
+            setSelectedWeekdays(selectedWeekdays.filter(d => d !== dayId));
+        } else {
+            setSelectedWeekdays([...selectedWeekdays, dayId]);
+        }
+    }
+
+    function toggleBulkTimeSlot(time) {
+        if (bulkTimeSlots.includes(time)) {
+            setBulkTimeSlots(bulkTimeSlots.filter(t => t !== time));
+        } else {
+            setBulkTimeSlots([...bulkTimeSlots, time]);
+        }
+    }
+
+    function applyTimePreset(preset) {
+        const presetSlots = TIME_PRESETS[preset];
+        // Toggle: if all preset slots are selected, deselect them; otherwise select all
+        const allSelected = presetSlots.every(t => bulkTimeSlots.includes(t));
+        if (allSelected) {
+            setBulkTimeSlots(bulkTimeSlots.filter(t => !presetSlots.includes(t)));
+        } else {
+            const newSlots = [...new Set([...bulkTimeSlots, ...presetSlots])];
+            setBulkTimeSlots(newSlots);
+        }
+    }
+
+    function getDatesBetween(startDate, endDate, weekdays) {
+        const dates = [];
+        const current = new Date(startDate);
+        const end = new Date(endDate);
+
+        while (current <= end) {
+            if (weekdays.includes(current.getDay())) {
+                // Use local timezone date formatting instead of toISOString (which uses UTC)
+                const year = current.getFullYear();
+                const month = String(current.getMonth() + 1).padStart(2, '0');
+                const day = String(current.getDate()).padStart(2, '0');
+                dates.push(`${year}-${month}-${day}`);
+            }
+            current.setDate(current.getDate() + 1);
+        }
+        return dates;
+    }
+
+    function getBulkSlotsCount() {
+        if (selectedWeekdays.length === 0 || bulkTimeSlots.length === 0) return 0;
+
+        let startDate, endDate;
+        if (useCustomRange) {
+            if (!customStartDate || !customEndDate) return 0;
+            startDate = new Date(customStartDate);
+            endDate = new Date(customEndDate);
+        } else {
+            startDate = new Date();
+            endDate = new Date();
+            endDate.setDate(startDate.getDate() + (bulkWeeks * 7));
+        }
+
+        const dates = getDatesBetween(startDate, endDate, selectedWeekdays);
+        return dates.length * bulkTimeSlots.length;
+    }
+
+    function getDateRangeText() {
+        if (useCustomRange) {
+            if (!customStartDate || !customEndDate) return "";
+            const start = new Date(customStartDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+            const end = new Date(customEndDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+            return `${start} - ${end}`;
+        }
+        const today = new Date();
+        const endDate = new Date();
+        endDate.setDate(today.getDate() + (bulkWeeks * 7));
+        return `${bulkWeeks} week(s)`;
+    }
+
+    async function handleBulkAddSlots() {
+        if (!mentor || selectedWeekdays.length === 0 || bulkTimeSlots.length === 0) {
+            toast.error("Please select at least one day and time slot");
+            return;
+        }
+
+        if (useCustomRange && (!customStartDate || !customEndDate)) {
+            toast.error("Please select start and end dates");
+            return;
+        }
+
+        setSavingBulk(true);
+        try {
+            let startDate, endDate;
+            if (useCustomRange) {
+                startDate = new Date(customStartDate);
+                endDate = new Date(customEndDate);
+            } else {
+                startDate = new Date();
+                endDate = new Date();
+                endDate.setDate(startDate.getDate() + (bulkWeeks * 7));
+            }
+
+            const dates = getDatesBetween(startDate, endDate, selectedWeekdays);
+
+            // Filter out dates that already have slots for the selected times
+            const existingSlotKeys = new Set(
+                slots.map(s => `${s.date}-${s.start_time}`)
+            );
+
+            const slotsToInsert = [];
+            for (const date of dates) {
+                for (const time of bulkTimeSlots) {
+                    const key = `${date}-${time}`;
+                    if (!existingSlotKeys.has(key)) {
+                        slotsToInsert.push({
+                            mentor_id: mentor.id,
+                            date: date,
+                            start_time: time,
+                            end_time: calculateEndTime(time),
+                            is_booked: false,
+                        });
+                    }
+                }
+            }
+
+            if (slotsToInsert.length === 0) {
+                toast.info("All selected slots already exist!");
+                return;
+            }
+
+            const { error } = await supabase.from("availability").insert(slotsToInsert);
+
+            if (error) throw error;
+
+            await fetchSlots(mentor.id);
+            setSelectedWeekdays([]);
+            setBulkTimeSlots([]);
+            setCustomStartDate("");
+            setCustomEndDate("");
+            toast.success(`${slotsToInsert.length} slots added successfully!`);
+        } catch (error) {
+            console.error("Error adding bulk slots:", error);
+            toast.error("Failed to add slots: " + error.message);
+        } finally {
+            setSavingBulk(false);
         }
     }
 
@@ -186,11 +400,57 @@ export default function MentorDashboardPage() {
             if (error) throw error;
 
             await fetchSlots(mentor.id);
+            toast.success("Slot deleted");
         } catch (error) {
             console.error("Error deleting slot:", error);
-            alert("Failed to delete slot: " + error.message);
+            toast.error("Failed to delete slot: " + error.message);
         }
     }
+
+    function toggleSlotSelection(slotId) {
+        setSelectedSlotsToDelete(prev =>
+            prev.includes(slotId)
+                ? prev.filter(id => id !== slotId)
+                : [...prev, slotId]
+        );
+    }
+
+    function toggleSelectAll() {
+        if (selectedSlotsToDelete.length === slots.length) {
+            setSelectedSlotsToDelete([]);
+        } else {
+            setSelectedSlotsToDelete(slots.map(s => s.id));
+        }
+    }
+
+    async function handleDeleteSelectedSlots() {
+        if (selectedSlotsToDelete.length === 0) return;
+        if (!confirm(`Are you sure you want to delete ${selectedSlotsToDelete.length} slot(s)?`)) return;
+
+        try {
+            const { error } = await supabase
+                .from("availability")
+                .delete()
+                .in("id", selectedSlotsToDelete);
+
+            if (error) throw error;
+
+            await fetchSlots(mentor.id);
+            setSelectedSlotsToDelete([]);
+            setIsSelectionMode(false);
+            toast.success(`${selectedSlotsToDelete.length} slot(s) deleted!`);
+        } catch (error) {
+            console.error("Error deleting slots:", error);
+            toast.error("Failed to delete slots: " + error.message);
+        }
+    }
+
+    function cancelSelection() {
+        setSelectedSlotsToDelete([]);
+        setIsSelectionMode(false);
+    }
+
+
 
     async function handleSaveMeetLink() {
         if (!mentor) return;
@@ -576,96 +836,354 @@ export default function MentorDashboardPage() {
                 </Card>
 
                 <div className="grid md:grid-cols-2 gap-6">
-                    {/* Add Slots Form */}
+                    {/* Add Slots Form with Tabs */}
                     <Card>
-                        <CardHeader>
+                        <CardHeader className="pb-2">
                             <CardTitle className="flex items-center gap-2">
                                 <Plus className="w-5 h-5" />
                                 Add Availability Slots
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {/* Date Picker */}
-                            <div className="space-y-2">
-                                <Label htmlFor="date">Select Date</Label>
-                                <Input
-                                    id="date"
-                                    type="date"
-                                    value={selectedDate}
-                                    min={new Date().toISOString().split("T")[0]}
-                                    onChange={(e) => {
-                                        setSelectedDate(e.target.value);
-                                        setSelectedTimeSlots([]);
-                                    }}
-                                />
-                            </div>
+                            <Tabs defaultValue="single" className="w-full">
+                                <TabsList className="grid w-full grid-cols-2 mb-4">
+                                    <TabsTrigger value="single" className="flex items-center gap-1.5">
+                                        <Calendar className="w-4 h-4" />
+                                        Single Day
+                                    </TabsTrigger>
+                                    <TabsTrigger value="bulk" className="flex items-center gap-1.5">
+                                        <Repeat className="w-4 h-4" />
+                                        Bulk Schedule
+                                    </TabsTrigger>
+                                </TabsList>
 
-                            {/* Time Slots Grid */}
-                            {selectedDate && (
-                                <div className="space-y-2">
-                                    <Label>Select Time Slots (30 min each)</Label>
-                                    <div className="grid grid-cols-4 gap-2 max-h-[250px] overflow-y-auto">
-                                        {TIME_SLOTS.map((time) => {
-                                            const isTaken = isSlotTaken(time);
-                                            const isPast = isSlotPast(time);
-                                            const isDisabled = isTaken || isPast;
-                                            const isSelected = selectedTimeSlots.includes(time);
+                                {/* Single Day Tab */}
+                                <TabsContent value="single" className="space-y-4">
+                                    {/* Date Picker */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="date">Select Date</Label>
+                                        <Input
+                                            id="date"
+                                            type="date"
+                                            value={selectedDate}
+                                            min={new Date().toISOString().split("T")[0]}
+                                            onChange={(e) => {
+                                                setSelectedDate(e.target.value);
+                                                setSelectedTimeSlots([]);
+                                            }}
+                                        />
+                                    </div>
 
-                                            return (
+                                    {/* Time Slots Grid */}
+                                    {selectedDate && (
+                                        <div className="space-y-2">
+                                            <Label>Select Time Slots (30 min each)</Label>
+                                            <div className="grid grid-cols-4 gap-2 max-h-[200px] overflow-y-auto">
+                                                {TIME_SLOTS.map((time) => {
+                                                    const isTaken = isSlotTaken(time);
+                                                    const isPast = isSlotPast(time);
+                                                    const isDisabled = isTaken || isPast;
+                                                    const isSelected = selectedTimeSlots.includes(time);
+
+                                                    return (
+                                                        <button
+                                                            key={time}
+                                                            type="button"
+                                                            disabled={isDisabled}
+                                                            onClick={() => !isDisabled && toggleTimeSlot(time)}
+                                                            className={`
+                                                                p-2 text-sm rounded-lg border transition-all
+                                                                ${isDisabled
+                                                                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200"
+                                                                    : isSelected
+                                                                        ? "bg-primary text-white border-primary"
+                                                                        : "bg-white text-gray-700 border-gray-200 hover:border-primary hover:bg-primary/5"
+                                                                }
+                                                            `}
+                                                        >
+                                                            {formatTime(time)}
+                                                            {isTaken && (
+                                                                <span className="block text-[10px]">Added</span>
+                                                            )}
+                                                            {isPast && !isTaken && (
+                                                                <span className="block text-[10px]">Past</span>
+                                                            )}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                            <p className="text-xs text-gray-500">
+                                                Selected: {selectedTimeSlots.length} slot(s)
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    <Button
+                                        onClick={handleAddSlots}
+                                        className="w-full"
+                                        disabled={saving || !selectedDate || selectedTimeSlots.length === 0}
+                                    >
+                                        {saving ? (
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        ) : (
+                                            <Plus className="w-4 h-4 mr-2" />
+                                        )}
+                                        Add {selectedTimeSlots.length} Slot(s)
+                                    </Button>
+                                </TabsContent>
+
+                                {/* Bulk Schedule Tab */}
+                                <TabsContent value="bulk" className="space-y-4">
+                                    {/* Weekday Selection */}
+                                    <div className="space-y-2">
+                                        <Label>Select Days of Week</Label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {WEEKDAYS.map((day) => (
                                                 <button
-                                                    key={time}
+                                                    key={day.id}
                                                     type="button"
-                                                    disabled={isDisabled}
-                                                    onClick={() => !isDisabled && toggleTimeSlot(time)}
+                                                    onClick={() => toggleWeekday(day.id)}
                                                     className={`
-                                                        p-2 text-sm rounded-lg border transition-all
-                                                        ${isDisabled
-                                                            ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200"
-                                                            : isSelected
-                                                                ? "bg-primary text-white border-primary"
-                                                                : "bg-white text-gray-700 border-gray-200 hover:border-primary hover:bg-primary/5"
+                                                        px-3 py-2 text-sm font-medium rounded-lg border transition-all
+                                                        ${selectedWeekdays.includes(day.id)
+                                                            ? "bg-primary text-white border-primary"
+                                                            : "bg-white text-gray-700 border-gray-200 hover:border-primary hover:bg-primary/5"
                                                         }
                                                     `}
                                                 >
-                                                    {formatTime(time)}
-                                                    {isTaken && (
-                                                        <span className="block text-[10px]">Added</span>
-                                                    )}
-                                                    {isPast && !isTaken && (
-                                                        <span className="block text-[10px]">Past</span>
-                                                    )}
+                                                    {day.name}
                                                 </button>
-                                            );
-                                        })}
+                                            ))}
+                                        </div>
                                     </div>
-                                    <p className="text-xs text-gray-500">
-                                        Selected: {selectedTimeSlots.length} slot(s)
-                                    </p>
-                                </div>
-                            )}
 
-                            <Button
-                                onClick={handleAddSlots}
-                                className="w-full"
-                                disabled={saving || !selectedDate || selectedTimeSlots.length === 0}
-                            >
-                                {saving ? (
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                ) : (
-                                    <Plus className="w-4 h-4 mr-2" />
-                                )}
-                                Add {selectedTimeSlots.length} Slot(s)
-                            </Button>
+                                    {/* Duration Selection */}
+                                    <div className="space-y-2">
+                                        <Label>Duration</Label>
+                                        <div className="flex gap-2 flex-wrap">
+                                            {[1, 2, 3, 4].map((weeks) => (
+                                                <button
+                                                    key={weeks}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setBulkWeeks(weeks);
+                                                        setUseCustomRange(false);
+                                                    }}
+                                                    className={`
+                                                        px-3 py-2 text-sm font-medium rounded-lg border transition-all
+                                                        ${!useCustomRange && bulkWeeks === weeks
+                                                            ? "bg-blue-600 text-white border-blue-600"
+                                                            : "bg-white text-gray-700 border-gray-200 hover:border-blue-400 hover:bg-blue-50"
+                                                        }
+                                                    `}
+                                                >
+                                                    {weeks}w
+                                                </button>
+                                            ))}
+                                            <button
+                                                type="button"
+                                                onClick={() => setUseCustomRange(!useCustomRange)}
+                                                className={`
+                                                    px-3 py-2 text-sm font-medium rounded-lg border transition-all flex items-center gap-1.5
+                                                    ${useCustomRange
+                                                        ? "bg-purple-600 text-white border-purple-600"
+                                                        : "bg-white text-gray-700 border-gray-200 hover:border-purple-400 hover:bg-purple-50"
+                                                    }
+                                                `}
+                                            >
+                                                <CalendarRange className="w-4 h-4" />
+                                                Custom
+                                            </button>
+                                        </div>
+
+                                        {/* Custom Date Range Pickers */}
+                                        {useCustomRange && (
+                                            <div className="flex gap-2 mt-2">
+                                                <div className="flex-1">
+                                                    <Label className="text-xs text-gray-500">Start Date</Label>
+                                                    <Input
+                                                        type="date"
+                                                        value={customStartDate}
+                                                        min={new Date().toISOString().split("T")[0]}
+                                                        onChange={(e) => setCustomStartDate(e.target.value)}
+                                                        className="mt-1"
+                                                    />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <Label className="text-xs text-gray-500">End Date</Label>
+                                                    <Input
+                                                        type="date"
+                                                        value={customEndDate}
+                                                        min={customStartDate || new Date().toISOString().split("T")[0]}
+                                                        onChange={(e) => setCustomEndDate(e.target.value)}
+                                                        className="mt-1"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Quick Time Presets */}
+                                    <div className="space-y-2">
+                                        <Label>Quick Select</Label>
+                                        <div className="flex gap-2 flex-wrap">
+                                            <button
+                                                type="button"
+                                                onClick={() => applyTimePreset("morning")}
+                                                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${TIME_PRESETS.morning.every(t => bulkTimeSlots.includes(t))
+                                                    ? "bg-amber-100 text-amber-800 border-amber-300"
+                                                    : "bg-white text-gray-600 border-gray-200 hover:bg-amber-50"
+                                                    }`}
+                                            >
+                                                <Sun className="w-3 h-3" />
+                                                Morning
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => applyTimePreset("afternoon")}
+                                                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${TIME_PRESETS.afternoon.every(t => bulkTimeSlots.includes(t))
+                                                    ? "bg-orange-100 text-orange-800 border-orange-300"
+                                                    : "bg-white text-gray-600 border-gray-200 hover:bg-orange-50"
+                                                    }`}
+                                            >
+                                                <Sunset className="w-3 h-3" />
+                                                Afternoon
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => applyTimePreset("evening")}
+                                                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${TIME_PRESETS.evening.every(t => bulkTimeSlots.includes(t))
+                                                    ? "bg-indigo-100 text-indigo-800 border-indigo-300"
+                                                    : "bg-white text-gray-600 border-gray-200 hover:bg-indigo-50"
+                                                    }`}
+                                            >
+                                                <Moon className="w-3 h-3" />
+                                                Evening
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => applyTimePreset("all")}
+                                                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${TIME_PRESETS.all.every(t => bulkTimeSlots.includes(t))
+                                                    ? "bg-green-100 text-green-800 border-green-300"
+                                                    : "bg-white text-gray-600 border-gray-200 hover:bg-green-50"
+                                                    }`}
+                                            >
+                                                <CalendarRange className="w-3 h-3" />
+                                                All Day
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Time Slots Grid for Bulk */}
+                                    <div className="space-y-2">
+                                        <Label>Or select individual slots</Label>
+                                        <div className="grid grid-cols-4 gap-1.5 max-h-[150px] overflow-y-auto">
+                                            {TIME_SLOTS.map((time) => {
+                                                const isSelected = bulkTimeSlots.includes(time);
+                                                return (
+                                                    <button
+                                                        key={time}
+                                                        type="button"
+                                                        onClick={() => toggleBulkTimeSlot(time)}
+                                                        className={`
+                                                            p-1.5 text-xs rounded-md border transition-all
+                                                            ${isSelected
+                                                                ? "bg-primary text-white border-primary"
+                                                                : "bg-white text-gray-700 border-gray-200 hover:border-primary hover:bg-primary/5"
+                                                            }
+                                                        `}
+                                                    >
+                                                        {formatTime(time)}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* Preview */}
+                                    {(selectedWeekdays.length > 0 || bulkTimeSlots.length > 0) && (
+                                        <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                            <p className="text-sm text-blue-800">
+                                                <span className="font-semibold">{getBulkSlotsCount()}</span> slots will be created
+                                                {selectedWeekdays.length > 0 && bulkTimeSlots.length > 0 && (
+                                                    <span className="block text-xs text-blue-600 mt-1">
+                                                        {selectedWeekdays.map(d => WEEKDAYS.find(w => w.id === d)?.name).join(", ")}
+                                                        {" × "}{bulkTimeSlots.length} time slots × {getDateRangeText()}
+                                                    </span>
+                                                )}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    <Button
+                                        onClick={handleBulkAddSlots}
+                                        className="w-full"
+                                        disabled={savingBulk || selectedWeekdays.length === 0 || bulkTimeSlots.length === 0}
+                                    >
+                                        {savingBulk ? (
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        ) : (
+                                            <Repeat className="w-4 h-4 mr-2" />
+                                        )}
+                                        Add {getBulkSlotsCount()} Bulk Slots
+                                    </Button>
+                                </TabsContent>
+                            </Tabs>
                         </CardContent>
                     </Card>
 
                     {/* Upcoming Slots */}
                     <Card>
-                        <CardHeader>
+                        <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle className="flex items-center gap-2">
                                 <Calendar className="w-5 h-5" />
                                 Your Availability
+                                <span className="text-sm font-normal text-gray-500">({slots.length} slots)</span>
                             </CardTitle>
+                            {slots.length > 0 && (
+                                <div className="flex gap-2">
+                                    {!isSelectionMode ? (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setIsSelectionMode(true)}
+                                            className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                                        >
+                                            <Check className="w-3 h-3 mr-1" />
+                                            Select
+                                        </Button>
+                                    ) : (
+                                        <>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={toggleSelectAll}
+                                                className="text-gray-600"
+                                            >
+                                                {selectedSlotsToDelete.length === slots.length ? "Deselect All" : "Select All"}
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={cancelSelection}
+                                                className="text-gray-600"
+                                            >
+                                                Cancel
+                                            </Button>
+                                            {selectedSlotsToDelete.length > 0 && (
+                                                <Button
+                                                    size="sm"
+                                                    onClick={handleDeleteSelectedSlots}
+                                                    className="bg-red-600 hover:bg-red-700 text-white"
+                                                >
+                                                    <Trash2 className="w-3 h-3 mr-1" />
+                                                    Delete ({selectedSlotsToDelete.length})
+                                                </Button>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                            )}
                         </CardHeader>
                         <CardContent>
                             {slots.length === 0 ? (
@@ -679,12 +1197,24 @@ export default function MentorDashboardPage() {
                                     {slots.map((slot) => (
                                         <div
                                             key={slot.id}
-                                            className={`flex items-center justify-between p-3 rounded-lg border ${slot.is_booked
+                                            onClick={() => isSelectionMode && !slot.is_booked && toggleSlotSelection(slot.id)}
+                                            className={`flex items-center justify-between p-3 rounded-lg border transition-all ${slot.is_booked
                                                 ? "bg-green-50 border-green-200"
-                                                : "bg-gray-50 border-gray-200"
-                                                }`}
+                                                : selectedSlotsToDelete.includes(slot.id)
+                                                    ? "bg-blue-50 border-blue-400 ring-2 ring-blue-200"
+                                                    : "bg-gray-50 border-gray-200"
+                                                } ${isSelectionMode && !slot.is_booked ? "cursor-pointer hover:border-blue-300" : ""}`}
                                         >
                                             <div className="flex items-center gap-3">
+                                                {isSelectionMode && !slot.is_booked && (
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedSlotsToDelete.includes(slot.id)}
+                                                        onChange={() => toggleSlotSelection(slot.id)}
+                                                        className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    />
+                                                )}
                                                 <div className="text-center">
                                                     <p className="text-xs text-gray-500">
                                                         {formatDate(slot.date)}
@@ -699,7 +1229,7 @@ export default function MentorDashboardPage() {
                                                     </span>
                                                 )}
                                             </div>
-                                            {!slot.is_booked && (
+                                            {!slot.is_booked && !isSelectionMode && (
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"

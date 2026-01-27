@@ -77,8 +77,11 @@ export function isSlotAvailable(slot, currentUserId) {
   // Check if slot is in the past or within the minimum advance booking window
   if (slot.date && slot.startTime) {
     const [hours, minutes] = slot.startTime.split(':').map(Number);
-    const slotDateTime = new Date(slot.date);
-    slotDateTime.setHours(hours, minutes, 0, 0);
+
+    // Parse date string as local timezone, not UTC
+    // slot.date format: "YYYY-MM-DD"
+    const [year, month, day] = slot.date.split('-').map(Number);
+    const slotDateTime = new Date(year, month - 1, day, hours, minutes, 0, 0);
 
     const now = new Date();
     const minBookingTime = new Date(now.getTime() + MIN_ADVANCE_BOOKING_HOURS * 60 * 60 * 1000);
