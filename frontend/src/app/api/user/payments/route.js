@@ -46,6 +46,13 @@ export async function GET(request) {
       .select("id, name, college, image")
       .in("id", mentorIds);
 
+    // 3. Fetch related payment records for these bookings
+    const bookingIds = bookingsProxy.map(b => b.id);
+    const { data: paymentRecords } = await supabase
+      .from("payments")
+      .select("booking_id, invoice_id, amount, status, payment_method, payment_method_details, fee, tax, razorpay_payment_id")
+      .in("booking_id", bookingIds);
+
     const mentorMap = {};
     const mentorCollegeMap = {};
     const mentorImageMap = {};
@@ -56,24 +63,41 @@ export async function GET(request) {
       mentorImageMap[m.id] = m.image;
     });
 
-    const transformedPayments = bookingsProxy.map(b => ({
-      id: b.id,
-      date: new Date(b.created_at).toLocaleDateString(),
-      amount: b.session_price ? `₹${b.session_price}` : "₹500",
-      status: "Completed",
-      mentor: mentorMap[b.mentor_id] || "Mentor",
-      // Detailed fields for modal
-      mentor_id: b.mentor_id,
-      mentor_name: mentorMap[b.mentor_id] || "Mentor",
-      mentor_college: mentorCollegeMap[b.mentor_id],
-      mentor_image: mentorImageMap[b.mentor_id],
-      slot_date: b.date,
-      slot_time: b.start_time,
-      duration: b.session_duration,
-      session_title: b.session_type,
-      meet_link: b.meet_link,
-      created_at: b.created_at
-    }));
+    const paymentMap = {};
+    paymentRecords?.forEach(p => {
+      paymentMap[p.booking_id] = p;
+    });
+
+    const transformedPayments = bookingsProxy.map(b => {
+      const p = paymentMap[b.id] || {};
+      return {
+        id: b.id, // Keeping booking ID as main ID for list, but we might want invoice ID for display
+        date: new Date(b.created_at).toLocaleDateString(),
+        amount: b.session_price ? `₹${b.session_price}` : "₹500",
+        status: p.status === 'captured' ? "Completed" : (b.status === 'confirmed' ? 'Completed' : b.status),
+        mentor: mentorMap[b.mentor_id] || "Mentor",
+
+        // Detailed fields for modal
+        mentor_id: b.mentor_id,
+        mentor_name: mentorMap[b.mentor_id] || "Mentor",
+        mentor_college: mentorCollegeMap[b.mentor_id],
+        mentor_image: mentorImageMap[b.mentor_id],
+        slot_date: b.date,
+        slot_time: b.start_time,
+        duration: b.session_duration,
+        session_title: b.session_type,
+        meet_link: b.meet_link,
+        created_at: b.created_at,
+
+        // Premium Invoice Fields
+        invoice_id: p.invoice_id || `INV-${b.id.slice(-6).toUpperCase()}`, // Fallback
+        payment_method: p.payment_method || 'Online',
+        payment_method_details: p.payment_method_details || {},
+        fee: p.fee || 0,
+        tax: p.tax || 0,
+        transaction_id: p.razorpay_payment_id || b.id
+      };
+    });
 
     return NextResponse.json({ payments: transformedPayments });
   } catch (error) {

@@ -8,6 +8,7 @@ import ContactMessage from "../emails/ContactMessage";
 import PromotionEmail from "../emails/PromotionEmail";
 import MentorOnboardingEmail from "../emails/MentorOnboardingEmail";
 import CustomEmail from "../emails/CustomEmail";
+import PaymentReceiptEmail from "../emails/PaymentReceiptEmail";
 
 
 export function getResendClient() {
@@ -213,5 +214,29 @@ export async function sendCustomEmail(params) {
     } catch (error) {
         console.error("Custom Email Error:", error);
         return { error };
+    }
+}
+
+export const generatePaymentReceiptEmailHtml = async (props) => {
+    return await render(<PaymentReceiptEmail {...props} />);
+};
+
+export async function sendPaymentReceiptEmail(params) {
+    const { userEmail, amount, orderId, invoiceId } = params;
+    if (!process.env.RESEND_API_KEY || !userEmail) return;
+    const resend = getResendClient();
+    if (!resend) return;
+
+    try {
+        const html = await generatePaymentReceiptEmailHtml(params);
+        await resend.emails.send({
+            from: "Campus Connect <noreply@campus-connect.co.in>",
+            to: [userEmail],
+            subject: `Payment Invoice: ${invoiceId} - Campus Connect`,
+            html
+        });
+        console.log("Payment receipt email sent to:", userEmail);
+    } catch (error) {
+        console.error("Error sending payment receipt email:", error);
     }
 }
