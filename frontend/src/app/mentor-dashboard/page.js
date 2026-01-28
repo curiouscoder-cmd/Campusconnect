@@ -173,10 +173,28 @@ export default function MentorDashboardPage() {
 
         setSaving(true);
         try {
-            // Check for existing slots to prevent duplicates
+            // Fetch fresh data from database to prevent duplicates (don't rely on stale state)
+            const { data: freshSlots, error: fetchError } = await supabase
+                .from("availability")
+                .select("date, start_time")
+                .eq("mentor_id", mentor.id)
+                .eq("date", selectedDate);
+
+            if (fetchError) throw fetchError;
+
+            // Normalize time format - database might store "11:00:00" but we compare with "11:00"
+            const normalizeTime = (time) => {
+                if (!time) return '';
+                // Extract just HH:MM (first 5 characters)
+                return time.substring(0, 5);
+            };
+
             const existingSlotKeys = new Set(
-                slots.map(s => `${s.date}-${s.start_time}`)
+                (freshSlots || []).map(s => `${s.date}-${normalizeTime(s.start_time)}`)
             );
+
+            console.log("Existing slots:", existingSlotKeys);
+            console.log("Trying to add:", selectedTimeSlots.map(t => `${selectedDate}-${t}`));
 
             const slotsToInsert = selectedTimeSlots
                 .filter(time => !existingSlotKeys.has(`${selectedDate}-${time}`))
@@ -194,7 +212,12 @@ export default function MentorDashboardPage() {
                 return;
             }
 
-            const { error } = await supabase.from("availability").insert(slotsToInsert);
+            const { error } = await supabase
+                .from("availability")
+                .upsert(slotsToInsert, {
+                    onConflict: 'mentor_id,date,start_time',
+                    ignoreDuplicates: true
+                });
 
             if (error) throw error;
 
@@ -214,6 +237,7 @@ export default function MentorDashboardPage() {
             setSaving(false);
         }
     }
+
 
     // Bulk schedule functions
     const WEEKDAYS = [
@@ -344,9 +368,25 @@ export default function MentorDashboardPage() {
 
             const dates = getDatesBetween(startDate, endDate, selectedWeekdays);
 
-            // Filter out dates that already have slots for the selected times
+            // Fetch fresh data from database to prevent duplicates (don't rely on stale state)
+            const { data: freshSlots, error: fetchError } = await supabase
+                .from("availability")
+                .select("date, start_time")
+                .eq("mentor_id", mentor.id)
+                .gte("date", dates[0])
+                .lte("date", dates[dates.length - 1]);
+
+            if (fetchError) throw fetchError;
+
+            // Normalize time format - database might store "11:00:00" but we compare with "11:00"
+            const normalizeTime = (time) => {
+                if (!time) return '';
+                // Extract just HH:MM (first 5 characters)
+                return time.substring(0, 5);
+            };
+
             const existingSlotKeys = new Set(
-                slots.map(s => `${s.date}-${s.start_time}`)
+                (freshSlots || []).map(s => `${s.date}-${normalizeTime(s.start_time)}`)
             );
 
             const slotsToInsert = [];
@@ -365,12 +405,19 @@ export default function MentorDashboardPage() {
                 }
             }
 
+
             if (slotsToInsert.length === 0) {
                 toast.info("All selected slots already exist!");
+                setSavingBulk(false);
                 return;
             }
 
-            const { error } = await supabase.from("availability").insert(slotsToInsert);
+            const { error } = await supabase
+                .from("availability")
+                .upsert(slotsToInsert, {
+                    onConflict: 'mentor_id,date,start_time',
+                    ignoreDuplicates: true
+                });
 
             if (error) throw error;
 
@@ -379,7 +426,14 @@ export default function MentorDashboardPage() {
             setBulkTimeSlots([]);
             setCustomStartDate("");
             setCustomEndDate("");
-            toast.success(`${slotsToInsert.length} slots added successfully!`);
+
+            const totalPossible = dates.length * bulkTimeSlots.length;
+            const skipped = totalPossible - slotsToInsert.length;
+            if (skipped > 0) {
+                toast.success(`${slotsToInsert.length} slots added! (${skipped} duplicates skipped)`);
+            } else {
+                toast.success(`${slotsToInsert.length} slots added successfully!`);
+            }
         } catch (error) {
             console.error("Error adding bulk slots:", error);
             toast.error("Failed to add slots: " + error.message);
@@ -387,6 +441,7 @@ export default function MentorDashboardPage() {
             setSavingBulk(false);
         }
     }
+
 
     async function handleDeleteSlot(slotId) {
         if (!confirm("Are you sure you want to delete this slot?")) return;
