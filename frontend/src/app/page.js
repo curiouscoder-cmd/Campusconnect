@@ -361,6 +361,155 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Features Section - What We Help You With */}
+        <section className="py-24 bg-gradient-to-b from-white via-primary/[0.02] to-slate-50">
+          <div className="container px-4 md:px-6 mx-auto">
+            <FadeIn direction="up">
+              <div className="text-center mb-16 max-w-3xl mx-auto">
+                <Badge variant="outline" className="mb-4 py-1.5 px-4 text-sm font-medium rounded-full border-primary/20 bg-primary/5 text-primary">
+                  Why Campus Connect?
+                </Badge>
+                <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4" style={{ fontFamily: 'var(--font-display)' }}>
+                  What we help you with
+                </h2>
+                <p className="text-lg text-muted-foreground">
+                  Making informed decisions about your college shouldn&apos;t be a guessing game. Here&apos;s how we help.
+                </p>
+              </div>
+            </FadeIn>
+
+            <FadeInStagger className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+              {/* Feature 1 - College Clarity - Indigo/Violet */}
+              <FadeInStaggerItem>
+                <div className="group relative p-7 rounded-2xl bg-white border border-border/60 hover:border-indigo-300 hover:shadow-lg hover:shadow-indigo-100 transition-all duration-300">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <svg className="w-6 h-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold mb-2 text-foreground tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>Get Real Clarity</h3>
+                      <p className="text-muted-foreground text-[15px] leading-relaxed">
+                        Get genuine, unfiltered insights about the college you&apos;re considering. No marketing fluff, just real experiences.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </FadeInStaggerItem>
+
+              {/* Feature 2 - Compare Colleges - Emerald/Teal */}
+              <FadeInStaggerItem>
+                <div className="group relative p-7 rounded-2xl bg-white border border-border/60 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-100 transition-all duration-300">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <svg className="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold mb-2 text-foreground tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>Compare New-Gen Colleges</h3>
+                      <p className="text-muted-foreground text-[15px] leading-relaxed">
+                        Confused between NST, Vedam, NIAT, or Polaris? Talk to students and make an informed comparison.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </FadeInStaggerItem>
+
+              {/* Feature 3 - Admission Prep - Amber/Orange */}
+              <FadeInStaggerItem>
+                <div className="group relative p-7 rounded-2xl bg-white border border-border/60 hover:border-amber-300 hover:shadow-lg hover:shadow-amber-100 transition-all duration-300">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <svg className="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold mb-2 text-foreground tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>Prepare Before Admission</h3>
+                      <p className="text-muted-foreground text-[15px] leading-relaxed">
+                        From laptop requirements to coding prerequisites, get fully prepared for Day 1 at your new college.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </FadeInStaggerItem>
+
+              {/* Feature 4 - Entrance Exam Tips - Rose/Pink */}
+              <FadeInStaggerItem>
+                <div className="group relative p-7 rounded-2xl bg-white border border-border/60 hover:border-rose-300 hover:shadow-lg hover:shadow-rose-100 transition-all duration-300">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-rose-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <svg className="w-6 h-6 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold mb-2 text-foreground tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>Entrance Exam & Prep Tips</h3>
+                      <p className="text-muted-foreground text-[15px] leading-relaxed">
+                        Get insider tips on NSAT, interviews, and admission processes. Learn what actually gets you selected.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </FadeInStaggerItem>
+
+              {/* Feature 5 - Campus Life - Sky/Blue */}
+              <FadeInStaggerItem>
+                <div className="group relative p-7 rounded-2xl bg-white border border-border/60 hover:border-sky-300 hover:shadow-lg hover:shadow-sky-100 transition-all duration-300">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-sky-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <svg className="w-6 h-6 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold mb-2 text-foreground tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>Real Campus Life Insights</h3>
+                      <p className="text-muted-foreground text-[15px] leading-relaxed">
+                        Hostel life, mess food, social scene, clubs, and daily routines. Know what your 4 years will look like.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </FadeInStaggerItem>
+
+              {/* Feature 6 - Career Insights - Violet/Purple */}
+              <FadeInStaggerItem>
+                <div className="group relative p-7 rounded-2xl bg-white border border-border/60 hover:border-violet-300 hover:shadow-lg hover:shadow-violet-100 transition-all duration-300">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-violet-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <svg className="w-6 h-6 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold mb-2 text-foreground tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>Placement & Career Reality</h3>
+                      <p className="text-muted-foreground text-[15px] leading-relaxed">
+                        Get honest placement statistics, internship opportunities, and career growth prospects from real students.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </FadeInStaggerItem>
+            </FadeInStagger>
+
+            {/* CTA Row */}
+            <FadeIn direction="up" delay={0.4}>
+              <div className="mt-16 text-center">
+                <p className="text-muted-foreground mb-6">
+                  Ready to get answers to all your questions?
+                </p>
+                <Link href="#mentors">
+                  <Button size="lg" className="rounded-full px-8 h-12 text-base gradient-bg text-white shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all hover:-translate-y-0.5 border-0">
+                    Talk to a Student Now <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </FadeIn>
+          </div>
+        </section>
+
         {/* Mentors Section */}
         <section id="mentors" className="py-24 bg-gradient-to-b from-primary/5 to-transparent border-t border-primary/10">
           <div className="container px-4 md:px-6 mx-auto">
