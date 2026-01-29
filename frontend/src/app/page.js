@@ -35,35 +35,35 @@ const COLLEGES = [
     id: "nst",
     name: "Newton School of Technology",
     short: "NST",
-    image: "https://images.unsplash.com/photo-1562774053-701939374585?w=800&auto=format&fit=crop&q=80",
+    image: "https://d13loartjoc1yn.cloudfront.net/upload/institute/images/large/1741756766Campus%203.webp",
     description: "A tech-first university focused on practical learning and industry partnerships"
   },
   {
     id: "sst",
     name: "Scaler School of Technology",
     short: "SST",
-    image: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800&auto=format&fit=crop&q=80",
+    image: "https://assets-v2.scaler.com/assets/programs/undergrad/webp/campus_life/campus/campus-27-bd2073084cb8767634187f36313f6785d7d69ef95267f0e4e57608636b563b60.webp.gz",
     description: "Building the next generation of tech leaders with hands-on experience"
   },
   {
     id: "vst",
     name: "Vedam School of Technology",
     short: "Vedam",
-    image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&auto=format&fit=crop&q=80",
+    image: "https://media.licdn.com/dms/image/v2/D5622AQEISapgATaX7A/feedshare-shrink_800/B56Zd3CXqrH8Ag-/0/1750048806343?e=2147483647&v=beta&t=RPe1cyHk3GUXWGKJLkWjr2FTOdAgxImEy6eNU5pmJmk",
     description: "Where ancient wisdom meets modern technology education"
   },
   {
     id: "niat",
     name: "NxtWave Institute of Advanced Technology",
     short: "NIAT",
-    image: "https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?w=800&auto=format&fit=crop&q=80",
+    image: "https://framerusercontent.com/images/iorBiDrSAGPkIhSlJVUZFkcQI.jpg?scale-down-to=1024&width=1123&height=763",
     description: "Pioneering advanced tech education with industry-ready curriculum"
   },
   {
     id: "pst",
     name: "Polaris School of Technology",
     short: "Polaris",
-    image: "https://images.unsplash.com/photo-1607237138185-eedd9c632b0b?w=800&auto=format&fit=crop&q=80",
+    image: "https://miro.medium.com/v2/resize:fit:1400/1*6-Arakl5sc-Wi1K7Y648dQ.jpeg",
     description: "Guiding students towards stellar careers in technology"
   }
 ];
