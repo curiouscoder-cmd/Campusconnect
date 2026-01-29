@@ -30,12 +30,43 @@ import { Analytics } from "@vercel/analytics/next"
 // Available colleges for filtering
 const COLLEGES = [
   { id: "all", name: "All Colleges", short: "All" },
-  { id: "nst", name: "Newton School of Technology", short: "NST" },
-  { id: "sst", name: "Scaler School of Technology", short: "SST" },
-  { id: "vst", name: "Vedam School of Technology", short: "Vedam" },
-  { id: "niat", name: "NxtWave Institute of Advanced Technology", short: "NIAT" },
-  { id: "pst", name: "Polaris School of Technology", short: "Polaris" }
+  {
+    id: "nst",
+    name: "Newton School of Technology",
+    short: "NST",
+    image: "https://images.unsplash.com/photo-1562774053-701939374585?w=800&auto=format&fit=crop&q=80",
+    description: "A tech-first university focused on practical learning and industry partnerships"
+  },
+  {
+    id: "sst",
+    name: "Scaler School of Technology",
+    short: "SST",
+    image: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800&auto=format&fit=crop&q=80",
+    description: "Building the next generation of tech leaders with hands-on experience"
+  },
+  {
+    id: "vst",
+    name: "Vedam School of Technology",
+    short: "Vedam",
+    image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&auto=format&fit=crop&q=80",
+    description: "Where ancient wisdom meets modern technology education"
+  },
+  {
+    id: "niat",
+    name: "NxtWave Institute of Advanced Technology",
+    short: "NIAT",
+    image: "https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?w=800&auto=format&fit=crop&q=80",
+    description: "Pioneering advanced tech education with industry-ready curriculum"
+  },
+  {
+    id: "pst",
+    name: "Polaris School of Technology",
+    short: "Polaris",
+    image: "https://images.unsplash.com/photo-1607237138185-eedd9c632b0b?w=800&auto=format&fit=crop&q=80",
+    description: "Guiding students towards stellar careers in technology"
+  }
 ];
+
 
 // Mock Data - All mentors with college IDs for filtering
 const allMentors = [
@@ -361,6 +392,142 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Mentors Section - Show first 6 with "See All" option */}
+        <section id="mentors" className="py-24 bg-gradient-to-b from-primary/5 to-transparent border-t border-primary/10">
+          <div className="container px-4 md:px-6 mx-auto">
+            <FadeIn direction="up">
+              <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-6">
+                <div>
+                  <h2 className="text-3xl font-bold tracking-tight mb-4" style={{ fontFamily: 'var(--font-display)' }}>Meet top mentors</h2>
+                  <p className="text-muted-foreground max-w-xl">
+                    Connect with students who are living the college experience right now. Get honest answers about what it&apos;s really like.
+                  </p>
+                </div>
+              </div>
+            </FadeIn>
+
+            {/* Campus Selector Tabs */}
+            <div className="mb-10">
+              <div className="flex flex-wrap gap-2 p-1.5 bg-muted/50 rounded-2xl w-fit">
+                {COLLEGES.map((college) => (
+                  <button
+                    key={college.id}
+                    onClick={() => setSelectedCollege(college.id)}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${selectedCollege === college.id
+                      ? 'bg-primary text-white shadow-md'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      }`}
+                  >
+                    {college.short}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-3 text-sm text-muted-foreground">
+                {selectedCollege === "all"
+                  ? "Showing mentors from all colleges"
+                  : `Showing mentors from ${COLLEGES.find(c => c.id === selectedCollege)?.name}`
+                }
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {mentors
+                .filter(mentor => selectedCollege === "all" || mentor.college_id === selectedCollege)
+                .slice(0, 6) // Limit to first 6 mentors
+                .map((mentor, i) => (
+                  <div key={mentor.id || i}>
+                    <MentorCardWithBooking mentor={mentor}>
+                      <MentorCard mentor={mentor} />
+                    </MentorCardWithBooking>
+                  </div>
+                ))
+              }
+              {mentors.filter(mentor => selectedCollege === "all" || mentor.college_id === selectedCollege).length === 0 && !loadingMentors && (
+                <div className="col-span-full text-center py-12 text-muted-foreground">
+                  <p className="mb-2">mentors from this college coming soon!</p>
+                  <p className="text-sm">Check back soon or explore mentors from other colleges!</p>
+                </div>
+              )}
+            </div>
+
+            {/* See All Mentors Button - Show if more than 6 mentors */}
+            {mentors.filter(mentor => selectedCollege === "all" || mentor.college_id === selectedCollege).length > 6 && (
+              <FadeIn direction="up" delay={0.2}>
+                <div className="mt-12 text-center">
+                  <Link href="/mentors">
+                    <Button variant="outline" size="lg" className="rounded-full px-8 border-primary/30 text-primary hover:bg-primary/5">
+                      See All Mentors <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </FadeIn>
+            )}
+          </div>
+        </section>
+
+        {/* Colleges Showcase Section */}
+        <section className="py-24 bg-gradient-to-b from-slate-50 to-white">
+          <div className="container px-4 md:px-6 mx-auto">
+            <FadeIn direction="up">
+              <div className="text-center mb-14">
+                <Badge variant="outline" className="mb-4 text-primary border-primary/30 px-4 py-1">
+                  Partner Institutions
+                </Badge>
+                <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4" style={{ fontFamily: 'var(--font-display)' }}>
+                  Explore New-Gen Colleges
+                </h2>
+                <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+                  Get insider perspectives from students at India&apos;s most innovative tech institutions
+                </p>
+              </div>
+            </FadeIn>
+
+            <FadeInStagger className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {COLLEGES.filter(c => c.id !== "all").map((college) => (
+                <FadeInStaggerItem key={college.id}>
+                  <div
+                    onClick={() => {
+                      setSelectedCollege(college.id);
+                      document.getElementById('mentors')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="group relative h-72 md:h-80 rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500"
+                  >
+                    {/* Background Image */}
+                    <div
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                      style={{ backgroundImage: `url(${college.image})` }}
+                    />
+
+                    {/* Dark Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20 group-hover:from-black/80 group-hover:via-black/40 transition-all duration-500" />
+
+                    {/* Explore Mentors Badge - Top Right */}
+                    <div className="absolute top-4 right-4 z-10">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-white text-sm font-medium border border-white/30 group-hover:bg-primary group-hover:border-primary transition-all duration-300">
+                        Explore Mentors
+                        <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                      </span>
+                    </div>
+
+                    {/* College Info - Bottom */}
+                    <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
+                      <h3 className="text-xl md:text-2xl font-bold text-white mb-2 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
+                        {college.name}
+                      </h3>
+                      <p className="text-white/80 text-sm line-clamp-2 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                        {college.description}
+                      </p>
+                    </div>
+
+                    {/* Hover Glow Effect */}
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-t from-primary/20 to-transparent pointer-events-none" />
+                  </div>
+                </FadeInStaggerItem>
+              ))}
+            </FadeInStagger>
+          </div>
+        </section>
+
         {/* Features Section - What We Help You With */}
         <section className="py-24 bg-gradient-to-b from-white via-primary/[0.02] to-slate-50">
           <div className="container px-4 md:px-6 mx-auto">
@@ -507,65 +674,6 @@ export default function Home() {
                 </Link>
               </div>
             </FadeIn>
-          </div>
-        </section>
-
-        {/* Mentors Section */}
-        <section id="mentors" className="py-24 bg-gradient-to-b from-primary/5 to-transparent border-t border-primary/10">
-          <div className="container px-4 md:px-6 mx-auto">
-            <FadeIn direction="up">
-              <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-6">
-                <div>
-                  <h2 className="text-3xl font-bold tracking-tight mb-4" style={{ fontFamily: 'var(--font-display)' }}>Meet top mentors</h2>
-                  <p className="text-muted-foreground max-w-xl">
-                    Connect with students who are living the college experience right now. Get honest answers about what it&apos;s really like.
-                  </p>
-                </div>
-              </div>
-            </FadeIn>
-
-            {/* Campus Selector Tabs */}
-            <div className="mb-10">
-              <div className="flex flex-wrap gap-2 p-1.5 bg-muted/50 rounded-2xl w-fit">
-                {COLLEGES.map((college) => (
-                  <button
-                    key={college.id}
-                    onClick={() => setSelectedCollege(college.id)}
-                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${selectedCollege === college.id
-                      ? 'bg-primary text-white shadow-md'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                      }`}
-                  >
-                    {college.short}
-                  </button>
-                ))}
-              </div>
-              <p className="mt-3 text-sm text-muted-foreground">
-                {selectedCollege === "all"
-                  ? "Showing mentors from all colleges"
-                  : `Showing mentors from ${COLLEGES.find(c => c.id === selectedCollege)?.name}`
-                }
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mentors
-                .filter(mentor => selectedCollege === "all" || mentor.college_id === selectedCollege)
-                .map((mentor, i) => (
-                  <div key={mentor.id || i}>
-                    <MentorCardWithBooking mentor={mentor}>
-                      <MentorCard mentor={mentor} />
-                    </MentorCardWithBooking>
-                  </div>
-                ))
-              }
-              {mentors.filter(mentor => selectedCollege === "all" || mentor.college_id === selectedCollege).length === 0 && !loadingMentors && (
-                <div className="col-span-full text-center py-12 text-muted-foreground">
-                  <p className="mb-2">mentors from this college coming soon!</p>
-                  <p className="text-sm">Check back soon or explore mentors from other colleges!</p>
-                </div>
-              )}
-            </div>
           </div>
         </section>
 
