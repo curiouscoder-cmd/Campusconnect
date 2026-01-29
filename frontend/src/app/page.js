@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/accordion";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Check, ChevronLeft, ChevronRight, Gift, ExternalLink } from "lucide-react";
 import { HeroHighlight } from "@/components/ui/hero-highlight";
 import { TextReveal } from "@/components/ui/text-reveal";
@@ -26,6 +26,7 @@ import { PricingCard } from "@/components/PricingCard";
 import { Accordion as AccordionEldora, AccordionContent as AccordionContentEldora, AccordionItem as AccordionItemEldora, AccordionTrigger as AccordionTriggerEldora } from "@/components/ui/accordion-eldora";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight } from "lucide-react";
+import { AnimatedTestimonials } from "@/components/ui/animated-testimonials";
 import { Analytics } from "@vercel/analytics/next"
 // Available colleges for filtering
 const COLLEGES = [
@@ -140,100 +141,48 @@ const pricingPlans = [
   }
 ];
 
-// Testimonials data
+// Testimonials data for AnimatedTestimonials component
 const testimonials = [
   {
-    quote: "Finally got the real picture.",
-    text: "I was confused between NST and a traditional college. One session with Aditya gave me honest insights about hostel life, faculty, and placements that no brochure could. I made my decision with confidence.",
+    quote: "I was confused between NST and a traditional college. One session with Aditya gave me honest insights about hostel life, faculty, and placements that no brochure could. I made my decision with confidence.",
     name: "Sarthak Gupta",
-    role: "Applicant who booked a session",
-    initials: "SG"
+    designation: "Applicant who booked a session",
+    src: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=500&fit=crop&crop=face"
   },
   {
-    quote: "Cleared all my doubts instantly.",
-    text: "The mentor was so helpful in explaining the actual campus culture and placement statistics. This 30-minute session saved me months of confusion. Highly recommend Campus Connect!",
+    quote: "The mentor was so helpful in explaining the actual campus culture and placement statistics. This 30-minute session saved me months of confusion. Highly recommend Campus Connect!",
     name: "Priya Sharma",
-    role: "Admitted to NST 2024",
-    initials: "PS"
+    designation: "Admitted to NST 2024",
+    src: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=500&h=500&fit=crop&crop=face"
   },
   {
-    quote: "Honest feedback that matters.",
-    text: "Unlike college websites and brochures, I got real insights about what student life is actually like. The mentor answered all my questions without sugarcoating anything. Worth every penny!",
+    quote: "Unlike college websites and brochures, I got real insights about what student life is actually like. The mentor answered all my questions without sugarcoating anything. Worth every penny!",
     name: "Arjun Patel",
-    role: "Applicant considering multiple colleges",
-    initials: "AP"
+    designation: "Applicant considering multiple colleges",
+    src: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&h=500&fit=crop&crop=face"
   },
   {
-    quote: "Best decision before joining college.",
-    text: "I was skeptical about paying for a session, but talking to a current student gave me confidence in my choice. They explained everything from academics to social life to career prospects.",
+    quote: "I was skeptical about paying for a session, but talking to a current student gave me confidence in my choice. They explained everything from academics to social life to career prospects.",
     name: "Neha Verma",
-    role: "Admitted to NST 2024",
-    initials: "NV"
+    designation: "Admitted to NST 2024",
+    src: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&h=500&fit=crop&crop=face"
   }
 ];
 
-// Testimonials Carousel Component
+// Testimonials Section using AnimatedTestimonials
 function TestimonialsCarousel() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % testimonials.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const current = testimonials[currentIndex];
-
   return (
-    <section id="reviews" className="py-24 bg-slate-900 text-white">
-      <div className="container px-4 md:px-6 mx-auto max-w-2xl">
+    <section id="reviews" className="py-12 md:py-16 bg-gradient-to-br from-slate-50 to-white">
+      <div className="container px-4 md:px-6 mx-auto">
         <FadeIn direction="up">
-          <div className="text-center mb-12">
-            <p className="text-sm font-medium text-white/60 uppercase tracking-wider">What Students Say</p>
+          <div className="text-center mb-4">
+            <p className="text-sm font-medium text-primary uppercase tracking-wider mb-1">Student Reviews</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
+              What Students Say
+            </h2>
           </div>
         </FadeIn>
-
-        <FadeIn direction="up" delay={0.2}>
-          <div className="overflow-hidden">
-            <motion.div
-              key={currentIndex}
-              initial={{ opacity: 0, x: 100 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -100 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-              className="text-center"
-            >
-              <h3 className="text-2xl md:text-3xl font-bold mb-6 text-white">
-                &ldquo;{current.quote}&rdquo;
-              </h3>
-              <p className="text-white/70 text-lg leading-relaxed mb-8">
-                {current.text}
-              </p>
-              <div className="flex items-center justify-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm">
-                  {current.initials}
-                </div>
-                <div className="text-left">
-                  <p className="font-semibold text-white text-sm">{current.name}</p>
-                  <p className="text-xs text-white/60">{current.role}</p>
-                </div>
-              </div>
-
-              {/* Dots Indicator */}
-              <div className="flex gap-2 justify-center mt-8">
-                {testimonials.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`h-1 rounded-full transition-all ${index === currentIndex ? "bg-white w-8" : "bg-white/30 w-2"
-                      }`}
-                  />
-                ))}
-              </div>
-            </motion.div>
-          </div>
-        </FadeIn>
+        <AnimatedTestimonials testimonials={testimonials} autoplay={true} />
       </div>
     </section>
   );
