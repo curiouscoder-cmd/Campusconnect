@@ -33,6 +33,10 @@ import {
     Sun,
     Sunset,
     Moon,
+    Share2,
+    Copy,
+    MessageCircle,
+    ExternalLink,
 } from "lucide-react";
 
 // Predefined time slots (30 min each, 9 AM to 10 PM)
@@ -681,13 +685,39 @@ export default function MentorDashboardPage() {
             <Navbar />
             <main className="flex-1 container mx-auto px-4 py-8 max-w-5xl mt-16">
                 {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">
-                        Welcome, {mentor.name}!
-                    </h1>
-                    <p className="text-gray-500 mt-1">
-                        Manage your availability and view upcoming sessions.
-                    </p>
+                <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">
+                            Welcome, {mentor.name}!
+                        </h1>
+                        <p className="text-gray-500 mt-1">
+                            Manage your availability and view upcoming sessions.
+                        </p>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                            onClick={() => {
+                                const message = "🤔 Thinking about " + (mentor.college || 'Newton School of Technology') + "?\n\n🎓 Before you decide, talk to someone who's actually studying here.\nI'm " + (mentor.name?.split(' ')[0] || 'a student') + ", a current student, and I share honest insights about academics, campus life, hostels, faculty, and placements.\n\n📞 You can book a short 1:1 call with me here:\n👉 https://campus-connect.co.in/mentor/" + mentor.id;
+                                const whatsappUrl = "https://wa.me/?text=" + encodeURIComponent(message);
+                                window.open(whatsappUrl, '_blank');
+                            }}
+                        >
+                            <Share2 className="w-4 h-4 mr-1.5" />
+                            Share Profile
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                                navigator.clipboard.writeText(`https://campus-connect.co.in/mentor/${mentor.id}`);
+                                toast.success("Link copied!");
+                            }}
+                        >
+                            <Copy className="w-4 h-4" />
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Stats Cards */}
@@ -764,6 +794,7 @@ export default function MentorDashboardPage() {
                         </p>
                     </CardContent>
                 </Card>
+
 
                 {/* Profile Settings Card */}
                 <Card className="mb-6">
@@ -1353,6 +1384,6 @@ export default function MentorDashboardPage() {
                 </Card>
             </main>
             <Footer />
-        </div>
+        </div >
     );
 }

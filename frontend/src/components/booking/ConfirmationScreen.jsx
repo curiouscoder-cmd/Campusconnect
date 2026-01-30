@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { CheckCircle, Calendar, Clock, Video, Mail, Copy, ExternalLink, Gift } from "lucide-react";
+import { CheckCircle, Calendar, Clock, Video, Mail, Copy, ExternalLink, Gift, MessageCircle, Share2 } from "lucide-react";
 import { formatTime } from "@/lib/booking-utils";
 import { useState } from "react";
 
@@ -15,6 +15,13 @@ export function ConfirmationScreen({
   isNsatMode = false,
 }) {
   const [copied, setCopied] = useState(false);
+  const [referralCopied, setReferralCopied] = useState(false);
+
+  const referralMessage = `🎓 Just had a great session on Campus Connect!
+
+If you're confused about new-gen colleges like NST, SST, NIAT - talk to real students who are actually studying there.
+
+Check it out: https://campus-connect.co.in`;
 
   const handleCopyLink = () => {
     if (meetLink) {
@@ -306,6 +313,45 @@ export function ConfirmationScreen({
           <span>Confirmation sent to {userDetails.email}</span>
         </motion.div>
       )}
+
+      {/* Referral Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.65 }}
+        className="bg-gradient-to-r from-primary/10 to-purple-500/10 rounded-xl p-4 border border-primary/20"
+      >
+        <div className="flex items-center gap-2 mb-2">
+          <Share2 className="w-4 h-4 text-primary" />
+          <p className="text-sm font-semibold text-gray-900">Know someone confused about college?</p>
+        </div>
+        <p className="text-xs text-gray-600 mb-3">Share Campus Connect and help them get clarity too!</p>
+
+        <div
+          onClick={() => {
+            navigator.clipboard.writeText(referralMessage);
+            setReferralCopied(true);
+            setTimeout(() => setReferralCopied(false), 2000);
+          }}
+          className="text-xs bg-white/80 p-2 rounded-lg mb-3 cursor-pointer hover:bg-white transition-colors border border-gray-200"
+        >
+          <p className="text-gray-600 line-clamp-2">{referralMessage}</p>
+          <p className="text-primary text-xs mt-1 font-medium">
+            {referralCopied ? "✓ Copied!" : "Tap to copy"}
+          </p>
+        </div>
+
+        <button
+          onClick={() => {
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(referralMessage)}`;
+            window.open(whatsappUrl, '_blank');
+          }}
+          className="w-full py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+        >
+          <MessageCircle className="w-4 h-4" />
+          Share on WhatsApp
+        </button>
+      </motion.div>
 
       {/* Action Buttons */}
       <motion.div

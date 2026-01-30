@@ -14,7 +14,7 @@ import {
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Check, ChevronLeft, ChevronRight, Gift, ExternalLink } from "lucide-react";
+import { ChevronDown, Check, ChevronLeft, ChevronRight, Gift, ExternalLink, Share2, Copy, MessageCircle, X } from "lucide-react";
 import { HeroHighlight } from "@/components/ui/hero-highlight";
 import { TextReveal } from "@/components/ui/text-reveal";
 import { TypewriterEffectSmooth } from "@/components/ui/typewriter-effect";
@@ -216,10 +216,13 @@ const faqs = [
 ];
 
 export default function Home() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isMentor, user } = useAuth();
   const [mentors, setMentors] = useState([]);
   const [loadingMentors, setLoadingMentors] = useState(true);
   const [selectedCollege, setSelectedCollege] = useState("all");
+  const [showMentorCard, setShowMentorCard] = useState(true);
+  const [mentorData, setMentorData] = useState(null);
+
 
   useEffect(() => {
     let isMounted = true;
@@ -257,9 +260,77 @@ export default function Home() {
     };
   }, []);
 
+  // Fetch mentor data for share card
+  useEffect(() => {
+    if (isMentor && user?.email) {
+      supabase
+        .from('mentors')
+        .select('id, name, college')
+        .eq('email', user.email)
+        .single()
+        .then(({ data }) => {
+          if (data) setMentorData(data);
+        });
+    }
+  }, [isMentor, user]);
+
+
   return (
     <div className="min-h-screen flex flex-col font-sans">
       <Navbar />
+
+      {/* Floating Mentor Share Card */}
+      {isMentor && showMentorCard && mentorData && (
+        <motion.div
+          initial={{ opacity: 0, y: 50, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: "spring", damping: 20, stiffness: 300 }}
+          className="fixed bottom-6 right-6 z-50"
+        >
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-2xl p-5 w-72 border border-slate-700">
+            <button
+              onClick={() => setShowMentorCard(false)}
+              className="absolute top-3 right-3 text-slate-400 hover:text-white transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2.5 bg-green-500/20 rounded-xl">
+                <Share2 className="w-5 h-5 text-green-400" />
+              </div>
+              <div>
+                <p className="font-semibold text-white text-sm">Share your profile</p>
+                <p className="text-xs text-slate-400">Get more bookings</p>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                className="flex-1 bg-green-500 hover:bg-green-600 text-white font-medium"
+                onClick={() => {
+                  const message = "🤔 Thinking about " + (mentorData.college || 'Newton School of Technology') + "?\n\n🎓 Before you decide, talk to someone who's actually studying here.\nI'm " + (mentorData.name?.split(' ')[0] || 'a student') + ", a current student, and I share honest insights about academics, campus life, hostels, faculty, and placements.\n\n📞 You can book a short 1:1 call with me here:\n👉 https://campus-connect.co.in/mentor/" + mentorData.id;
+                  const whatsappUrl = "https://wa.me/?text=" + encodeURIComponent(message);
+                  window.open(whatsappUrl, '_blank');
+                }}
+              >
+                <MessageCircle className="w-4 h-4 mr-2" />
+                Share on WhatsApp
+              </Button>
+              <Button
+                variant="outline"
+                className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+                onClick={() => {
+                  navigator.clipboard.writeText(`https://campus-connect.co.in/mentor/${mentorData.id}`);
+                }}
+              >
+                <Copy className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       <main className="flex-1 mt-16"> {/* Added mt-16 to clear fixed navbar */}
         {/* Hero Section - Full viewport with NSAT at bottom */}
         <section className="relative overflow-hidden min-h-[calc(100vh-64px)] md:h-[calc(100vh-64px)] flex flex-col">
@@ -415,7 +486,7 @@ export default function Home() {
         </section>
 
         {/* Colleges Showcase Section */}
-        <section className="py-24 bg-gradient-to-b from-slate-50 to-white">
+        <section id="colleges" className="py-24 bg-gradient-to-b from-slate-50 to-white">
           <div className="container px-4 md:px-6 mx-auto">
             <FadeIn direction="up">
               <div className="text-center mb-14">

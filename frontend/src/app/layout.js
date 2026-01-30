@@ -12,6 +12,29 @@ const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-displ
 export const metadata = {
   title: "Campus Connect | Talk to Real Students at New-Gen Colleges",
   description: "Get honest insights from current students at NST, Vedam, NIAT & more. Book 1:1 sessions to ask about campus life, placements, faculty, hostel, and whether the college is worth joining.",
+  metadataBase: new URL('https://campus-connect.co.in'),
+  openGraph: {
+    title: 'Campus Connect | Talk to Real Students',
+    description: 'Get honest insights from current students at new-gen colleges. Book 1:1 sessions for just ₹49.',
+    url: 'https://campus-connect.co.in',
+    siteName: 'Campus Connect',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Campus Connect - Talk to Real Students',
+      },
+    ],
+    locale: 'en_IN',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Campus Connect | Talk to Real Students',
+    description: 'Get honest insights from current students at new-gen colleges. Book 1:1 sessions for just ₹49.',
+    images: ['/og-image.png'],
+  },
   icons: {
     icon: [
       {
@@ -44,7 +67,7 @@ export default function RootLayout({ children }) {
             }}
           />
         </AuthProvider>
-        <Analytics/>
+        <Analytics />
       </body>
     </html>
   );

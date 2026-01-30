@@ -59,6 +59,9 @@ export function Navbar() {
                     <Link href="/#mentors" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
                         Students
                     </Link>
+                    <Link href="/#colleges" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+                        Explore Colleges
+                    </Link>
                     <Link href="/contact" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
                         Contact
                     </Link>
