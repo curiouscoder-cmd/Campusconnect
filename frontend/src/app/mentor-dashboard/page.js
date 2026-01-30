@@ -218,10 +218,7 @@ export default function MentorDashboardPage() {
 
             const { error } = await supabase
                 .from("availability")
-                .upsert(slotsToInsert, {
-                    onConflict: 'mentor_id,date,start_time',
-                    ignoreDuplicates: true
-                });
+                .insert(slotsToInsert);
 
             if (error) throw error;
 
@@ -418,10 +415,7 @@ export default function MentorDashboardPage() {
 
             const { error } = await supabase
                 .from("availability")
-                .upsert(slotsToInsert, {
-                    onConflict: 'mentor_id,date,start_time',
-                    ignoreDuplicates: true
-                });
+                .insert(slotsToInsert);
 
             if (error) throw error;
 

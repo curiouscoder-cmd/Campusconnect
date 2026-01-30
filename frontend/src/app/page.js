@@ -137,7 +137,8 @@ const pricingPlans = [
     title: "Group Session",
     price: "₹49",
     features: ["60 min group call", "Q&A with current students", "Learn from others' questions", "Recording available"],
-    popular: false
+    popular: false,
+    comingSoon: true
   }
 ];
 
@@ -393,31 +394,42 @@ I'm ${firstName}, a current student, and I share honest insights about academics
             </HeroHighlight>
           </div>
 
-          {/* NSAT Offer Banner - Fixed at bottom of hero */}
-          <div className="w-full py-4 bg-gradient-to-r from-primary/10 via-purple-500/10 to-primary/10 border-y border-primary/20">
-            <div className="container px-4 md:px-6 mx-auto">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-primary to-purple-500 flex items-center justify-center shrink-0">
-                    <Gift className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">🎉 NSAT Offer: Get Your First Session FREE!</h3>
-                    <p className="text-sm text-gray-600">Register for NSAT using our link & get ₹300 off + a free mentorship session</p>
-                  </div>
+          {/* NSAT Offer - Sticky Note at bottom right */}
+          <motion.div
+            initial={{ opacity: 0, y: 30, rotate: -2 }}
+            animate={{ opacity: 1, y: 0, rotate: 2 }}
+            transition={{ delay: 0.6, type: "spring", damping: 15 }}
+            className="absolute right-6 md:right-12 bottom-8 z-30 hidden md:block"
+          >
+            <div
+              className="relative bg-gradient-to-br from-violet-100 to-purple-100 rounded-lg shadow-xl p-6 w-80 cursor-pointer hover:rotate-0 hover:scale-105 transition-all duration-300"
+              onClick={() => document.getElementById('mentors')?.scrollIntoView({ behavior: 'smooth' })}
+              style={{ boxShadow: '4px 4px 15px rgba(0,0,0,0.1), -1px -1px 5px rgba(255,255,255,0.5)' }}
+            >
+              {/* Tape at top */}
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-6 bg-gradient-to-b from-purple-200/80 to-purple-300/60 rounded-sm opacity-80"
+                style={{ boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
+              />
+
+              <div className="flex items-center gap-3 mb-3 mt-1">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center shadow-md">
+                  <Gift className="w-5 h-5 text-white" />
                 </div>
-                <Button
-                  onClick={() => {
-                    document.getElementById('mentors')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="rounded-full px-6 bg-gradient-to-r from-primary to-purple-500 text-white hover:opacity-90 transition-opacity shrink-0"
-                >
-                  Claim Free Session
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
+                <span className="font-bold text-purple-900 text-lg">🎉 NSAT Offer!</span>
               </div>
+              <p className="text-base text-black-800 font-semibold mb-2">
+                Get Your First Session FREE
+              </p>
+              <p className="text-sm text-black-700 mb-4">
+                Register for NSAT using our link & get ₹300 off + a free mentorship session
+              </p>
+              <Button
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white shadow-md"
+              >
+                Claim Free Session <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
             </div>
-          </div>
+          </motion.div>
         </section>
 
         {/* Mentors Section - Show first 6 with "See All" option */}

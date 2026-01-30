@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Clock, Calendar, CreditCard, Shield, Loader2 } from "lucide-react";
+import { Clock, Calendar, CreditCard, Shield, Loader2, Tag } from "lucide-react";
 import { formatTime } from "@/lib/booking-utils";
 import { cn } from "@/lib/utils";
+import { ReferralCodeInput } from "@/components/ReferralComponents";
+import { useAuth } from "@/context/AuthContext";
 
 // Razorpay Key - Replace with your actual key
 const RAZORPAY_KEY = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_yourkeyhere";
@@ -18,6 +20,22 @@ export function PaymentScreen({
   onPaymentFailure,
 }) {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [appliedReferral, setAppliedReferral] = useState(null);
+  const { user } = useAuth();
+
+  // Calculate final price with referral discount (only for 30-min sessions)
+  const canApplyReferral = selectedSession?.duration === 30;
+  const originalPrice = selectedSession?.price || 0;
+  const discountAmount = (canApplyReferral && appliedReferral) ? appliedReferral.discountAmount : 0;
+  const finalPrice = Math.max(0, originalPrice - discountAmount);
+
+  const handleApplyReferral = (referralData) => {
+    setAppliedReferral(referralData);
+  };
+
+  const handleRemoveReferral = () => {
+    setAppliedReferral(null);
+  };
 
   const handlePayment = async () => {
     setIsProcessing(true);
@@ -30,7 +48,10 @@ export function PaymentScreen({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: selectedSession.price,
+          amount: finalPrice, // Use discounted price
+          originalAmount: originalPrice,
+          discountAmount: discountAmount,
+          referralCodeId: appliedReferral?.referralCodeId || null,
           slotId: selectedSlot.id,
           mentorId: mentor.id,
           sessionType: selectedSession,
@@ -74,12 +95,34 @@ export function PaymentScreen({
                 slotDate: selectedSlot.date,
                 slotTime: selectedSlot.startTime,
                 mentorName: mentor.name,
+                referralCodeId: appliedReferral?.referralCodeId || null,
+                discountAmount: discountAmount,
               }),
             });
 
             const verifyData = await verifyResponse.json();
 
             if (verifyData.success) {
+              // Record referral use if applicable
+              if (appliedReferral?.referralCodeId && user?.id) {
+                try {
+                  await fetch('/api/referral/use', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      referralCodeId: appliedReferral.referralCodeId,
+                      refereeUserId: user.id,
+                      refereeEmail: userDetails.email,
+                      bookingId: verifyData.booking?.id,
+                      discountApplied: discountAmount,
+                    }),
+                  });
+                } catch (refError) {
+                  console.error("Error recording referral:", refError);
+                  // Don't fail payment for this
+                }
+              }
+
               onPaymentSuccess({
                 razorpayPaymentId: response.razorpay_payment_id,
                 razorpayOrderId: response.razorpay_order_id,
@@ -109,6 +152,8 @@ export function PaymentScreen({
           mentorId: mentor.id,
           slotId: selectedSlot.id,
           sessionType: selectedSession.id,
+          referralCodeId: appliedReferral?.referralCodeId || '',
+          discountAmount: discountAmount.toString(),
         },
         theme: {
           color: "#6366F1",
@@ -146,6 +191,16 @@ export function PaymentScreen({
         <p className="text-sm text-gray-500 mt-1">Review your booking and pay to confirm</p>
       </div>
 
+      {/* Referral Code Input - Only for 30-min sessions */}
+      {canApplyReferral && (
+        <ReferralCodeInput
+          onApply={handleApplyReferral}
+          onRemove={handleRemoveReferral}
+          appliedDiscount={appliedReferral}
+          originalPrice={originalPrice}
+        />
+      )}
+
       {/* Booking Summary */}
       <div className="bg-gray-50 rounded-xl p-5 space-y-4">
         <h3 className="font-semibold text-gray-900">Booking Summary</h3>
@@ -176,12 +231,32 @@ export function PaymentScreen({
             </span>
           </div>
 
-          <div className="border-t border-gray-200 pt-3 mt-3">
-            <div className="flex items-center justify-between">
+          <div className="border-t border-gray-200 pt-3 mt-3 space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-500">Session Price</span>
+              <span className="text-gray-700">₹{originalPrice}</span>
+            </div>
+
+            {discountAmount > 0 && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-green-600 flex items-center gap-1">
+                  <Tag className="w-3 h-3" />
+                  Referral Discount
+                </span>
+                <span className="text-green-600 font-medium">-₹{discountAmount}</span>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between pt-2 border-t border-gray-200">
               <span className="font-medium text-gray-900">Total Amount</span>
-              <span className="text-xl font-bold text-slate-900">
-                ₹{selectedSession.price}
-              </span>
+              <div className="text-right">
+                {discountAmount > 0 && (
+                  <span className="text-sm text-gray-400 line-through mr-2">₹{originalPrice}</span>
+                )}
+                <span className="text-xl font-bold text-slate-900">
+                  ₹{finalPrice}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -214,7 +289,7 @@ export function PaymentScreen({
         ) : (
           <>
             <CreditCard className="w-5 h-5" />
-            Pay ₹{selectedSession.price}
+            Pay ₹{finalPrice}
           </>
         )}
       </motion.button>
