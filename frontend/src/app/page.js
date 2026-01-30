@@ -169,11 +169,11 @@ const testimonials = [
   }
 ];
 
-// Testimonials Section using AnimatedTestimonials
+// Testimonials Carousel Component
 function TestimonialsCarousel() {
   return (
-    <section id="reviews" className="py-12 md:py-16 bg-gradient-to-br from-slate-50 to-white">
-      <div className="container px-4 md:px-6 mx-auto">
+    <section id="reviews" className="py-24 bg-slate-900 text-white">
+      <div className="container px-4 md:px-6 mx-auto max-w-2xl">
         <FadeIn direction="up">
           <div className="text-center mb-4">
             <p className="text-sm font-medium text-primary uppercase tracking-wider mb-1">Student Reviews</p>
@@ -309,9 +309,17 @@ export default function Home() {
               <Button
                 className="flex-1 bg-green-500 hover:bg-green-600 text-white font-medium"
                 onClick={() => {
-                  const message = "🤔 Thinking about " + (mentorData.college || 'Newton School of Technology') + "?\n\n🎓 Before you decide, talk to someone who's actually studying here.\nI'm " + (mentorData.name?.split(' ')[0] || 'a student') + ", a current student, and I share honest insights about academics, campus life, hostels, faculty, and placements.\n\n📞 You can book a short 1:1 call with me here:\n👉 https://campus-connect.co.in/mentor/" + mentorData.id;
-                  const whatsappUrl = "https://wa.me/?text=" + encodeURIComponent(message);
-                  window.open(whatsappUrl, '_blank');
+                  const collegeName = mentorData.college || 'Newton School of Technology';
+                  const firstName = mentorData.name?.split(' ')[0] || 'a student';
+                  const profileUrl = `https://campus-connect.co.in/mentor/${mentorData.id}`;
+                  const message = `\u{1F914} Thinking about ${collegeName}?
+
+\u{1F393} Before you decide, talk to someone who's actually studying here.
+I'm ${firstName}, a current student, and I share honest insights about academics, campus life, hostels, faculty, and placements.
+
+\u{1F4DE} You can book a short 1:1 call with me here:
+\u{1F449} ${profileUrl}`;
+                  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
                 }}
               >
                 <MessageCircle className="w-4 h-4 mr-2" />
@@ -719,7 +727,7 @@ export default function Home() {
         </section>
 
         {/* Student Testimonials Carousel */}
-        <TestimonialsCarousel />
+        {/* <TestimonialsCarousel /> */}
 
         {/* FAQ Section */}
         <section id="faq" className="py-24">

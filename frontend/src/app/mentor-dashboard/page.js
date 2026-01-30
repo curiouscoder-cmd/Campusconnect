@@ -699,9 +699,17 @@ export default function MentorDashboardPage() {
                             size="sm"
                             className="bg-green-600 hover:bg-green-700 text-white"
                             onClick={() => {
-                                const message = "🤔 Thinking about " + (mentor.college || 'Newton School of Technology') + "?\n\n🎓 Before you decide, talk to someone who's actually studying here.\nI'm " + (mentor.name?.split(' ')[0] || 'a student') + ", a current student, and I share honest insights about academics, campus life, hostels, faculty, and placements.\n\n📞 You can book a short 1:1 call with me here:\n👉 https://campus-connect.co.in/mentor/" + mentor.id;
-                                const whatsappUrl = "https://wa.me/?text=" + encodeURIComponent(message);
-                                window.open(whatsappUrl, '_blank');
+                                const collegeName = mentor.college || 'Newton School of Technology';
+                                const firstName = mentor.name?.split(' ')[0] || 'a student';
+                                const profileUrl = `https://campus-connect.co.in/mentor/${mentor.id}`;
+                                const message = `\u{1F914} Thinking about ${collegeName}?
+
+\u{1F393} Before you decide, talk to someone who's actually studying here.
+I'm ${firstName}, a current student, and I share honest insights about academics, campus life, hostels, faculty, and placements.
+
+\u{1F4DE} You can book a short 1:1 call with me here:
+\u{1F449} ${profileUrl}`;
+                                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
                             }}
                         >
                             <Share2 className="w-4 h-4 mr-1.5" />
